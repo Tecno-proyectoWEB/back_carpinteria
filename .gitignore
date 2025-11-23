@@ -28,3 +28,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# Añadir líneas a .gitignore si no están
+if (-not (Select-String -Path .gitignore -Pattern '^\\.env$' -Quiet)) { Add-Content .gitignore "`n.env`n" }
+# revisar .gitignore
+Get-Content .gitignore
