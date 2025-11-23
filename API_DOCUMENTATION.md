@@ -1401,3 +1401,4 @@ Authorization: Bearer {token}
 **Última actualización**: Noviembre 2025  
 **Versión de API**: 1.0
 
+#soledad barea villca
