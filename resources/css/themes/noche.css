@@ -1,0 +1,10 @@
+/* Tema Noche - Colores oscuros */
+:root[data-mode="noche"] {
+    --bg-primary: #1F2937;
+    --bg-secondary: #111827;
+    --text-primary: #F9FAFB;
+    --text-secondary: #D1D5DB;
+    --border-primary: #374151;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+

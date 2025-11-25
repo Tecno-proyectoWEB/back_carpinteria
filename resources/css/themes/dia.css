@@ -1,0 +1,10 @@
+/* Tema Día - Colores claros */
+:root[data-mode="dia"] {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --border-primary: #E5E7EB;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+

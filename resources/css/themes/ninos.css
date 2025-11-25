@@ -1,0 +1,28 @@
+/* Tema para Niños - Colores vibrantes y alegres */
+:root[data-theme="ninos"] {
+    --primary-color: #FF6B9D;
+    --secondary-color: #FFD93D;
+    --accent-color: #6BCB77;
+    --background-color: #FFF5E6;
+    --surface-color: #FFFFFF;
+    --text-color: #2D3436;
+    --text-secondary: #636E72;
+    --border-color: #FFE5B4;
+    --success-color: #00B894;
+    --error-color: #D63031;
+    --warning-color: #FDCB6E;
+    --info-color: #74B9FF;
+    
+    /* Fuentes más grandes y legibles */
+    --font-size-base: 18px;
+    --font-size-lg: 22px;
+    --font-size-xl: 28px;
+    --font-size-2xl: 36px;
+    
+    /* Espaciado más generoso */
+    --spacing-unit: 1.2rem;
+    
+    /* Bordes redondeados */
+    --border-radius: 16px;
+}
+

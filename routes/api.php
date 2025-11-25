@@ -29,6 +29,9 @@ use App\Http\Controllers\PagoController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+// Ruta de búsqueda para API
+Route::get('/buscar', [\App\Http\Controllers\SearchController::class, 'buscar']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -58,6 +61,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('rol-permisos', RolPermisoController::class);
     Route::apiResource('tipos-accion', TipoAccionController::class);
     Route::apiResource('stripe-payments', StripePaymentController::class);
+    
+    // Rutas de Pagofacil
+    Route::post('pagofacil/crear-cupon', [\App\Http\Controllers\PagoFacilController::class, 'crearCupon']);
+    Route::post('pagofacil/verificar-pago', [\App\Http\Controllers\PagoFacilController::class, 'verificarPago']);
+    Route::post('pagofacil/crear-plan-pagos', [\App\Http\Controllers\PagoFacilController::class, 'crearPlanPagos']);
+    Route::post('pagofacil/webhook', [\App\Http\Controllers\PagoFacilController::class, 'webhook']);
     Route::apiResource('servicios', ServicioController::class);
     Route::apiResource('movimientos-inventario', MovimientoInventarioController::class);
     Route::apiResource('pagos', PagoController::class);

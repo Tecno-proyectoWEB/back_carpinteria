@@ -9,3 +9,11 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Importar temas */
+@import './themes/ninos.css';
+@import './themes/jovenes.css';
+@import './themes/adultos.css';
+@import './themes/dia.css';
+@import './themes/noche.css';
+@import './accessibility.css';
