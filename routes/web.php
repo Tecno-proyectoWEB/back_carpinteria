@@ -57,4 +57,27 @@ Route::middleware('auth')->group(function () {
     
     // Proveedores
     Route::resource('proveedores', \App\Http\Controllers\Web\ProveedorController::class);
+    
+    // Bitácora
+    Route::get('bitacora', [\App\Http\Controllers\Web\BitacoraController::class, 'index'])->name('bitacora.index');
+    Route::get('bitacora/{bitacora}', [\App\Http\Controllers\Web\BitacoraController::class, 'show'])->name('bitacora.show');
+    
+    // Categorías
+    Route::resource('categorias', \App\Http\Controllers\Web\CategoriaController::class);
+    
+    // Sectores
+    Route::resource('sectores', \App\Http\Controllers\Web\SectorController::class);
+    
+    // Pagos
+    Route::get('pagos', [\App\Http\Controllers\Web\PagoController::class, 'index'])->name('pagos.index');
+    Route::get('pagos/{pago}', [\App\Http\Controllers\Web\PagoController::class, 'show'])->name('pagos.show');
+    Route::post('pagos/{pago}/registrar', [\App\Http\Controllers\Web\PagoController::class, 'registrarPago'])->name('pagos.registrar');
+    
+    // Métodos de Pago
+    Route::resource('metodos-pago', \App\Http\Controllers\Web\MetodoPagoController::class);
+    
+    // Pagofacil
+    Route::post('pagofacil/crear-cupon', [\App\Http\Controllers\Web\PagoFacilController::class, 'crearCupon'])->name('pagofacil.crear-cupon');
+    Route::get('pagofacil/plan-pagos/{pedido}', [\App\Http\Controllers\Web\PagoFacilController::class, 'showPlanPagos'])->name('pagofacil.plan-pagos');
+    Route::post('pagofacil/crear-plan-pagos', [\App\Http\Controllers\Web\PagoFacilController::class, 'crearPlanPagos'])->name('pagofacil.crear-plan-pagos');
 });
