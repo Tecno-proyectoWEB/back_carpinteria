@@ -3,7 +3,7 @@
         <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Escanea el código QR para pagar</h3>
 
         <div class="text-center mb-4">
-            <img :src="pago.qr_image" alt="Código QR de Pago" class="mx-auto border-2 border-gray-200 rounded-lg" />
+            <img :src="qrImageUrl" alt="Código QR de Pago" class="mx-auto border-2 border-gray-200 rounded-lg" />
         </div>
 
         <div class="bg-gray-50 rounded-lg p-4 mb-4">
@@ -52,9 +52,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { route } from '../ziggy.js'
+import { useStorage } from '../composables/useStorage'
 
 const props = defineProps({
     pago: Object,
@@ -66,8 +67,15 @@ const props = defineProps({
 
 const emit = defineEmits(['showModal'])
 
+const { storageUrlSafe } = useStorage()
 const consultando = ref(false)
 let intervalId = null
+
+// URL de la imagen QR usando el composable
+const qrImageUrl = computed(() => {
+    if (!props.pago?.qr_image) return ''
+    return storageUrlSafe(props.pago.qr_image)
+})
 
 const formatDate = (date) => {
     if (!date) return ''
