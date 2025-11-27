@@ -29,7 +29,7 @@ class Usuario extends Authenticatable
 
     protected $hidden = [
         'password',
-        'remember_token',
+        // 'remember_token', // No existe en la tabla, comentado
     ];
 
     protected $casts = [

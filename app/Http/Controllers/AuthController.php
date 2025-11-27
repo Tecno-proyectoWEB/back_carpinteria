@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 use App\Models\Rol;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -20,7 +21,14 @@ class AuthController extends Controller
 
         $usuario = Usuario::where('email', $request->email)->with('rol')->first();
 
-        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
+        if (!$usuario) {
+            return back()->withErrors(['email' => 'Credenciales inválidas']);
+        }
+
+        // Obtener el hash original de la base de datos (sin el cast)
+        $passwordHash = $usuario->getRawOriginal('password');
+        
+        if (!Hash::check($request->password, $passwordHash)) {
             return back()->withErrors(['email' => 'Credenciales inválidas']);
         }
 
@@ -45,9 +53,40 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Credenciales expiradas']);
         }
 
-        Auth::login($usuario);
+        // Autenticar al usuario (sin remember_token ya que la tabla no lo tiene)
+        Auth::login($usuario, false);
+        
+        // Regenerar ID de sesión para seguridad
+        $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        Log::info('Login exitoso', [
+            'user_id' => $usuario->id,
+            'email' => $usuario->email,
+            'rol' => $usuario->rol ? $usuario->rol->nombre : null,
+            'is_authenticated' => Auth::check(),
+            'session_id' => $request->session()->getId()
+        ]);
+
+        // Obtener la URL de destino
+        $intendedUrl = $request->session()->pull('url.intended', route('dashboard'));
+
+        Log::info('Redirigiendo a', [
+            'url' => $intendedUrl,
+            'is_inertia' => $request->header('X-Inertia'),
+            'auth_check' => Auth::check(),
+            'user_id' => Auth::id()
+        ]);
+
+        // Para peticiones de Inertia, usar Inertia::location() que fuerza una redirección HTTP completa
+        // Esto hace que el navegador haga una petición GET completa en lugar de una petición AJAX
+        if ($request->header('X-Inertia')) {
+            // Inertia::location() devuelve una respuesta 409 con header X-Inertia-Location
+            // que Inertia.js interpreta como una redirección completa del navegador
+            return Inertia::location($intendedUrl);
+        }
+
+        // Para peticiones normales (no Inertia), redirección estándar
+        return redirect($intendedUrl);
     }
 
     public function register(Request $request)
@@ -65,7 +104,7 @@ class AuthController extends Controller
             'nombre' => $request->nombre,
             'apellido' => $request->apellido,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password, // El cast 'hashed' lo hasheará automáticamente
             'telefono' => $request->telefono,
             'rol_id' => $request->rol_id,
             'estado' => true,

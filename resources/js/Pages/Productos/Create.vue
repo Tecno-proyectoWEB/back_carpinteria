@@ -51,7 +51,6 @@
                         <input v-model="form.tiempo" type="text" placeholder="Ej: 5 días" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
                     </div>
                 </div>
-<<<<<<< Updated upstream
 
                 <div class="mt-6 flex space-x-4">
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
@@ -62,8 +61,6 @@
                     </Link>
                 </div>
             </form>
-=======
->>>>>>> Stashed changes
         </div>
     </Layout>
 </template>

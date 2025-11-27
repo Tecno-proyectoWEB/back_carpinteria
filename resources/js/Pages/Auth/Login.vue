@@ -51,7 +51,8 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
+import { route } from '../../ziggy.js'
 
 const form = useForm({
     email: '',
@@ -59,7 +60,30 @@ const form = useForm({
 })
 
 const submit = () => {
-    form.post('/login')
+    form.post(route('login'), {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: (page) => {
+            // Si la redirección no se hizo automáticamente, redirigir manualmente
+            console.log('Login exitoso, página recibida:', page)
+            // Si Inertia::location() no funcionó, hacer redirección manual
+            if (window.location.pathname === '/login') {
+                router.visit(route('dashboard'), {
+                    method: 'get',
+                    preserveState: false,
+                    preserveScroll: false
+                })
+            }
+        },
+        onError: (errors) => {
+            // Los errores se muestran automáticamente en el template
+            console.error('Errores de login:', errors)
+        },
+        onFinish: () => {
+            // Este callback se ejecuta siempre al finalizar la petición
+            console.log('Petición de login finalizada')
+        }
+    })
 }
 </script>
 

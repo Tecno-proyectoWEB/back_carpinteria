@@ -30,3 +30,4 @@ return new class extends Migration
         DB::statement("DROP VIEW IF EXISTS \"v_ventas_diarias\"");
     }
 };
+

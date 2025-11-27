@@ -16,9 +16,6 @@ return new class extends Migration
             $table->string('nombre')->nullable();
             $table->string('descripcion')->nullable();
             $table->boolean('activo')->nullable()->default(true);
-            $table->unsignedBigInteger('subcategoria_id')->nullable()->index('idx_categoria_subcategoria');
-
-            $table->foreign('subcategoria_id')->references('id')->on('subcategoria')->onDelete('set null');
         });
     }
 

@@ -25,10 +25,8 @@ return new class extends Migration
             $table->boolean('activo')->nullable()->default(true);
             $table->string('imagen')->nullable();
             $table->unsignedBigInteger('categoria_id')->nullable()->index('idx_material_categoria');
-            $table->unsignedBigInteger('sector_id')->nullable()->index('idx_material_sector');
 
             $table->foreign('categoria_id')->references('id')->on('categoria')->onDelete('set null');
-            $table->foreign('sector_id')->references('id')->on('sector')->onDelete('set null');
         });
     }
 
