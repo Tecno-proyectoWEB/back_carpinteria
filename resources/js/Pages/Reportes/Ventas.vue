@@ -38,15 +38,15 @@
             <div class="grid grid-cols-3 gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Total Ventas</h3>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">${{ totalVentas?.toFixed(2) }}</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900">${{ formatNumber(totalVentas) }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Ventas al Contado</h3>
-                    <p class="mt-2 text-3xl font-bold text-green-600">${{ totalVentasContado?.toFixed(2) }}</p>
+                    <p class="mt-2 text-3xl font-bold text-green-600">${{ formatNumber(totalVentasContado) }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Ventas a Crédito</h3>
-                    <p class="mt-2 text-3xl font-bold text-blue-600">${{ totalVentasCredito?.toFixed(2) }}</p>
+                    <p class="mt-2 text-3xl font-bold text-blue-600">${{ formatNumber(totalVentasCredito) }}</p>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@
                                 {{ venta.usuario?.nombre }} {{ venta.usuario?.apellido }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ${{ venta.importe_total?.toFixed(2) }}
+                                ${{ formatNumber(venta.importe_total) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ venta.metodo_pago?.nombre || 'N/A' }}
@@ -103,13 +103,19 @@ const props = defineProps({
 })
 
 const filters = ref({
-    fecha_inicio: props.filters?.fecha_inicio || new Date().toISOString().slice(0, 10),
+    fecha_inicio: props.filters?.fecha_inicio || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10),
     fecha_fin: props.filters?.fecha_fin || new Date().toISOString().slice(0, 10),
     usuario_id: props.filters?.usuario_id || '',
 })
 
 const filtrar = () => {
     router.get(route('reportes.ventas'), filters.value, { preserveState: true })
+}
+
+// Función helper para formatear números de forma segura
+const formatNumber = (value) => {
+    const num = Number(value) || 0
+    return num.toFixed(2)
 }
 </script>
 

@@ -29,15 +29,24 @@ class ReporteController extends Controller
             return back()->withErrors(['message' => 'No tiene permiso para ver reportes']);
         }
 
-        $request->validate([
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'usuario_id' => 'nullable|integer|exists:usuario,id',
-        ]);
+        // Si no hay fechas, usar valores por defecto (mes actual)
+        $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth()->toDateString();
+        $fechaFin = $request->fecha_fin ?? now()->toDateString();
+
+        // Validar solo si se proporcionan fechas
+        if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
+            $request->validate([
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+                'usuario_id' => 'nullable|integer|exists:usuario,id',
+            ]);
+            $fechaInicio = $request->fecha_inicio;
+            $fechaFin = $request->fecha_fin;
+        }
 
         $query = Venta::with(['usuario', 'metodoPago'])
             ->where('estado', true)
-            ->whereBetween('fecha', [$request->fecha_inicio, $request->fecha_fin]);
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
 
         if ($request->filled('usuario_id')) {
             $query->where('usuario_id', $request->usuario_id);
@@ -45,11 +54,11 @@ class ReporteController extends Controller
 
         $ventas = $query->orderBy('fecha', 'desc')->get();
 
-        $totalVentas = $ventas->sum('importe_total');
-        $totalVentasContado = $ventas->filter(function($venta) {
+        $totalVentas = (float) $ventas->sum('importe_total');
+        $totalVentasContado = (float) $ventas->filter(function($venta) {
             return $venta->pagos()->where('tipo', 'CONTADO')->exists();
         })->sum('importe_total');
-        $totalVentasCredito = $ventas->filter(function($venta) {
+        $totalVentasCredito = (float) $ventas->filter(function($venta) {
             return $venta->pagos()->where('tipo', 'CREDITO')->exists();
         })->sum('importe_total');
 
@@ -58,7 +67,11 @@ class ReporteController extends Controller
             'totalVentas' => $totalVentas,
             'totalVentasContado' => $totalVentasContado,
             'totalVentasCredito' => $totalVentasCredito,
-            'filters' => $request->only(['fecha_inicio', 'fecha_fin', 'usuario_id']),
+            'filters' => [
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin,
+                'usuario_id' => $request->usuario_id ?? '',
+            ],
         ]);
     }
 
@@ -72,7 +85,7 @@ class ReporteController extends Controller
         $fechaFin = $request->fecha_fin ?? now()->toDateString();
 
         // Estadísticas de ventas
-        $totalVentas = Venta::where('estado', true)
+        $totalVentas = (float) Venta::where('estado', true)
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('importe_total');
 
@@ -81,7 +94,11 @@ class ReporteController extends Controller
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->with('usuario:id,nombre,apellido')
             ->groupBy('usuario_id')
-            ->get();
+            ->get()
+            ->map(function($item) {
+                $item->total = (float) $item->total;
+                return $item;
+            });
 
         // Productos más vendidos
         $productosMasVendidos = DB::table('detalle_venta as dv')
@@ -128,16 +145,22 @@ class ReporteController extends Controller
             ->count();
 
         return Inertia::render('Reportes/Estadisticas', [
-            'totalVentas' => $totalVentas,
+            'totalVentas' => (float) $totalVentas,
             'ventasPorVendedor' => $ventasPorVendedor,
-            'productosMasVendidos' => $productosMasVendidos,
-            'serviciosMasVendidos' => $serviciosMasVendidos,
-            'pagosPendientes' => $pagosPendientes,
-            'pagosPagados' => $pagosPagados,
-            'productosBajoStock' => $productosBajoStock,
-            'materialesBajoStock' => $materialesBajoStock,
-            'ingresosInventario' => $ingresosInventario,
-            'salidasInventario' => $salidasInventario,
+            'productosMasVendidos' => $productosMasVendidos->map(function($item) {
+                $item->total_ventas = (float) ($item->total_ventas ?? 0);
+                return $item;
+            }),
+            'serviciosMasVendidos' => $serviciosMasVendidos->map(function($item) {
+                $item->total_ingresos = (float) ($item->total_ingresos ?? 0);
+                return $item;
+            }),
+            'pagosPendientes' => (int) $pagosPendientes,
+            'pagosPagados' => (float) ($pagosPagados ?? 0),
+            'productosBajoStock' => (int) $productosBajoStock,
+            'materialesBajoStock' => (int) $materialesBajoStock,
+            'ingresosInventario' => (int) $ingresosInventario,
+            'salidasInventario' => (int) $salidasInventario,
             'filters' => [
                 'fecha_inicio' => $fechaInicio,
                 'fecha_fin' => $fechaFin,

@@ -31,19 +31,19 @@
             <div class="grid grid-cols-4 gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Total Ventas</h3>
-                    <p class="mt-2 text-2xl font-bold text-gray-900">${{ totalVentas?.toFixed(2) }}</p>
+                    <p class="mt-2 text-2xl font-bold text-gray-900">${{ formatNumber(totalVentas) }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Pagos Pendientes</h3>
-                    <p class="mt-2 text-2xl font-bold text-yellow-600">{{ pagosPendientes }}</p>
+                    <p class="mt-2 text-2xl font-bold text-yellow-600">{{ pagosPendientes || 0 }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Productos Bajo Stock</h3>
-                    <p class="mt-2 text-2xl font-bold text-red-600">{{ productosBajoStock }}</p>
+                    <p class="mt-2 text-2xl font-bold text-red-600">{{ productosBajoStock || 0 }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Materiales Bajo Stock</h3>
-                    <p class="mt-2 text-2xl font-bold text-red-600">{{ materialesBajoStock }}</p>
+                    <p class="mt-2 text-2xl font-bold text-red-600">{{ materialesBajoStock || 0 }}</p>
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
                                 {{ vendedor.usuario?.nombre }} {{ vendedor.usuario?.apellido }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ${{ vendedor.total?.toFixed(2) }}
+                                ${{ formatNumber(vendedor.total) }}
                             </td>
                         </tr>
                     </tbody>
@@ -85,7 +85,7 @@
                         <tr v-for="producto in productosMasVendidos" :key="producto.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ producto.nombre }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ producto.total_cantidad }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ producto.total_ventas?.toFixed(2) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ formatNumber(producto.total_ventas) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -106,7 +106,7 @@
                         <tr v-for="servicio in serviciosMasVendidos" :key="servicio.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ servicio.nombre }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ servicio.total_ventas }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ servicio.total_ingresos?.toFixed(2) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ formatNumber(servicio.total_ingresos) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -143,6 +143,12 @@ const filters = ref({
 
 const filtrar = () => {
     router.get(route('reportes.estadisticas'), filters.value, { preserveState: true })
+}
+
+// Función helper para formatear números de forma segura
+const formatNumber = (value) => {
+    const num = Number(value) || 0
+    return num.toFixed(2)
 }
 </script>
 
