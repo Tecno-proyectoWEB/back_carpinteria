@@ -12,7 +12,7 @@ class RolController extends Controller
 {
     public function index()
     {
-        if (!Auth::user()->tienePermiso('usuarios.ver')) {
+        if (!Auth::user()->tienePermiso('roles.ver')) {
             return back()->withErrors(['message' => 'No tiene permiso para ver roles']);
         }
 
@@ -23,7 +23,7 @@ class RolController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
+        if (!Auth::user()->tienePermiso('roles.crear')) {
             return back()->withErrors(['message' => 'No tiene permiso para crear roles']);
         }
 
@@ -34,7 +34,7 @@ class RolController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
+        if (!Auth::user()->tienePermiso('roles.crear')) {
             return back()->withErrors(['message' => 'No tiene permiso para crear roles']);
         }
 
@@ -55,22 +55,48 @@ class RolController extends Controller
         return redirect()->route('roles.index')->with('success', 'Rol creado correctamente');
     }
 
-    public function edit(Rol $rol)
+    public function edit($role)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
+        if (!Auth::user()->tienePermiso('roles.editar')) {
             return back()->withErrors(['message' => 'No tiene permiso para editar roles']);
         }
 
+        // Si $role es un string (ID), buscar el rol
+        if (is_string($role) || is_numeric($role)) {
+            $rol = Rol::findOrFail($role);
+        } else {
+            $rol = $role;
+        }
+
+        // Cargar el rol con sus permisos
+        $rol->load('permisos');
+
         return Inertia::render('Roles/Edit', [
-            'rol' => $rol->load('permisos'),
+            'rol' => [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+                'permisos' => $rol->permisos->map(function($permiso) {
+                    return [
+                        'id' => $permiso->id,
+                        'nombre' => $permiso->nombre,
+                    ];
+                })->values()->toArray(),
+            ],
             'permisos' => Permiso::all(),
         ]);
     }
 
-    public function update(Request $request, Rol $rol)
+    public function update(Request $request, $role)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
+        if (!Auth::user()->tienePermiso('roles.editar')) {
             return back()->withErrors(['message' => 'No tiene permiso para editar roles']);
+        }
+
+        // Si $role es un string (ID), buscar el rol
+        if (is_string($role) || is_numeric($role)) {
+            $rol = Rol::findOrFail($role);
+        } else {
+            $rol = $role;
         }
 
         $request->validate([
@@ -83,18 +109,16 @@ class RolController extends Controller
             'nombre' => $request->nombre,
         ]);
 
-        if ($request->has('permisos')) {
-            $rol->permisos()->sync($request->permisos);
-        } else {
-            $rol->permisos()->detach();
-        }
+        // Sincronizar permisos (si viene como array vacío, elimina todos los permisos)
+        $permisos = $request->input('permisos', []);
+        $rol->permisos()->sync($permisos);
 
         return redirect()->route('roles.index')->with('success', 'Rol actualizado correctamente');
     }
 
     public function destroy(Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('usuarios.eliminar')) {
+        if (!Auth::user()->tienePermiso('roles.eliminar')) {
             return back()->withErrors(['message' => 'No tiene permiso para eliminar roles']);
         }
 

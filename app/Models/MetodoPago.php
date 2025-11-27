@@ -14,13 +14,18 @@ class MetodoPago extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'es_electronico',
+        'tipo_electronico',
+        'numero_cuenta',
+        'entidad_financiera',
+        'activo',
     ];
 
     public $timestamps = false;
 
-    public function pedidos()
+    public function ventas()
     {
-        return $this->hasMany(Pedido::class, 'metodo_pago_id');
+        return $this->hasMany(\App\Models\Venta::class, 'metodo_pago_id');
     }
 
     public function pagos()

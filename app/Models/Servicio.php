@@ -33,9 +33,9 @@ class Servicio extends Model
         return $this->belongsTo(Categoria::class);
     }
 
-    public function detallesPedido()
+    public function detallesVenta()
     {
-        return $this->hasMany(DetallePedido::class, 'servicio_id');
+        return $this->hasMany(\App\Models\DetalleVenta::class, 'servicio_id');
     }
 }
 

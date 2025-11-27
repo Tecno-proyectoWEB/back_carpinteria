@@ -8,40 +8,34 @@ use App\Models\MetodoPago;
 
 class MetodoPagoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $metodos = [
             [
                 'nombre' => 'EFECTIVO',
                 'descripcion' => 'Pago en efectivo',
+                'es_electronico' => false,
+                'tipo_electronico' => null,
+                'numero_cuenta' => null,
+                'entidad_financiera' => null,
+                'activo' => true,
             ],
             [
-                'nombre' => 'TRANSFERENCIA BANCARIA',
-                'descripcion' => 'Transferencia bancaria',
-            ],
-            [
-                'nombre' => 'TARJETA DE CRÉDITO',
-                'descripcion' => 'Pago con tarjeta de crédito',
-            ],
-            [
-                'nombre' => 'TARJETA DE DÉBITO',
-                'descripcion' => 'Pago con tarjeta de débito',
-            ],
-            [
-                'nombre' => 'QR',
-                'descripcion' => 'Pago mediante código QR',
-            ],
-            [
-                'nombre' => 'CHEQUE',
-                'descripcion' => 'Pago con cheque',
+                'nombre' => 'QR PagoFácil',
+                'descripcion' => 'Pago mediante código QR usando PagoFácil',
+                'es_electronico' => true,
+                'tipo_electronico' => 'QR',
+                'numero_cuenta' => null,
+                'entidad_financiera' => 'PagoFácil',
+                'activo' => true,
             ],
         ];
 
         foreach ($metodos as $metodo) {
-            MetodoPago::firstOrCreate(['nombre' => $metodo['nombre']], $metodo);
+            MetodoPago::updateOrCreate(
+                ['nombre' => $metodo['nombre']],
+                $metodo
+            );
         }
     }
 }

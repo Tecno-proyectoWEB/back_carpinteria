@@ -47,27 +47,17 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'inventario.ingreso'],
             ['nombre' => 'inventario.salida'],
 
-            // Pedidos/Ventas
-            ['nombre' => 'pedidos.ver'],
-            ['nombre' => 'pedidos.crear'],
-            ['nombre' => 'pedidos.editar'],
-            ['nombre' => 'pedidos.eliminar'],
-            ['nombre' => 'pedidos.aprobar'],
+            // Ventas
             ['nombre' => 'ventas.ver'],
             ['nombre' => 'ventas.crear'],
             ['nombre' => 'ventas.editar'],
-            ['nombre' => 'ventas.anular'],
+            ['nombre' => 'ventas.eliminar'],
+            ['nombre' => 'ventas.aprobar'],
 
             // Pagos
             ['nombre' => 'pagos.ver'],
             ['nombre' => 'pagos.crear'],
             ['nombre' => 'pagos.registrar'],
-
-            // Compras
-            ['nombre' => 'compras.ver'],
-            ['nombre' => 'compras.crear'],
-            ['nombre' => 'compras.editar'],
-            ['nombre' => 'compras.eliminar'],
 
             // Reportes
             ['nombre' => 'reportes.ver'],
@@ -76,6 +66,12 @@ class PermisoSeeder extends Seeder
             // Configuración
             ['nombre' => 'configuracion.ver'],
             ['nombre' => 'configuracion.editar'],
+
+            // Roles y Permisos
+            ['nombre' => 'roles.ver'],
+            ['nombre' => 'roles.crear'],
+            ['nombre' => 'roles.editar'],
+            ['nombre' => 'roles.eliminar'],
         ];
 
         foreach ($permisos as $permiso) {

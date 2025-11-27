@@ -21,12 +21,8 @@ return new class extends Migration
             WHEN (m.stock_actual <= 0) THEN 'CRITICO'::text
             WHEN (m.stock_actual <= m.punto_reorden) THEN 'REORDENAR'::text
             ELSE 'BAJO'::text
-        END AS estado_alerta,
-    s.nombre AS sector,
-    a.nombre AS almacen
-   FROM ((material m
-     LEFT JOIN sector s ON ((m.sector_id = s.id)))
-     LEFT JOIN almacen a ON ((s.almacen_id = a.id)))
+        END AS estado_alerta
+   FROM material m
   WHERE ((m.stock_actual <= m.stock_minimo) AND (m.activo = true))
   ORDER BY m.stock_actual;");
     }

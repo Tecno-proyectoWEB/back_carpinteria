@@ -35,6 +35,39 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Contar visitas de la página actual
+        // IMPORTANTE: ContarVisitas ahora registra la visita ANTES de procesar la request
+        // Por lo tanto, podemos contar directamente las visitas registradas
+        $visitasPagina = 0;
+        $ruta = $request->path();
+        $rutaNormalizada = parse_url($ruta, PHP_URL_PATH) ?? $ruta;
+
+        // Contar visitas de la página actual (el registro se hace en el middleware ContarVisitas)
+        if ($rutaNormalizada !== 'login' &&
+            $rutaNormalizada !== '/' &&
+            !str_starts_with($rutaNormalizada, '_') &&
+            !str_starts_with($rutaNormalizada, 'api/') &&
+            !str_starts_with($rutaNormalizada, 'payment/')) {
+            try {
+                // Usar DB directamente para evitar problemas con el modelo
+                if (\Illuminate\Support\Facades\DB::getSchemaBuilder()->hasTable('visita')) {
+                    // Contar todas las visitas de esta ruta (ya incluye la visita actual registrada por ContarVisitas)
+                    $visitasPagina = \Illuminate\Support\Facades\DB::table('visita')
+                        ->where('ruta', $rutaNormalizada)
+                        ->count();
+                } else {
+                    $visitasPagina = 0;
+                    \Illuminate\Support\Facades\Log::warning('La tabla visita no existe para contar visitas');
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error al contar visitas: ' . $e->getMessage(), [
+                    'ruta' => $rutaNormalizada,
+                    'error' => $e->getTraceAsString()
+                ]);
+                $visitasPagina = 0;
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -49,6 +82,7 @@ class HandleInertiaRequests extends Middleware
                     ] : null,
                 ] : null,
             ],
+            'visitasPagina' => $visitasPagina,
             'ziggy' => function () {
                 return (new \Tighten\Ziggy\Ziggy)->toArray();
             },

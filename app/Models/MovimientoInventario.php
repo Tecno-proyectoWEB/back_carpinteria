@@ -20,7 +20,7 @@ class MovimientoInventario extends Model
         'material_id',
         'producto_id',
         'usuario_id',
-        'pedido_id',
+        'venta_id',
     ];
 
     protected $casts = [
@@ -45,9 +45,9 @@ class MovimientoInventario extends Model
         return $this->belongsTo(Usuario::class);
     }
 
-    public function pedido()
+    public function venta()
     {
-        return $this->belongsTo(Pedido::class);
+        return $this->belongsTo(Venta::class);
     }
 }
 

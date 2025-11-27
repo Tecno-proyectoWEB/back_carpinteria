@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pago', function (Blueprint $table) {
-            $table->comment('Registro de pagos de pedidos');
+            $table->comment('Registro de pagos de ventas');
             $table->bigIncrements('id');
             $table->decimal('monto', 10, 2);
             $table->timestamp('fecha_pago')->nullable();
@@ -21,11 +21,11 @@ return new class extends Migration
             $table->string('tipo', 20)->comment('CONTADO, CREDITO, CUOTA');
             $table->integer('numero_cuota')->nullable();
             $table->text('observaciones')->nullable();
-            $table->unsignedBigInteger('pedido_id')->index('idx_pago_pedido');
+            $table->unsignedBigInteger('venta_id')->index('idx_pago_venta');
             $table->unsignedBigInteger('metodo_pago_id')->index('idx_pago_metodo_pago');
             $table->unsignedBigInteger('usuario_id')->nullable()->index('idx_pago_usuario');
 
-            $table->foreign('pedido_id')->references('id')->on('pedido')->onDelete('cascade');
+            $table->foreign('venta_id')->references('id')->on('venta')->onDelete('cascade');
             $table->foreign('metodo_pago_id')->references('id')->on('metodo_pago')->onDelete('restrict');
             $table->foreign('usuario_id')->references('id')->on('usuario')->onDelete('set null');
 

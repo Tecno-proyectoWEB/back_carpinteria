@@ -22,14 +22,12 @@ return new class extends Migration
             $table->unsignedBigInteger('material_id')->nullable()->index('idx_movimiento_material');
             $table->unsignedBigInteger('producto_id')->nullable()->index('idx_movimiento_producto');
             $table->unsignedBigInteger('usuario_id')->index('idx_movimiento_usuario');
-            $table->unsignedBigInteger('compra_id')->nullable()->index('idx_movimiento_compra');
-            $table->unsignedBigInteger('pedido_id')->nullable()->index('idx_movimiento_pedido');
+            $table->unsignedBigInteger('venta_id')->nullable()->index('idx_movimiento_venta');
 
             $table->foreign('material_id')->references('id')->on('material')->onDelete('set null');
             $table->foreign('producto_id')->references('id')->on('producto')->onDelete('set null');
             $table->foreign('usuario_id')->references('id')->on('usuario')->onDelete('restrict');
-            $table->foreign('compra_id')->references('id')->on('compra')->onDelete('set null');
-            $table->foreign('pedido_id')->references('id')->on('pedido')->onDelete('set null');
+            $table->foreign('venta_id')->references('id')->on('venta')->onDelete('set null');
 
             $table->index(['tipo', 'fecha'], 'idx_movimiento_tipo_fecha');
         });

@@ -53,6 +53,12 @@ const fallbackRoutes = {
     'reportes.ventas': '/reportes/ventas',
     'reportes.estadisticas': '/reportes/estadisticas',
     'reportes.inventario': '/reportes/inventario',
+    'busqueda.buscar': '/buscar',
+    'ventas.index': '/ventas',
+    'ventas.create': '/ventas/create',
+    'ventas.storeContado': '/ventas/contado',
+    'ventas.storeCredito': '/ventas/credito',
+    'ventas.show': (id) => `/ventas/${id}`,
 }
 
 // Helper global para usar route() en todos los componentes
@@ -71,7 +77,15 @@ export function route(name, params = {}, absolute = true) {
         // Usar fallback
         const routePath = fallbackRoutes[name]
         if (typeof routePath === 'function') {
-            const id = params.id || (typeof params === 'number' ? params : (params && Object.keys(params).length > 0 ? Object.values(params)[0] : null))
+            // Manejar diferentes formatos de parámetros
+            let id = null
+            if (typeof params === 'number') {
+                id = params
+            } else if (typeof params === 'object' && params !== null) {
+                id = params.id || (Object.keys(params).length > 0 ? Object.values(params)[0] : null)
+            } else if (params !== null && params !== undefined) {
+                id = params
+            }
             return routePath(id)
         }
         return routePath || '#'

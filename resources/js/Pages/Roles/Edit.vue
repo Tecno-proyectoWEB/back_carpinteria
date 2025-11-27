@@ -3,9 +3,15 @@
         <div>
             <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-900">Editar Rol</h1>
+                <div v-if="!rol" class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <p>Error: No se encontraron datos del rol. Por favor, vuelve a la lista de roles.</p>
+                    <Link :href="route('roles.index')" class="mt-2 inline-block text-blue-600 hover:underline">
+                        Volver a Roles
+                    </Link>
+                </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div v-if="rol" class="bg-white rounded-lg shadow p-6">
                 <form @submit.prevent="submit">
                     <div class="grid grid-cols-1 gap-6">
                         <div>
@@ -40,12 +46,16 @@
                     </div>
                 </form>
             </div>
+            <div v-else class="bg-white rounded-lg shadow p-6">
+                <p class="text-gray-600">Cargando datos del rol...</p>
+            </div>
         </div>
     </Layout>
 </template>
 
 <script setup>
 import { useForm, Link } from '@inertiajs/vue3'
+import { computed, watchEffect, onMounted } from 'vue'
 import { route } from '../../ziggy.js'
 import Layout from '../Layout.vue'
 
@@ -56,13 +66,48 @@ const props = defineProps({
     errors: Object,
 })
 
+// Extraer los IDs de los permisos del rol de forma segura
+const permisosSeleccionados = computed(() => {
+    if (!props.rol || !props.rol.permisos) {
+        return []
+    }
+
+    // Asegurarse de que permisos es un array
+    const permisosArray = Array.isArray(props.rol.permisos)
+        ? props.rol.permisos
+        : []
+
+    // Extraer los IDs
+    return permisosArray.map(p => {
+        // Manejar tanto objetos como IDs directos
+        return typeof p === 'object' ? p.id : p
+    }).filter(id => id !== null && id !== undefined)
+})
+
+// Inicializar el formulario con los datos del rol disponibles
 const form = useForm({
-    nombre: props.rol.nombre,
-    permisos: props.rol.permisos?.map(p => p.id) || [],
+    nombre: props.rol?.nombre || '',
+    permisos: permisosSeleccionados.value,
+})
+
+// Actualizar el formulario cuando los props cambien
+watchEffect(() => {
+    if (props.rol) {
+        form.nombre = props.rol.nombre || ''
+        form.permisos = permisosSeleccionados.value
+    }
 })
 
 const submit = () => {
-    form.put(route('roles.update', props.rol.id))
+    if (!props.rol || !props.rol.id) {
+        console.error('Error: No se puede actualizar el rol porque no se encontró el ID', props.rol)
+        alert('Error: No se puede actualizar el rol porque no se encontraron los datos')
+        return
+    }
+
+    // Usar el ID directamente o como objeto según lo que espere la ruta
+    const rolId = props.rol.id
+    form.put(route('roles.update', rolId))
 }
 </script>
 

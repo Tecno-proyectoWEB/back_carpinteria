@@ -19,22 +19,30 @@ class Pago extends Model
         'tipo', // 'CONTADO', 'CREDITO', 'CUOTA'
         'numero_cuota',
         'observaciones',
-        'pedido_id',
+        'venta_id',
         'metodo_pago_id',
         'usuario_id',
+        'nro_pago',
+        'nro_transaccion',
+        'qr_image',
+        'qr_expires_at',
+        'fecha_confirmacion',
+        'metodo_pago_facil',
     ];
 
     protected $casts = [
         'monto' => 'float',
         'fecha_pago' => 'datetime',
         'fecha_vencimiento' => 'datetime',
+        'fecha_confirmacion' => 'datetime',
+        'qr_expires_at' => 'datetime',
     ];
 
     public $timestamps = false;
 
-    public function pedido()
+    public function venta()
     {
-        return $this->belongsTo(Pedido::class);
+        return $this->belongsTo(Venta::class);
     }
 
     public function metodoPago()

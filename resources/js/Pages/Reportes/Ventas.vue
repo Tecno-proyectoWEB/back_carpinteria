@@ -77,7 +77,7 @@
                                 {{ venta.metodo_pago?.nombre || 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <Link :href="route('pedidos.show', venta.id)" class="text-blue-600 hover:text-blue-900">Ver</Link>
+                                <Link :href="route('ventas.show', venta.id)" class="text-blue-600 hover:text-blue-900">Ver</Link>
                             </td>
                         </tr>
                     </tbody>

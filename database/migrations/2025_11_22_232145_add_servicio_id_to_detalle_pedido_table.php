@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('detalle_pedido', function (Blueprint $table) {
-            $table->unsignedBigInteger('servicio_id')->nullable()->after('producto_id')->index('idx_detalle_pedido_servicio');
+        Schema::table('detalle_venta', function (Blueprint $table) {
+            $table->unsignedBigInteger('servicio_id')->nullable()->after('producto_id')->index('idx_detalle_venta_servicio');
             $table->foreign('servicio_id')->references('id')->on('servicio')->onDelete('set null');
         });
     }
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('detalle_pedido', function (Blueprint $table) {
+        Schema::table('detalle_venta', function (Blueprint $table) {
             $table->dropForeign(['servicio_id']);
             $table->dropColumn('servicio_id');
         });

@@ -1,0 +1,636 @@
+/* Temas de edad - Mejorados para legibilidad */
+.theme-ninos {
+    --primary-color: #FF6B9D;
+    --secondary-color: #C44569;
+    --accent-color: #F8B500;
+    --bg-primary: #FFF5F7;
+    --bg-secondary: #FFE5EC;
+    /* Textos con alto contraste para legibilidad */
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #FFB3D1;
+    /* Colores para botones con buen contraste */
+    --button-primary-bg: #FF6B9D;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #C44569;
+    --button-secondary-text: #FFFFFF;
+}
+
+.theme-jovenes {
+    --primary-color: #6C5CE7;
+    --secondary-color: #A29BFE;
+    --accent-color: #00B894;
+    --bg-primary: #F8F9FA;
+    --bg-secondary: #E9ECEF;
+    /* Textos con alto contraste para legibilidad */
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #DEE2E6;
+    /* Colores para botones con buen contraste */
+    --button-primary-bg: #6C5CE7;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #5A4FD6;
+    --button-secondary-text: #FFFFFF;
+}
+
+.theme-adultos {
+    --primary-color: #2C3E50;
+    --secondary-color: #34495E;
+    --accent-color: #3498DB;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F5F5F5;
+    /* Textos con alto contraste para legibilidad */
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #BDC3C7;
+    /* Colores para botones con buen contraste */
+    --button-primary-bg: #2C3E50;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #34495E;
+    --button-secondary-text: #FFFFFF;
+}
+
+/* Modo oscuro - Mejorado para legibilidad */
+.dark-mode {
+    --bg-primary: #1A1A1A;
+    --bg-secondary: #2D2D2D;
+    /* Textos claros con alto contraste */
+    --text-primary: #F5F5F5;
+    --text-secondary: #D0D0D0;
+    --text-heading: #FFFFFF;
+    --text-button: #FFFFFF;
+    --border-color: #404040;
+}
+
+.dark-mode.theme-ninos {
+    --primary-color: #FF8FB3;
+    --secondary-color: #E85A7A;
+    --bg-primary: #2A1F2E;
+    --bg-secondary: #3D2A3F;
+    --text-primary: #F5F5F5;
+    --text-secondary: #E0E0E0;
+    --text-heading: #FFFFFF;
+    --button-primary-bg: #FF8FB3;
+    --button-primary-text: #1A1A1A;
+    --button-secondary-bg: #E85A7A;
+    --button-secondary-text: #FFFFFF;
+}
+
+.dark-mode.theme-jovenes {
+    --primary-color: #8B7FD9;
+    --secondary-color: #B8AFFF;
+    --bg-primary: #1E1E2E;
+    --bg-secondary: #2A2A3E;
+    --text-primary: #F5F5F5;
+    --text-secondary: #E0E0E0;
+    --text-heading: #FFFFFF;
+    --button-primary-bg: #8B7FD9;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #6C5CE7;
+    --button-secondary-text: #FFFFFF;
+}
+
+.dark-mode.theme-adultos {
+    --primary-color: #4A6FA5;
+    --secondary-color: #5A7FB5;
+    --bg-primary: #1A1A1A;
+    --bg-secondary: #2D2D2D;
+    --text-primary: #F5F5F5;
+    --text-secondary: #D0D0D0;
+    --text-heading: #FFFFFF;
+    --button-primary-bg: #4A6FA5;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #5A7FB5;
+    --button-secondary-text: #FFFFFF;
+}
+
+/* Tamaños de fuente */
+.font-small {
+    font-size: 0.875rem;
+}
+
+.font-small * {
+    font-size: 0.875rem;
+}
+
+.font-normal {
+    font-size: 1rem;
+}
+
+.font-normal * {
+    font-size: 1rem;
+}
+
+.font-large {
+    font-size: 1.125rem;
+}
+
+.font-large * {
+    font-size: 1.125rem;
+}
+
+.font-xlarge {
+    font-size: 1.25rem;
+}
+
+.font-xlarge * {
+    font-size: 1.25rem;
+}
+
+/* Contraste */
+.contrast-normal {
+    --contrast-ratio: 1;
+}
+
+.contrast-high {
+    --contrast-ratio: 1.2;
+    filter: contrast(1.2);
+}
+
+.contrast-very-high {
+    --contrast-ratio: 1.5;
+    filter: contrast(1.5);
+}
+
+/* Aplicar variables CSS */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-primary {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.text-primary {
+    color: var(--text-primary) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.text-heading {
+    color: var(--text-heading) !important;
+    font-weight: 600;
+}
+
+/* Clases para textos legibles en todos los temas */
+.text-legible {
+    color: var(--text-primary) !important;
+}
+
+.text-legible-heading {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+}
+
+/* Asegurar que los títulos siempre sean legibles */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+}
+
+/* Textos en modo oscuro */
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6 {
+    color: #FFFFFF !important;
+}
+
+.dark-mode p,
+.dark-mode span,
+.dark-mode div {
+    color: var(--text-primary) !important;
+}
+
+.border-theme {
+    border-color: var(--border-color) !important;
+}
+
+/* Botones primarios, secundarios y de acento - MODO DÍA */
+.btn-primary {
+    background-color: var(--button-primary-bg, var(--primary-color)) !important;
+    color: var(--button-primary-text, #FFFFFF) !important;
+    font-weight: 600;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+    background-color: var(--button-secondary-bg, var(--secondary-color)) !important;
+    color: var(--button-secondary-text, #FFFFFF) !important;
+    font-weight: 600;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-accent {
+    background-color: var(--accent-color) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-accent:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones en modo oscuro con mejor contraste */
+.dark-mode .btn-primary {
+    background-color: var(--button-primary-bg, var(--primary-color)) !important;
+    color: var(--button-primary-text, #FFFFFF) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+.dark-mode .btn-secondary {
+    background-color: var(--button-secondary-bg, var(--secondary-color)) !important;
+    color: var(--button-secondary-text, #FFFFFF) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .btn-secondary:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+.dark-mode .btn-accent {
+    background-color: var(--accent-color) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .btn-accent:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+/* Asegurar que todos los botones sean legibles - MODO DÍA */
+button:not(.btn-primary):not(.btn-secondary):not(.btn-accent),
+a[role="button"]:not(.btn-primary):not(.btn-secondary):not(.btn-accent),
+input[type="submit"]:not(.btn-primary):not(.btn-secondary):not(.btn-accent),
+input[type="button"]:not(.btn-primary):not(.btn-secondary):not(.btn-accent) {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Botones con clases de Tailwind - MODO DÍA */
+button.bg-blue-600,
+button.bg-blue-500,
+button.bg-green-600,
+button.bg-green-500,
+button.bg-red-600,
+button.bg-red-500,
+button.bg-purple-600,
+button.bg-purple-500,
+button.bg-indigo-600,
+button.bg-indigo-500,
+button.bg-gray-600,
+button.bg-gray-500,
+a.bg-blue-600,
+a.bg-blue-500,
+a.bg-green-600,
+a.bg-green-500,
+a.bg-red-600,
+a.bg-red-500,
+a.bg-purple-600,
+a.bg-purple-500,
+a.bg-indigo-600,
+a.bg-indigo-500,
+a.bg-gray-600,
+a.bg-gray-500 {
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button.bg-blue-600:hover,
+button.bg-blue-500:hover,
+button.bg-green-600:hover,
+button.bg-green-500:hover,
+button.bg-red-600:hover,
+button.bg-red-500:hover,
+button.bg-purple-600:hover,
+button.bg-purple-500:hover,
+button.bg-indigo-600:hover,
+button.bg-indigo-500:hover,
+button.bg-gray-600:hover,
+button.bg-gray-500:hover,
+a.bg-blue-600:hover,
+a.bg-blue-500:hover,
+a.bg-green-600:hover,
+a.bg-green-500:hover,
+a.bg-red-600:hover,
+a.bg-red-500:hover,
+a.bg-purple-600:hover,
+a.bg-purple-500:hover,
+a.bg-indigo-600:hover,
+a.bg-indigo-500:hover,
+a.bg-gray-600:hover,
+a.bg-gray-500:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones en MODO OSCURO */
+.dark-mode button.bg-blue-600,
+.dark-mode button.bg-blue-500,
+.dark-mode button.bg-green-600,
+.dark-mode button.bg-green-500,
+.dark-mode button.bg-red-600,
+.dark-mode button.bg-red-500,
+.dark-mode button.bg-purple-600,
+.dark-mode button.bg-purple-500,
+.dark-mode button.bg-indigo-600,
+.dark-mode button.bg-indigo-500,
+.dark-mode button.bg-gray-600,
+.dark-mode button.bg-gray-500,
+.dark-mode a.bg-blue-600,
+.dark-mode a.bg-blue-500,
+.dark-mode a.bg-green-600,
+.dark-mode a.bg-green-500,
+.dark-mode a.bg-red-600,
+.dark-mode a.bg-red-500,
+.dark-mode a.bg-purple-600,
+.dark-mode a.bg-purple-500,
+.dark-mode a.bg-indigo-600,
+.dark-mode a.bg-indigo-500,
+.dark-mode a.bg-gray-600,
+.dark-mode a.bg-gray-500 {
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode button.bg-blue-600:hover,
+.dark-mode button.bg-blue-500:hover,
+.dark-mode button.bg-green-600:hover,
+.dark-mode button.bg-green-500:hover,
+.dark-mode button.bg-red-600:hover,
+.dark-mode button.bg-red-500:hover,
+.dark-mode button.bg-purple-600:hover,
+.dark-mode button.bg-purple-500:hover,
+.dark-mode button.bg-indigo-600:hover,
+.dark-mode button.bg-indigo-500:hover,
+.dark-mode button.bg-gray-600:hover,
+.dark-mode button.bg-gray-500:hover,
+.dark-mode a.bg-blue-600:hover,
+.dark-mode a.bg-blue-500:hover,
+.dark-mode a.bg-green-600:hover,
+.dark-mode a.bg-green-500:hover,
+.dark-mode a.bg-red-600:hover,
+.dark-mode a.bg-red-500:hover,
+.dark-mode a.bg-purple-600:hover,
+.dark-mode a.bg-purple-500:hover,
+.dark-mode a.bg-indigo-600:hover,
+.dark-mode a.bg-indigo-500:hover,
+.dark-mode a.bg-gray-600:hover,
+.dark-mode a.bg-gray-500:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+/* Mejorar legibilidad de inputs y formularios */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-mode input[type="text"],
+.dark-mode input[type="email"],
+.dark-mode input[type="password"],
+.dark-mode input[type="number"],
+.dark-mode textarea,
+.dark-mode select {
+    color: #F5F5F5 !important;
+    background-color: #2D2D2D !important;
+    border-color: #555555 !important;
+}
+
+/* Asegurar que los enlaces sean visibles */
+a {
+    color: var(--primary-color) !important;
+    transition: opacity 0.2s ease;
+}
+
+a:hover {
+    opacity: 0.8;
+}
+
+.dark-mode a {
+    color: var(--primary-color) !important;
+}
+
+/* Mejorar contraste de labels */
+label {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+}
+
+.dark-mode label {
+    color: #F5F5F5 !important;
+}
+
+/* Asegurar que las tarjetas tengan buen contraste */
+.card,
+.bg-white {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .card,
+.dark-mode .bg-white {
+    background-color: #2D2D2D !important;
+    color: #F5F5F5 !important;
+}
+
+/* Mejorar visibilidad de bordes */
+.border,
+.border-2,
+.border-4 {
+    border-color: var(--border-color) !important;
+}
+
+.dark-mode .border,
+.dark-mode .border-2,
+.dark-mode .border-4 {
+    border-color: #555555 !important;
+}
+
+/* Reglas universales para botones - MODO DÍA */
+/* Asegurar que todos los botones con clases de color de Tailwind tengan texto blanco */
+button.bg-blue-600,
+button.bg-blue-500,
+button.bg-blue-700,
+button.bg-green-600,
+button.bg-green-500,
+button.bg-green-700,
+button.bg-red-600,
+button.bg-red-500,
+button.bg-red-700,
+button.bg-purple-600,
+button.bg-purple-500,
+button.bg-purple-700,
+button.bg-indigo-600,
+button.bg-indigo-500,
+button.bg-indigo-700,
+button.bg-gray-600,
+button.bg-gray-500,
+button.bg-gray-700,
+a.bg-blue-600,
+a.bg-blue-500,
+a.bg-blue-700,
+a.bg-green-600,
+a.bg-green-500,
+a.bg-green-700,
+a.bg-red-600,
+a.bg-red-500,
+a.bg-red-700,
+a.bg-purple-600,
+a.bg-purple-500,
+a.bg-purple-700,
+a.bg-indigo-600,
+a.bg-indigo-500,
+a.bg-indigo-700,
+a.bg-gray-600,
+a.bg-gray-500,
+a.bg-gray-700 {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+/* MODO OSCURO - Asegurar visibilidad de botones */
+.dark-mode button.bg-blue-600,
+.dark-mode button.bg-blue-500,
+.dark-mode button.bg-blue-700,
+.dark-mode button.bg-green-600,
+.dark-mode button.bg-green-500,
+.dark-mode button.bg-green-700,
+.dark-mode button.bg-red-600,
+.dark-mode button.bg-red-500,
+.dark-mode button.bg-red-700,
+.dark-mode button.bg-purple-600,
+.dark-mode button.bg-purple-500,
+.dark-mode button.bg-purple-700,
+.dark-mode button.bg-indigo-600,
+.dark-mode button.bg-indigo-500,
+.dark-mode button.bg-indigo-700,
+.dark-mode button.bg-gray-600,
+.dark-mode button.bg-gray-500,
+.dark-mode button.bg-gray-700,
+.dark-mode a.bg-blue-600,
+.dark-mode a.bg-blue-500,
+.dark-mode a.bg-blue-700,
+.dark-mode a.bg-green-600,
+.dark-mode a.bg-green-500,
+.dark-mode a.bg-green-700,
+.dark-mode a.bg-red-600,
+.dark-mode a.bg-red-500,
+.dark-mode a.bg-red-700,
+.dark-mode a.bg-purple-600,
+.dark-mode a.bg-purple-500,
+.dark-mode a.bg-purple-700,
+.dark-mode a.bg-indigo-600,
+.dark-mode a.bg-indigo-500,
+.dark-mode a.bg-indigo-700,
+.dark-mode a.bg-gray-600,
+.dark-mode a.bg-gray-500,
+.dark-mode a.bg-gray-700 {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Hover states para modo oscuro */
+.dark-mode button.bg-blue-600:hover,
+.dark-mode button.bg-blue-500:hover,
+.dark-mode button.bg-blue-700:hover,
+.dark-mode button.bg-green-600:hover,
+.dark-mode button.bg-green-500:hover,
+.dark-mode button.bg-green-700:hover,
+.dark-mode button.bg-red-600:hover,
+.dark-mode button.bg-red-500:hover,
+.dark-mode button.bg-red-700:hover,
+.dark-mode button.bg-purple-600:hover,
+.dark-mode button.bg-purple-500:hover,
+.dark-mode button.bg-purple-700:hover,
+.dark-mode button.bg-indigo-600:hover,
+.dark-mode button.bg-indigo-500:hover,
+.dark-mode button.bg-indigo-700:hover,
+.dark-mode button.bg-gray-600:hover,
+.dark-mode button.bg-gray-500:hover,
+.dark-mode button.bg-gray-700:hover,
+.dark-mode a.bg-blue-600:hover,
+.dark-mode a.bg-blue-500:hover,
+.dark-mode a.bg-blue-700:hover,
+.dark-mode a.bg-green-600:hover,
+.dark-mode a.bg-green-500:hover,
+.dark-mode a.bg-green-700:hover,
+.dark-mode a.bg-red-600:hover,
+.dark-mode a.bg-red-500:hover,
+.dark-mode a.bg-red-700:hover,
+.dark-mode a.bg-purple-600:hover,
+.dark-mode a.bg-purple-500:hover,
+.dark-mode a.bg-purple-700:hover,
+.dark-mode a.bg-indigo-600:hover,
+.dark-mode a.bg-indigo-500:hover,
+.dark-mode a.bg-indigo-700:hover,
+.dark-mode a.bg-gray-600:hover,
+.dark-mode a.bg-gray-500:hover,
+.dark-mode a.bg-gray-700:hover {
+    filter: brightness(1.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+

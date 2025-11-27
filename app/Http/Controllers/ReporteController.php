@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pedido;
+use App\Models\Venta;
 use App\Models\Producto;
 use App\Models\Material;
 use App\Models\Pago;
@@ -35,7 +35,7 @@ class ReporteController extends Controller
             'usuario_id' => 'nullable|integer|exists:usuario,id',
         ]);
 
-        $query = Pedido::with(['usuario', 'metodoPago'])
+        $query = Venta::with(['usuario', 'metodoPago'])
             ->where('estado', true)
             ->whereBetween('fecha', [$request->fecha_inicio, $request->fecha_fin]);
 
@@ -72,11 +72,11 @@ class ReporteController extends Controller
         $fechaFin = $request->fecha_fin ?? now()->toDateString();
 
         // Estadísticas de ventas
-        $totalVentas = Pedido::where('estado', true)
+        $totalVentas = Venta::where('estado', true)
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('importe_total');
 
-        $ventasPorVendedor = Pedido::select('usuario_id', DB::raw('sum(importe_total) as total'))
+        $ventasPorVendedor = Venta::select('usuario_id', DB::raw('sum(importe_total) as total'))
             ->where('estado', true)
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->with('usuario:id,nombre,apellido')
@@ -84,26 +84,26 @@ class ReporteController extends Controller
             ->get();
 
         // Productos más vendidos
-        $productosMasVendidos = DB::table('detalle_pedido as dp')
-            ->join('pedido as p', 'dp.pedido_id', '=', 'p.id')
-            ->join('producto as pr', 'dp.producto_id', '=', 'pr.id')
-            ->select('pr.id', 'pr.nombre', DB::raw('sum(dp.cantidad) as total_cantidad'), DB::raw('sum(dp.importe_total) as total_ventas'))
-            ->where('p.estado', true)
-            ->whereBetween('p.fecha', [$fechaInicio, $fechaFin])
-            ->whereNotNull('dp.producto_id')
+        $productosMasVendidos = DB::table('detalle_venta as dv')
+            ->join('venta as v', 'dv.venta_id', '=', 'v.id')
+            ->join('producto as pr', 'dv.producto_id', '=', 'pr.id')
+            ->select('pr.id', 'pr.nombre', DB::raw('sum(dv.cantidad) as total_cantidad'), DB::raw('sum(dv.importe_total) as total_ventas'))
+            ->where('v.estado', true)
+            ->whereBetween('v.fecha', [$fechaInicio, $fechaFin])
+            ->whereNotNull('dv.producto_id')
             ->groupBy('pr.id', 'pr.nombre')
             ->orderByDesc('total_cantidad')
             ->limit(10)
             ->get();
 
         // Servicios más vendidos
-        $serviciosMasVendidos = DB::table('detalle_pedido as dp')
-            ->join('pedido as p', 'dp.pedido_id', '=', 'p.id')
-            ->join('servicio as s', 'dp.servicio_id', '=', 's.id')
-            ->select('s.id', 's.nombre', DB::raw('count(*) as total_ventas'), DB::raw('sum(dp.importe_total) as total_ingresos'))
-            ->where('p.estado', true)
-            ->whereBetween('p.fecha', [$fechaInicio, $fechaFin])
-            ->whereNotNull('dp.servicio_id')
+        $serviciosMasVendidos = DB::table('detalle_venta as dv')
+            ->join('venta as v', 'dv.venta_id', '=', 'v.id')
+            ->join('servicio as s', 'dv.servicio_id', '=', 's.id')
+            ->select('s.id', 's.nombre', DB::raw('count(*) as total_ventas'), DB::raw('sum(dv.importe_total) as total_ingresos'))
+            ->where('v.estado', true)
+            ->whereBetween('v.fecha', [$fechaInicio, $fechaFin])
+            ->whereNotNull('dv.servicio_id')
             ->groupBy('s.id', 's.nombre')
             ->orderByDesc('total_ventas')
             ->limit(10)
@@ -154,7 +154,7 @@ class ReporteController extends Controller
         $fechaInicio = $request->fecha_inicio ?? now()->startOfMonth()->toDateString();
         $fechaFin = $request->fecha_fin ?? now()->toDateString();
 
-        $movimientos = MovimientoInventario::with(['material', 'producto', 'usuario', 'pedido'])
+        $movimientos = MovimientoInventario::with(['material', 'producto', 'usuario', 'venta'])
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->orderBy('fecha', 'desc')
             ->get();

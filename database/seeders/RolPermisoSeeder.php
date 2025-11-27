@@ -39,24 +39,23 @@ class RolPermisoSeeder extends Seeder
             $carpintero->permisos()->sync($permisosCarpintero);
         }
 
-        // Secretaria: usuarios, pedidos/ventas, pagos, reportes
+        // Secretaria: usuarios, ventas, pagos, reportes, roles
         if ($secretaria) {
             $permisosSecretaria = Permiso::whereIn('nombre', [
                 'usuarios.ver', 'usuarios.crear', 'usuarios.editar',
-                'pedidos.ver', 'pedidos.crear', 'pedidos.editar', 'pedidos.aprobar',
-                'ventas.ver', 'ventas.crear', 'ventas.editar',
+                'ventas.ver', 'ventas.crear', 'ventas.editar', 'ventas.aprobar',
                 'pagos.ver', 'pagos.crear', 'pagos.registrar',
                 'reportes.ver', 'reportes.exportar',
+                'roles.ver', 'roles.crear', 'roles.editar',
             ])->pluck('id');
             $secretaria->permisos()->sync($permisosSecretaria);
         }
 
-        // Cliente: solo ver productos y servicios, crear pedidos
+        // Cliente: solo ver productos y servicios, crear ventas
         if ($cliente) {
             $permisosCliente = Permiso::whereIn('nombre', [
                 'productos.ver',
                 'servicios.ver',
-                'pedidos.crear',
                 'ventas.crear',
             ])->pluck('id');
             $cliente->permisos()->sync($permisosCliente);

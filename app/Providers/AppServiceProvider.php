@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Configurar route model binding para roles
+        // Laravel espera 'role' pero nuestro modelo es 'Rol'
+        \Illuminate\Support\Facades\Route::bind('role', function ($value) {
+            return \App\Models\Rol::findOrFail($value);
+        });
     }
 }

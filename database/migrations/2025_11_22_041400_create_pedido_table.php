@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pedido', function (Blueprint $table) {
-            $table->comment('Pedidos de clientes');
+        Schema::create('venta', function (Blueprint $table) {
+            $table->comment('Ventas de clientes');
             $table->bigIncrements('id');
-            $table->timestamp('fecha')->nullable()->index('idx_pedido_fecha');
+            $table->timestamp('fecha')->nullable()->index('idx_venta_fecha');
             $table->string('descripcion')->nullable();
             $table->double('importe_total')->nullable();
             $table->double('importe_total_desc')->nullable();
             $table->boolean('estado')->nullable();
-            $table->unsignedBigInteger('metodo_pago_id')->index('idx_pedido_metodo_pago');
-            $table->unsignedBigInteger('usuario_id')->index('idx_pedido_usuario');
+            $table->unsignedBigInteger('metodo_pago_id')->index('idx_venta_metodo_pago');
+            $table->unsignedBigInteger('usuario_id')->index('idx_venta_usuario');
 
             $table->foreign('metodo_pago_id')->references('id')->on('metodo_pago')->onDelete('restrict');
             $table->foreign('usuario_id')->references('id')->on('usuario')->onDelete('cascade');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pedido');
+        Schema::dropIfExists('venta');
     }
 };

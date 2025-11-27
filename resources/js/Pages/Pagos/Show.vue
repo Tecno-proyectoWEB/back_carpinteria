@@ -5,12 +5,20 @@
                 <h1 class="text-3xl font-bold text-gray-900">Detalle de Pago</h1>
             </div>
 
+            <!-- QR de Pago (si existe) -->
+            <div v-if="pagoConQR && pagoConQR.estado === 'PENDIENTE'" class="mb-6">
+                <QRPayment
+                    :pago="pagoConQR"
+                    @show-modal="showModal = true"
+                />
+            </div>
+
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Pedido</label>
-                        <Link :href="route('pedidos.show', pago.pedido_id)" class="mt-1 text-sm text-blue-600 hover:text-blue-900">
-                            Pedido #{{ pago.pedido_id }}
+                        <label class="block text-sm font-medium text-gray-700">Venta</label>
+                        <Link :href="route('ventas.show', pago.venta_id)" class="mt-1 text-sm text-blue-600 hover:text-blue-900">
+                            Venta #{{ pago.venta_id }}
                         </Link>
                     </div>
 
@@ -74,17 +82,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal de Estado de Pago -->
+        <PaymentModal
+            v-if="pagoConQR"
+            :show="showModal"
+            :pago="pagoConQR"
+            :payment-info="paymentInfo"
+            @close="showModal = false"
+        />
     </Layout>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { Link, router } from '@inertiajs/vue3'
 import { route } from '../../ziggy.js'
 import Layout from '../Layout.vue'
+import QRPayment from '../../Components/QRPayment.vue'
+import PaymentModal from '../../Components/PaymentModal.vue'
 
-defineProps({
+const props = defineProps({
     auth: Object,
     pago: Object,
+    pagoConQR: Object,
 })
+
+const showModal = ref(false)
+const paymentInfo = ref(null)
+
+// NO consultar automáticamente al cargar - solo cuando el usuario abra el modal
+// Esto evita consultas innecesarias que pueden causar problemas de rendimiento
 </script>
 

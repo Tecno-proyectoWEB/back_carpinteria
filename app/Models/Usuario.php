@@ -52,9 +52,9 @@ class Usuario extends Authenticatable
         return $this->belongsTo(Rol::class);
     }
 
-    public function pedidos()
+    public function ventas()
     {
-        return $this->hasMany(Pedido::class);
+        return $this->hasMany(Venta::class);
     }
 
     public function movimientosInventario()
@@ -74,9 +74,25 @@ class Usuario extends Authenticatable
 
     public function tienePermiso($permiso)
     {
+        // Asegurar que el rol esté cargado
+        if (!$this->relationLoaded('rol')) {
+            $this->load('rol');
+        }
+
         if (!$this->rol) {
             return false;
         }
+
+        // Asegurar que los permisos estén cargados en el rol
+        if (!$this->rol->relationLoaded('permisos')) {
+            $this->rol->load('permisos');
+        }
+
+        // Verificar el permiso en la colección cargada o hacer consulta
+        if ($this->rol->relationLoaded('permisos') && $this->rol->permisos) {
+            return $this->rol->permisos->contains('nombre', $permiso);
+        }
+
         return $this->rol->permisos()->where('nombre', $permiso)->exists();
     }
 

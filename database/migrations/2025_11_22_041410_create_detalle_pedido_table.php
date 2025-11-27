@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('detalle_pedido', function (Blueprint $table) {
+        Schema::create('detalle_venta', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('producto_id')->nullable()->index('idx_detalle_pedido_producto');
-            $table->unsignedBigInteger('pedido_id')->nullable()->index('idx_detalle_pedido_pedido');
+            $table->unsignedBigInteger('producto_id')->nullable()->index('idx_detalle_venta_producto');
+            $table->unsignedBigInteger('venta_id')->nullable()->index('idx_detalle_venta_venta');
             $table->integer('cantidad');
             $table->boolean('estado')->nullable()->default(false);
             $table->double('importe_total')->nullable()->default(0);
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->double('precio_unitario')->nullable();
 
             $table->foreign('producto_id')->references('id')->on('producto')->onDelete('set null');
-            $table->foreign('pedido_id')->references('id')->on('pedido')->onDelete('cascade');
+            $table->foreign('venta_id')->references('id')->on('venta')->onDelete('cascade');
         });
     }
 
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('detalle_pedido');
+        Schema::dropIfExists('detalle_venta');
     }
 };

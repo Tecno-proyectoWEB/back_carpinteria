@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ProductoSeeder::class,
             ServicioSeeder::class,
             // CompraSeeder eliminado - modelo Compra fue eliminado
-            PedidoSeeder::class,
+            VentaSeeder::class,
         ]);
     }
 }
