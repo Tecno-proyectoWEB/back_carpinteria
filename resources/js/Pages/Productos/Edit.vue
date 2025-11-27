@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Editar Producto</h2>
 
@@ -60,7 +60,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Imagen Actual
                             </label>
-                            <div v-if="producto.imagen" class="mb-2">
+                            <div v-if="producto?.imagen" class="mb-2">
                                 <img
                                     :src="`/storage/${producto.imagen}`"
                                     alt="Imagen actual"
@@ -87,7 +87,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('productos.index')"
+                                :href="getRoute('productos.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -111,25 +111,30 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    producto: Object,
-    categorias: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    producto: {
+        type: Object,
+        default: () => ({}),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const form = useForm({
-    nombre: props.producto.nombre,
-    descripcion: props.producto.descripcion || '',
-    categoria_id: props.producto.categoria_id,
-    stock: props.producto.stock,
-    stock_minimo: props.producto.stock_minimo || 0,
-    precio_unitario: props.producto.precio_unitario,
+    nombre: props.producto?.nombre || '',
+    descripcion: props.producto?.descripcion || '',
+    categoria_id: props.producto?.categoria_id || '',
+    stock: props.producto?.stock || 0,
+    stock_minimo: props.producto?.stock_minimo || 0,
+    precio_unitario: props.producto?.precio_unitario || 0,
     imagen: null,
     _method: 'PUT',
 });
@@ -149,7 +154,8 @@ const handleImageChange = (event) => {
 };
 
 const submit = () => {
-    form.post(route('productos.update', props.producto.id), {
+    if (!props.producto?.id) return;
+    form.post(getRoute('productos.update', props.producto.id), {
         forceFormData: true,
     });
 };

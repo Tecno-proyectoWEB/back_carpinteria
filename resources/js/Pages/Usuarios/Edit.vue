@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Editar Usuario</h2>
 
@@ -130,7 +130,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('usuarios.index')"
+                                :href="getRoute('usuarios.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -153,35 +153,43 @@
 
 <script setup>
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    usuario: Object,
-    roles: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    usuario: {
+        type: Object,
+        default: () => ({}),
+    },
+    roles: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const form = useForm({
-    nombre: props.usuario.nombre,
-    apellido: props.usuario.apellido,
-    email: props.usuario.email,
-    telefono: props.usuario.telefono || '',
+    nombre: props.usuario?.nombre || '',
+    apellido: props.usuario?.apellido || '',
+    email: props.usuario?.email || '',
+    telefono: props.usuario?.telefono || '',
     password: '',
     password_confirmation: '',
-    rol_id: props.usuario.rol_id,
-    estado: props.usuario.estado,
-    disponibilidad: props.usuario.disponibilidad,
-    cuenta_no_expirada: props.usuario.cuenta_no_expirada,
-    cuenta_no_bloqueada: props.usuario.cuenta_no_bloqueada,
-    credenciales_no_expiradas: props.usuario.credenciales_no_expiradas,
+    rol_id: props.usuario?.rol_id || '',
+    estado: props.usuario?.estado ?? true,
+    disponibilidad: props.usuario?.disponibilidad ?? true,
+    cuenta_no_expirada: props.usuario?.cuenta_no_expirada ?? true,
+    cuenta_no_bloqueada: props.usuario?.cuenta_no_bloqueada ?? true,
+    credenciales_no_expiradas: props.usuario?.credenciales_no_expiradas ?? true,
     _method: 'PUT',
 });
 
 const submit = () => {
-    form.post(route('usuarios.update', props.usuario.id));
+    if (!props.usuario?.id) return;
+    form.post(getRoute('usuarios.update', props.usuario.id));
 };
 </script>
 

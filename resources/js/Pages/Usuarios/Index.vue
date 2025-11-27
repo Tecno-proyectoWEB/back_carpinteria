@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Usuarios</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('usuarios.create')"
+                        :href="getRoute('usuarios.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nuevo Usuario
@@ -62,57 +61,58 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="usuarios.data"
+                    :data="usuariosData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
                     :paginated="false"
                 >
                     <template #cell-nombre_completo="{ row }">
-                        {{ row.nombre }} {{ row.apellido }}
+                        {{ row?.nombre || '' }} {{ row?.apellido || '' }}
                     </template>
                     <template #cell-rol="{ value }">
                         <Badge variant="info">{{ value?.nombre || 'Sin rol' }}</Badge>
                     </template>
                     <template #cell-estado="{ row }">
-                        <Badge :variant="row.estado ? 'success' : 'error'">
-                            {{ row.estado ? 'Activo' : 'Inactivo' }}
+                        <Badge :variant="row?.estado ? 'success' : 'error'">
+                            {{ row?.estado ? 'Activo' : 'Inactivo' }}
                         </Badge>
                     </template>
                     <template #cell-disponibilidad="{ row }">
-                        <Badge :variant="row.disponibilidad ? 'success' : 'warning'">
-                            {{ row.disponibilidad ? 'Disponible' : 'No disponible' }}
+                        <Badge :variant="row?.disponibilidad ? 'success' : 'warning'">
+                            {{ row?.disponibilidad ? 'Disponible' : 'No disponible' }}
                         </Badge>
                     </template>
                     <template #cell-cuenta="{ row }">
                         <div class="text-xs space-y-1">
-                            <div :class="row.cuenta_no_expirada ? 'text-green-600' : 'text-red-600'">
-                                {{ row.cuenta_no_expirada ? '✓' : '✗' }} No expirada
+                            <div :class="row?.cuenta_no_expirada ? 'text-green-600' : 'text-red-600'">
+                                {{ row?.cuenta_no_expirada ? '✓' : '✗' }} No expirada
                             </div>
-                            <div :class="row.cuenta_no_bloqueada ? 'text-green-600' : 'text-red-600'">
-                                {{ row.cuenta_no_bloqueada ? '✓' : '✗' }} No bloqueada
+                            <div :class="row?.cuenta_no_bloqueada ? 'text-green-600' : 'text-red-600'">
+                                {{ row?.cuenta_no_bloqueada ? '✓' : '✗' }} No bloqueada
                             </div>
-                            <div :class="row.credenciales_no_expiradas ? 'text-green-600' : 'text-red-600'">
-                                {{ row.credenciales_no_expiradas ? '✓' : '✗' }} Credenciales válidas
+                            <div :class="row?.credenciales_no_expiradas ? 'text-green-600' : 'text-red-600'">
+                                {{ row?.credenciales_no_expiradas ? '✓' : '✗' }} Credenciales válidas
                             </div>
                         </div>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('usuarios.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('usuarios.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver
                         </Link>
                         <Link
-                            v-if="canEdit"
-                            :href="route('usuarios.edit', row.id)"
+                            v-if="canEdit && row?.id"
+                            :href="getRoute('usuarios.edit', row.id)"
                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                             Editar
                         </Link>
                         <button
-                            v-if="canDelete && row.id !== currentUserId"
+                            v-if="canDelete && row?.id && row.id !== currentUserId"
                             @click="deleteUsuario(row)"
                             class="text-red-600 hover:text-red-900"
                         >
@@ -142,24 +142,41 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    usuarios: Object,
-    roles: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    usuarios: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    roles: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que usuarios.data sea un array válido
+const usuariosData = computed(() => {
+    if (!props.usuarios || !props.usuarios.data) {
+        return [];
+    }
+    return Array.isArray(props.usuarios.data) ? props.usuarios.data : [];
 });
 
 const columns = [
@@ -180,19 +197,19 @@ const filters = ref({
 });
 
 const currentUserId = computed(() => {
-    return window.$page?.props?.auth?.user?.id;
+    return page.props.auth?.user?.id;
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO'].includes(rol);
 });
 
 const canEdit = computed(() => canCreate.value);
 const canDelete = computed(() => canCreate.value);
 
 const applyFilters = () => {
-    router.get(route('usuarios.index'), filters.value, {
+    router.get(getRoute('usuarios.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -204,8 +221,9 @@ const clearFilters = () => {
 };
 
 const deleteUsuario = (usuario) => {
-    if (confirm(`¿Está seguro de eliminar al usuario "${usuario.nombre} ${usuario.apellido}"?`)) {
-        router.delete(route('usuarios.destroy', usuario.id), {
+    if (!usuario?.id) return;
+    if (confirm(`¿Está seguro de eliminar al usuario "${usuario?.nombre || ''} ${usuario?.apellido || ''}"?`)) {
+        router.delete(getRoute('usuarios.destroy', usuario.id), {
             preserveScroll: true,
         });
     }

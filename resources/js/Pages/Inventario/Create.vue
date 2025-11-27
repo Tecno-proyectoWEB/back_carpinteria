@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Registrar Movimiento de Inventario</h2>
 
@@ -83,12 +83,12 @@
 
                         <div v-if="selectedItem" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
                             <p class="text-sm text-blue-800">
-                                <strong>Stock actual:</strong> {{ selectedItem.stock || selectedItem.stock_actual }}
-                                <span v-if="selectedItem.stock_minimo" class="ml-4">
+                                <strong>Stock actual:</strong> {{ selectedItem?.stock || selectedItem?.stock_actual || 0 }}
+                                <span v-if="selectedItem?.stock_minimo" class="ml-4">
                                     <strong>Stock mínimo:</strong> {{ selectedItem.stock_minimo }}
                                 </span>
                             </p>
-                            <p v-if="form.tipo === 'SALIDA' && selectedItem && (selectedItem.stock || selectedItem.stock_actual) < form.cantidad" class="text-red-600 text-sm mt-2">
+                            <p v-if="form.tipo === 'SALIDA' && selectedItem && ((selectedItem?.stock || selectedItem?.stock_actual || 0) < form.cantidad)" class="text-red-600 text-sm mt-2">
                                 ⚠️ La cantidad a retirar excede el stock disponible
                             </p>
                         </div>
@@ -117,7 +117,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('inventario.index')"
+                                :href="getRoute('inventario.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -141,16 +141,23 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Select from '@/Components/Form/Select.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 
 const props = defineProps({
-    materiales: Array,
-    productos: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    materiales: {
+        type: Array,
+        default: () => [],
+    },
+    productos: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const itemType = ref('material');
@@ -165,10 +172,10 @@ const form = useForm({
 });
 
 const selectedItem = computed(() => {
-    if (itemType.value === 'material' && form.material_id) {
-        return props.materiales.find(m => m.id === form.material_id);
-    } else if (itemType.value === 'producto' && form.producto_id) {
-        return props.productos.find(p => p.id === form.producto_id);
+    if (itemType.value === 'material' && form.material_id && props.materiales) {
+        return props.materiales.find(m => m?.id === form.material_id);
+    } else if (itemType.value === 'producto' && form.producto_id && props.productos) {
+        return props.productos.find(p => p?.id === form.producto_id);
     }
     return null;
 });
@@ -182,7 +189,7 @@ const onProductoChange = () => {
 };
 
 const submit = () => {
-    form.post(route('inventario.store'));
+    form.post(getRoute('inventario.store'));
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Editar Material</h2>
 
@@ -124,7 +124,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('materiales.index')"
+                                :href="getRoute('materiales.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -148,31 +148,41 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    material: Object,
-    categorias: Array,
-    sectores: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    material: {
+        type: Object,
+        default: () => ({}),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    sectores: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const form = useForm({
-    nombre: props.material.nombre,
-    descripcion: props.material.descripcion || '',
-    categoria_id: props.material.categoria_id,
-    sector_id: props.material.sector_id,
-    stock_actual: props.material.stock_actual,
-    stock_minimo: props.material.stock_minimo || 0,
-    punto_reorden: props.material.punto_reorden || 0,
-    precio: props.material.precio || 0,
-    unidad_medida: props.material.unidad_medida || '',
+    nombre: props.material?.nombre || '',
+    descripcion: props.material?.descripcion || '',
+    categoria_id: props.material?.categoria_id || '',
+    sector_id: props.material?.sector_id || '',
+    stock_actual: props.material?.stock_actual || 0,
+    stock_minimo: props.material?.stock_minimo || 0,
+    punto_reorden: props.material?.punto_reorden || 0,
+    precio: props.material?.precio || 0,
+    unidad_medida: props.material?.unidad_medida || '',
     imagen: null,
-    activo: props.material.activo,
+    activo: props.material?.activo ?? true,
     _method: 'PUT',
 });
 
@@ -191,7 +201,8 @@ const handleImageChange = (event) => {
 };
 
 const submit = () => {
-    form.post(route('materiales.update', props.material.id), {
+    if (!props.material?.id) return;
+    form.post(getRoute('materiales.update', props.material.id), {
         forceFormData: true,
     });
 };

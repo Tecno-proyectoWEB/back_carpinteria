@@ -20,6 +20,12 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'usuarios.editar'],
             ['nombre' => 'usuarios.eliminar'],
             
+            // Roles
+            ['nombre' => 'roles.ver'],
+            ['nombre' => 'roles.crear'],
+            ['nombre' => 'roles.editar'],
+            ['nombre' => 'roles.eliminar'],
+            
             // Productos
             ['nombre' => 'productos.ver'],
             ['nombre' => 'productos.crear'],
@@ -32,41 +38,44 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'servicios.editar'],
             ['nombre' => 'servicios.eliminar'],
             
-            // Insumos/Materiales
-            ['nombre' => 'insumos.ver'],
-            ['nombre' => 'insumos.crear'],
-            ['nombre' => 'insumos.editar'],
-            ['nombre' => 'insumos.eliminar'],
+            // Materiales (antes insumos)
+            ['nombre' => 'materiales.ver'],
+            ['nombre' => 'materiales.crear'],
+            ['nombre' => 'materiales.editar'],
+            ['nombre' => 'materiales.eliminar'],
             
-            // Inventario
-            ['nombre' => 'inventario.ver'],
-            ['nombre' => 'inventario.ingreso'],
-            ['nombre' => 'inventario.salida'],
+            // Proveedores
+            ['nombre' => 'proveedores.ver'],
+            ['nombre' => 'proveedores.crear'],
+            ['nombre' => 'proveedores.editar'],
+            ['nombre' => 'proveedores.eliminar'],
             
-            // Ventas
-            ['nombre' => 'ventas.ver'],
-            ['nombre' => 'ventas.crear'],
-            ['nombre' => 'ventas.editar'],
-            ['nombre' => 'ventas.anular'],
-            
-            // Pagos
-            ['nombre' => 'pagos.ver'],
-            ['nombre' => 'pagos.crear'],
-            ['nombre' => 'pagos.registrar'],
+            // Pedidos (Ventas)
+            ['nombre' => 'pedidos.ver'],
+            ['nombre' => 'pedidos.crear'],
+            ['nombre' => 'pedidos.editar'],
+            ['nombre' => 'pedidos.anular'],
             
             // Compras
             ['nombre' => 'compras.ver'],
             ['nombre' => 'compras.crear'],
             ['nombre' => 'compras.editar'],
             ['nombre' => 'compras.eliminar'],
+            ['nombre' => 'compras.confirmar'],
+            
+            // Inventario
+            ['nombre' => 'inventario.ver'],
+            ['nombre' => 'inventario.ingreso'],
+            ['nombre' => 'inventario.salida'],
+            
+            // Pagos
+            ['nombre' => 'pagos.ver'],
+            ['nombre' => 'pagos.crear'],
+            ['nombre' => 'pagos.registrar'],
             
             // Reportes
             ['nombre' => 'reportes.ver'],
             ['nombre' => 'reportes.exportar'],
-            
-            // Configuración
-            ['nombre' => 'configuracion.ver'],
-            ['nombre' => 'configuracion.editar'],
         ];
 
         foreach ($permisos as $permiso) {

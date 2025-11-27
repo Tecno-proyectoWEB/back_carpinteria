@@ -1,13 +1,12 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">Reportes del Negocio</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Reporte de Ventas -->
                     <Link
-                        :href="route('reportes.ventas')"
+                        :href="getRoute('reportes.ventas')"
                         class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
                     >
                         <div class="flex items-center justify-between mb-4">
@@ -25,7 +24,7 @@
 
                     <!-- Reporte de Compras -->
                     <Link
-                        :href="route('reportes.compras')"
+                        :href="getRoute('reportes.compras')"
                         class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
                     >
                         <div class="flex items-center justify-between mb-4">
@@ -43,7 +42,7 @@
 
                     <!-- Reporte de Inventario -->
                     <Link
-                        :href="route('reportes.inventario')"
+                        :href="getRoute('reportes.inventario')"
                         class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
                     >
                         <div class="flex items-center justify-between mb-4">
@@ -59,18 +58,13 @@
                         </p>
                     </Link>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
-
-const props = defineProps({
-    menuItems: Array,
-    pageVisits: Number,
-});
 </script>
 

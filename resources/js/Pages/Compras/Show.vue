@@ -1,30 +1,30 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-5xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Compra #{{ compra.id }}</h2>
-                            <p class="text-sm text-gray-500 mt-1">
+                            <h2 class="text-2xl font-bold text-gray-900">Compra #{{ compra?.id || 'N/A' }}</h2>
+                            <p v-if="compra?.fecha" class="text-sm text-gray-500 mt-1">
                                 {{ new Date(compra.fecha).toLocaleDateString('es-AR') }}
                             </p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <Badge
-                                :variant="compra.estado === 'COMPLETADA' ? 'success' : compra.estado === 'CANCELADA' ? 'error' : 'warning'"
+                                :variant="compra?.estado === 'COMPLETADA' ? 'success' : compra?.estado === 'CANCELADA' ? 'error' : 'warning'"
                             >
-                                {{ compra.estado }}
+                                {{ compra?.estado || 'N/A' }}
                             </Badge>
                             <button
-                                v-if="compra.estado === 'PENDIENTE' && canConfirm"
+                                v-if="compra?.estado === 'PENDIENTE' && canConfirm"
                                 @click="confirmar"
                                 class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                             >
                                 Confirmar Compra
                             </button>
                             <Link
-                                :href="route('compras.index')"
+                                :href="getRoute('compras.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Volver
@@ -63,16 +63,16 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr v-for="detalle in compra.detalles" :key="detalle.id">
-                                            <td class="px-4 py-3 text-sm">{{ detalle.material?.nombre }}</td>
-                                            <td class="px-4 py-3 text-sm">{{ detalle.cantidad }} {{ detalle.material?.unidad_medida || '' }}</td>
-                                            <td class="px-4 py-3 text-sm">${{ parseFloat(detalle.precio).toFixed(2) }}</td>
+                                        <tr v-for="detalle in (compra?.detalles || [])" :key="detalle?.id || Math.random()">
+                                            <td class="px-4 py-3 text-sm">{{ detalle?.material?.nombre || 'N/A' }}</td>
+                                            <td class="px-4 py-3 text-sm">{{ detalle?.cantidad || 0 }} {{ detalle?.material?.unidad_medida || '' }}</td>
+                                            <td class="px-4 py-3 text-sm">${{ parseFloat(detalle?.precio || 0).toFixed(2) }}</td>
                                             <td class="px-4 py-3 text-sm font-semibold">
-                                                ${{ parseFloat(detalle.importe_desc).toFixed(2) }}
+                                                ${{ parseFloat(detalle?.importe_desc || 0).toFixed(2) }}
                                             </td>
                                             <td class="px-4 py-3 text-sm">
-                                                <Badge :variant="detalle.estado === 'RECIBIDO' ? 'success' : 'warning'">
-                                                    {{ detalle.estado }}
+                                                <Badge :variant="detalle?.estado === 'RECIBIDO' ? 'success' : 'warning'">
+                                                    {{ detalle?.estado || 'N/A' }}
                                                 </Badge>
                                             </td>
                                         </tr>
@@ -85,17 +85,17 @@
                                             </td>
                                             <td></td>
                                         </tr>
-                                        <tr v-if="compra.importe_descuento > 0">
+                                        <tr v-if="(compra?.importe_descuento || 0) > 0">
                                             <td colspan="3" class="px-4 py-3 text-right font-semibold">Descuento:</td>
                                             <td class="px-4 py-3 text-red-600 font-semibold">
-                                                -${{ parseFloat(compra.importe_descuento).toFixed(2) }}
+                                                -${{ parseFloat(compra?.importe_descuento || 0).toFixed(2) }}
                                             </td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td colspan="3" class="px-4 py-3 text-right font-semibold">Total:</td>
                                             <td class="px-4 py-3 text-xl font-bold text-green-600">
-                                                ${{ parseFloat(compra.importe_total).toFixed(2) }}
+                                                ${{ parseFloat(compra?.importe_total || 0).toFixed(2) }}
                                             </td>
                                             <td></td>
                                         </tr>
@@ -141,28 +141,36 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    compra: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    compra: {
+        type: Object,
+        default: () => ({}),
+    },
+    },
+    },
 });
 
 const subtotal = computed(() => {
-    return props.compra.detalles?.reduce((sum, detalle) => sum + parseFloat(detalle.importe_desc || detalle.importe), 0) || 0;
+    if (!props.compra?.detalles || !Array.isArray(props.compra.detalles)) return 0;
+    return props.compra.detalles.reduce((sum, detalle) => sum + parseFloat(detalle?.importe_desc || detalle?.importe || 0), 0);
 });
 
 const canConfirm = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'SECRETARIA'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'SECRETARIA'].includes(rol);
 });
 
 const confirmar = () => {
+    if (!props.compra?.id) return;
     if (confirm('¿Está seguro de confirmar esta compra? Esto actualizará el stock de los materiales.')) {
-        router.post(route('compras.confirmar', props.compra.id), {}, {
+        router.post(getRoute('compras.confirmar', props.compra.id), {}, {
             preserveScroll: true,
         });
     }

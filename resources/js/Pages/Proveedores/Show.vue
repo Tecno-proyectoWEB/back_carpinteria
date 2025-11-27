@@ -1,23 +1,23 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-4xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900">{{ proveedor.nombre }}</h2>
-                            <p class="text-sm text-gray-500 mt-1">ID: {{ proveedor.id }}</p>
+                            <h2 class="text-2xl font-bold text-gray-900">{{ proveedor?.nombre || 'Proveedor' }}</h2>
+                            <p v-if="proveedor?.id" class="text-sm text-gray-500 mt-1">ID: {{ proveedor.id }}</p>
                         </div>
                         <div class="flex space-x-2">
                             <Link
-                                v-if="canEdit"
-                                :href="route('proveedores.edit', proveedor.id)"
+                                v-if="canEdit && proveedor?.id"
+                                :href="getRoute('proveedores.edit', proveedor.id)"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                             >
                                 Editar
                             </Link>
                             <Link
-                                :href="route('proveedores.index')"
+                                :href="getRoute('proveedores.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Volver
@@ -106,7 +106,8 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <Link
-                                                    :href="route('compras.show', compra.id)"
+                                                    v-if="compra?.id"
+                                                    :href="getRoute('compras.show', compra.id)"
                                                     class="text-indigo-600 hover:text-indigo-900"
                                                 >
                                                     Ver Detalle
@@ -129,19 +130,25 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    proveedor: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    proveedor: {
+        type: Object,
+        default: () => ({}),
+    },
+    },
+    },
 });
 
 const canEdit = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'SECRETARIA'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'SECRETARIA'].includes(rol);
 });
 
 const formatDate = (date) => {

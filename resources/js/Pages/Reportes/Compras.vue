@@ -1,11 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-7xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Reporte de Compras</h2>
                     <Link
-                        :href="route('reportes.index')"
+                        :href="getRoute('reportes.index')"
                         class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                     >
                         Volver
@@ -179,18 +179,40 @@
 <script setup>
 import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
-    compras: Array,
-    resumen: Object,
-    compras_por_proveedor: Array,
-    materiales_mas_comprados: Array,
-    compras_proveedor: Array,
-    proveedores: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    compras: {
+        type: Array,
+        default: () => [],
+    },
+    resumen: {
+        type: Object,
+        default: () => ({}),
+    },
+    compras_por_proveedor: {
+        type: Array,
+        default: () => [],
+    },
+    materiales_mas_comprados: {
+        type: Array,
+        default: () => [],
+    },
+    compras_proveedor: {
+        type: Array,
+        default: () => [],
+    },
+    proveedores: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const filters = ref({
@@ -200,7 +222,7 @@ const filters = ref({
 });
 
 const applyFilters = () => {
-    router.get(route('reportes.compras'), filters.value, {
+    router.get(getRoute('reportes.compras'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });

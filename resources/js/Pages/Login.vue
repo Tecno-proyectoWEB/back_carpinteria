@@ -43,7 +43,7 @@
                     </div>
                 </div>
 
-                <div v-if="form.errors.message" class="text-red-500 text-sm text-center">
+                <div v-if="form.errors.message" class="text-red-500 text-sm text-center bg-red-50 p-3 rounded-md mt-4">
                     {{ form.errors.message }}
                 </div>
 

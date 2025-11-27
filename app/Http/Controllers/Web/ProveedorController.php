@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ProveedorController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('proveedores.ver')) {
-            abort(403, 'No tiene permiso para ver proveedores');
-        }
+        $this->autorizarPermiso('proveedores.ver', 'No tiene permiso para ver proveedores');
 
         $query = Proveedor::query();
 
@@ -49,18 +48,14 @@ class ProveedorController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('proveedores.crear')) {
-            abort(403, 'No tiene permiso para crear proveedores');
-        }
+        $this->autorizarPermiso('proveedores.crear', 'No tiene permiso para crear proveedores');
 
         return Inertia::render('Proveedores/Create');
     }
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('proveedores.crear')) {
-            abort(403, 'No tiene permiso para crear proveedores');
-        }
+        $this->autorizarPermiso('proveedores.crear', 'No tiene permiso para crear proveedores');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -84,7 +79,7 @@ class ProveedorController extends Controller
             'tabla_afectada' => 'proveedor',
             'registro_id' => $proveedor->id,
             'datos_nuevos' => $proveedor->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -94,9 +89,7 @@ class ProveedorController extends Controller
 
     public function show(Proveedor $proveedor)
     {
-        if (!Auth::user()->tienePermiso('proveedores.ver')) {
-            abort(403, 'No tiene permiso para ver proveedores');
-        }
+        $this->autorizarPermiso('proveedores.ver', 'No tiene permiso para ver proveedores');
 
         $proveedor->load('compras');
 
@@ -107,9 +100,7 @@ class ProveedorController extends Controller
 
     public function edit(Proveedor $proveedor)
     {
-        if (!Auth::user()->tienePermiso('proveedores.editar')) {
-            abort(403, 'No tiene permiso para editar proveedores');
-        }
+        $this->autorizarPermiso('proveedores.editar', 'No tiene permiso para editar proveedores');
 
         return Inertia::render('Proveedores/Edit', [
             'proveedor' => $proveedor,
@@ -118,9 +109,7 @@ class ProveedorController extends Controller
 
     public function update(Request $request, Proveedor $proveedor)
     {
-        if (!Auth::user()->tienePermiso('proveedores.editar')) {
-            abort(403, 'No tiene permiso para editar proveedores');
-        }
+        $this->autorizarPermiso('proveedores.editar', 'No tiene permiso para editar proveedores');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -146,7 +135,7 @@ class ProveedorController extends Controller
             'registro_id' => $proveedor->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => $proveedor->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -156,9 +145,7 @@ class ProveedorController extends Controller
 
     public function destroy(Proveedor $proveedor)
     {
-        if (!Auth::user()->tienePermiso('proveedores.eliminar')) {
-            abort(403, 'No tiene permiso para eliminar proveedores');
-        }
+        $this->autorizarPermiso('proveedores.eliminar', 'No tiene permiso para eliminar proveedores');
 
         \App\Models\Bitacora::create([
             'accion' => 'Proveedor eliminado',
@@ -166,7 +153,7 @@ class ProveedorController extends Controller
             'tabla_afectada' => 'proveedor',
             'registro_id' => $proveedor->id,
             'datos_anteriores' => $proveedor->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 

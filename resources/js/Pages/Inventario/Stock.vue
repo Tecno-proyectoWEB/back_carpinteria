@@ -1,14 +1,14 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-7xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-3xl font-bold text-gray-900">Stock Actual</h2>
                         <p class="text-gray-600 mt-1">Inventario actual de materiales y productos</p>
                     </div>
                     <Link
-                        :href="route('inventario.index')"
+                        :href="getRoute('inventario.index')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         Ver Movimientos
@@ -204,16 +204,29 @@
 <script setup>
 import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
 const props = defineProps({
-    materiales: Array,
-    productos: Array,
-    estadisticas: Object,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    materiales: {
+        type: Array,
+        default: () => [],
+    },
+    productos: {
+        type: Array,
+        default: () => [],
+    },
+    estadisticas: {
+        type: Object,
+        default: () => ({}),
+    },
+    },
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const filters = ref({
@@ -224,7 +237,7 @@ const filters = ref({
 });
 
 const applyFilters = () => {
-    router.get(route('inventario.stock'), filters.value, {
+    router.get(getRoute('inventario.stock'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });

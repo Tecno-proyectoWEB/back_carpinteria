@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-5xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Crear Nueva Compra</h2>
 
@@ -74,7 +74,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('compras.index')"
+                                :href="getRoute('compras.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -98,6 +98,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Select from '@/Components/Form/Select.vue';
@@ -105,10 +106,16 @@ import DatePicker from '@/Components/Form/DatePicker.vue';
 import MaterialSelector from '@/Components/MaterialSelector.vue';
 
 const props = defineProps({
-    materiales: Array,
-    proveedores: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    materiales: {
+        type: Array,
+        default: () => [],
+    },
+    proveedores: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const estados = [
@@ -128,7 +135,8 @@ const form = useForm({
 });
 
 const subtotal = computed(() => {
-    return form.detalles.reduce((sum, item) => sum + item.importe, 0);
+    if (!form.detalles || !Array.isArray(form.detalles)) return 0;
+    return form.detalles.reduce((sum, item) => sum + (item?.importe || 0), 0);
 });
 
 const total = computed(() => {
@@ -136,7 +144,7 @@ const total = computed(() => {
 });
 
 const submit = () => {
-    form.post(route('compras.store'));
+    form.post(getRoute('compras.store'));
 };
 </script>
 

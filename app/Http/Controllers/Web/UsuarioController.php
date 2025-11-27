@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Usuario;
 use App\Models\Rol;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class UsuarioController extends Controller
 {
+    use HasPermissions;
+
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('usuarios.ver')) {
-            abort(403, 'No tiene permiso para ver usuarios');
-        }
+        $this->autorizarPermiso('usuarios.ver', 'No tiene permiso para ver usuarios');
 
         $query = Usuario::with('rol');
 
@@ -56,9 +56,7 @@ class UsuarioController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
-            abort(403, 'No tiene permiso para crear usuarios');
-        }
+        $this->autorizarPermiso('usuarios.crear', 'No tiene permiso para crear usuarios');
 
         $roles = Rol::all();
 
@@ -69,9 +67,7 @@ class UsuarioController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
-            abort(403, 'No tiene permiso para crear usuarios');
-        }
+        $this->autorizarPermiso('usuarios.crear', 'No tiene permiso para crear usuarios');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -114,7 +110,7 @@ class UsuarioController extends Controller
             'tabla_afectada' => 'usuario',
             'registro_id' => $usuario->id,
             'datos_nuevos' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -124,9 +120,7 @@ class UsuarioController extends Controller
 
     public function show(Usuario $usuario)
     {
-        if (!Auth::user()->tienePermiso('usuarios.ver')) {
-            abort(403, 'No tiene permiso para ver usuarios');
-        }
+        $this->autorizarPermiso('usuarios.ver', 'No tiene permiso para ver usuarios');
 
         $usuario->load('rol.permisos');
 
@@ -137,9 +131,7 @@ class UsuarioController extends Controller
 
     public function edit(Usuario $usuario)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
-            abort(403, 'No tiene permiso para editar usuarios');
-        }
+        $this->autorizarPermiso('usuarios.editar', 'No tiene permiso para editar usuarios');
 
         $roles = Rol::all();
 
@@ -151,9 +143,7 @@ class UsuarioController extends Controller
 
     public function update(Request $request, Usuario $usuario)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
-            abort(403, 'No tiene permiso para editar usuarios');
-        }
+        $this->autorizarPermiso('usuarios.editar', 'No tiene permiso para editar usuarios');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -195,7 +185,7 @@ class UsuarioController extends Controller
             'registro_id' => $usuario->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -205,11 +195,9 @@ class UsuarioController extends Controller
 
     public function destroy(Usuario $usuario)
     {
-        if (!Auth::user()->tienePermiso('usuarios.eliminar')) {
-            abort(403, 'No tiene permiso para eliminar usuarios');
-        }
+        $this->autorizarPermiso('usuarios.eliminar', 'No tiene permiso para eliminar usuarios');
 
-        if ($usuario->id === Auth::id()) {
+        if ($usuario->id === auth()->id()) {
             return back()->withErrors(['error' => 'No puede eliminarse a sí mismo']);
         }
 
@@ -219,7 +207,7 @@ class UsuarioController extends Controller
             'tabla_afectada' => 'usuario',
             'registro_id' => $usuario->id,
             'datos_anteriores' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 

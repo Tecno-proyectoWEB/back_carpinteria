@@ -19,7 +19,6 @@ use App\Http\Controllers\DetalleDevolucionController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\PermisoController;
-use App\Http\Controllers\RolPermisoController;
 use App\Http\Controllers\TipoAccionController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\ServicioController;
@@ -58,7 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('bitacoras', BitacoraController::class);
     Route::apiResource('roles', RolController::class);
     Route::apiResource('permisos', PermisoController::class);
-    Route::apiResource('rol-permisos', RolPermisoController::class);
     Route::apiResource('tipos-accion', TipoAccionController::class);
     Route::apiResource('stripe-payments', StripePaymentController::class);
     

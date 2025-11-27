@@ -1,20 +1,19 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold text-gray-900">Productos</h2>
-                    <Link
-                        v-if="$page.props.auth.user?.rol?.nombre === 'PROPIETARIO' || $page.props.auth.user?.rol?.nombre === 'CARPINTERO'"
-                        :href="route('productos.create')"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        + Nuevo Producto
-                    </Link>
-                </div>
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Productos</h2>
+                <Link
+                    v-if="$page.props.auth?.user?.rol?.nombre === 'PROPIETARIO' || $page.props.auth?.user?.rol?.nombre === 'CARPINTERO'"
+                    :href="getRoute('productos.create')"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                    + Nuevo Producto
+                </Link>
+            </div>
 
-                <!-- Filtros -->
-                <div class="mb-4 bg-white p-4 rounded-lg shadow">
+            <!-- Filtros -->
+            <div class="mb-4 bg-white p-4 rounded-lg shadow">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
@@ -47,12 +46,12 @@
                                 Limpiar
                             </button>
                         </div>
-                    </div>
                 </div>
+            </div>
 
-                <!-- Tabla -->
-                <DataTable
-                    :data="productos.data"
+            <!-- Tabla -->
+            <DataTable
+                    :data="productosData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
@@ -64,49 +63,50 @@
                         <Badge variant="info">{{ value?.nombre || 'Sin categoría' }}</Badge>
                     </template>
                     <template #cell-precio_unitario="{ value }">
-                        ${{ parseFloat(value).toFixed(2) }}
+                        ${{ parseFloat(value || 0).toFixed(2) }}
                     </template>
                     <template #cell-stock="{ row }">
-                        <span :class="row.stock <= row.stock_minimo ? 'text-red-600 font-bold' : ''">
-                            {{ row.stock }}
-                            <span v-if="row.stock <= row.stock_minimo" class="text-xs">⚠️</span>
+                        <span :class="(row?.stock || 0) <= (row?.stock_minimo || 0) ? 'text-red-600 font-bold' : ''">
+                            {{ row?.stock || 0 }}
+                            <span v-if="(row?.stock || 0) <= (row?.stock_minimo || 0)" class="text-xs">⚠️</span>
                         </span>
                     </template>
                     <template #cell-imagen="{ row }">
                         <img
-                            v-if="row.imagen"
+                            v-if="row?.imagen"
                             :src="`/storage/${row.imagen}`"
-                            :alt="row.nombre"
+                            :alt="row?.nombre || 'Producto'"
                             class="h-12 w-12 object-cover rounded"
                         />
                         <span v-else class="text-gray-400">Sin imagen</span>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('productos.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('productos.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver
                         </Link>
                         <Link
-                            v-if="canEdit"
-                            :href="route('productos.edit', row.id)"
+                            v-if="canEdit && row?.id"
+                            :href="getRoute('productos.edit', row.id)"
                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                             Editar
                         </Link>
                         <button
-                            v-if="canDelete"
+                            v-if="canDelete && row?.id"
                             @click="deleteProducto(row)"
                             class="text-red-600 hover:text-red-900"
                         >
                             Eliminar
                         </button>
                     </template>
-                </DataTable>
+            </DataTable>
 
-                <!-- Paginación -->
-                <div v-if="productos.links" class="mt-4">
+            <!-- Paginación -->
+            <div v-if="productos.links" class="mt-4">
                     <div class="flex justify-center">
                         <div v-for="link in productos.links" :key="link.label">
                             <Link
@@ -123,7 +123,6 @@
                                 v-html="link.label"
                                 class="px-3 py-2 border rounded-md mx-1 bg-gray-100 text-gray-400"
                             ></span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -133,17 +132,35 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
-defineProps({
-    productos: Object,
-    categorias: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+const page = usePage();
+
+const props = defineProps({
+    productos: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que productos.data sea un array válido
+const productosData = computed(() => {
+    if (!props.productos || !props.productos.data) {
+        return [];
+    }
+    return Array.isArray(props.productos.data) ? props.productos.data : [];
 });
 
 const columns = [
@@ -156,20 +173,23 @@ const columns = [
 ];
 
 const filters = ref({
-    search: '',
-    categoria_id: '',
+    search: props.filters?.search || '',
+    categoria_id: props.filters?.categoria_id || '',
 });
 
 const canEdit = computed(() => {
-    return ['PROPIETARIO', 'CARPINTERO'].includes(window.$page?.props?.auth?.user?.rol?.nombre);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
 const canDelete = computed(() => {
-    return ['PROPIETARIO', 'CARPINTERO'].includes(window.$page?.props?.auth?.user?.rol?.nombre);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
+
 const applyFilters = () => {
-    router.get(route('productos.index'), filters.value, {
+    router.get(getRoute('productos.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -181,12 +201,15 @@ const clearFilters = () => {
 };
 
 const editProducto = (producto) => {
-    router.visit(route('productos.edit', producto.id));
+    if (!producto?.id) return;
+    router.visit(getRoute('productos.edit', producto.id));
 };
 
 const deleteProducto = (producto) => {
-    if (confirm(`¿Está seguro de eliminar el producto "${producto.nombre}"?`)) {
-        router.delete(route('productos.destroy', producto.id), {
+    if (!producto?.id) return;
+
+    if (confirm(`¿Está seguro de eliminar el producto "${producto?.nombre || 'este producto'}"?`)) {
+        router.delete(getRoute('productos.destroy', producto.id), {
             preserveScroll: true,
             onSuccess: () => {
                 // Mensaje de éxito se mostrará automáticamente

@@ -1,10 +1,18 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-gray-900">Roles y Permisos</h2>
-                    <p class="text-gray-600 mt-2">Gestione los permisos asignados a cada rol del sistema</p>
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">Roles y Permisos</h2>
+                        <p class="text-gray-600 mt-2">Gestione los permisos asignados a cada rol del sistema</p>
+                    </div>
+                    <Link
+                        v-if="canCreate"
+                        :href="getRoute('roles.create')"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        + Nuevo Rol
+                    </Link>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -15,13 +23,22 @@
                     >
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-xl font-bold text-gray-900">{{ rol.nombre }}</h3>
-                            <Link
-                                v-if="canEdit"
-                                :href="route('roles.edit', rol.id)"
-                                class="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                            >
-                                Editar Permisos
-                            </Link>
+                            <div class="flex space-x-2">
+                                <Link
+                                    v-if="canEdit && rol?.id"
+                                    :href="getRoute('roles.edit', rol.id)"
+                                    class="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                                >
+                                    Editar
+                                </Link>
+                                <button
+                                    v-if="canDelete && rol?.id && rol.nombre !== 'PROPIETARIO' && (!rol.usuarios || rol.usuarios.length === 0)"
+                                    @click="deleteRol(rol)"
+                                    class="text-red-600 hover:text-red-900 text-sm font-medium"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
                         </div>
 
                         <div v-if="rol.permisos && rol.permisos.length > 0" class="space-y-2">
@@ -50,28 +67,61 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    roles: Array,
-    permisos: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    roles: {
+        type: Array,
+        default: () => [],
+    },
+    permisos: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const canEdit = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO'].includes(rol);
+    const permisos = page.props.auth?.user?.permisos || [];
+    return permisos.includes('roles.editar') || page.props.auth?.user?.rol?.nombre === 'PROPIETARIO';
 });
+
+const canCreate = computed(() => {
+    const permisos = page.props.auth?.user?.permisos || [];
+    return permisos.includes('roles.crear') || page.props.auth?.user?.rol?.nombre === 'PROPIETARIO';
+});
+
+const canDelete = computed(() => {
+    const permisos = page.props.auth?.user?.permisos || [];
+    return permisos.includes('roles.eliminar') || page.props.auth?.user?.rol?.nombre === 'PROPIETARIO';
+});
+
+const deleteRol = (rol) => {
+    if (!rol?.id) return;
+    if (rol.nombre === 'PROPIETARIO') {
+        alert('No se puede eliminar el rol PROPIETARIO');
+        return;
+    }
+    if (rol.usuarios && rol.usuarios.length > 0) {
+        alert('No se puede eliminar el rol porque tiene usuarios asignados');
+        return;
+    }
+    if (confirm(`¿Está seguro de eliminar el rol "${rol.nombre}"?`)) {
+        router.delete(getRoute('roles.destroy', rol.id), {
+            preserveScroll: true,
+        });
+    }
+};
 </script>
 
 

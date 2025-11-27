@@ -1,15 +1,15 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-4xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <div>
                             <h2 class="text-2xl font-bold text-gray-900">Detalle del Movimiento</h2>
-                            <p class="text-sm text-gray-500 mt-1">ID: {{ movimiento.id }}</p>
+                            <p v-if="movimiento?.id" class="text-sm text-gray-500 mt-1">ID: {{ movimiento.id }}</p>
                         </div>
                         <Link
-                            :href="route('inventario.index')"
+                            :href="getRoute('inventario.index')"
                             class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                         >
                             Volver
@@ -25,23 +25,23 @@
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Tipo de Movimiento</label>
                                         <p class="mt-1">
-                                            <Badge :variant="movimiento.tipo === 'INGRESO' ? 'success' : 'error'">
-                                                {{ movimiento.tipo }}
+                                            <Badge :variant="movimiento?.tipo === 'INGRESO' ? 'success' : 'error'">
+                                                {{ movimiento?.tipo || 'N/A' }}
                                             </Badge>
                                         </p>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Cantidad</label>
-                                        <p class="text-gray-900 font-semibold">{{ movimiento.cantidad }}</p>
+                                        <p class="text-gray-900 font-semibold">{{ movimiento?.cantidad || 0 }}</p>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Fecha y Hora</label>
-                                        <p class="text-gray-900">{{ formatDate(movimiento.fecha) }}</p>
+                                        <p class="text-gray-900">{{ formatDate(movimiento?.fecha) }}</p>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Usuario</label>
                                         <p class="text-gray-900">
-                                            {{ movimiento.usuario?.nombre }} {{ movimiento.usuario?.apellido }}
+                                            {{ movimiento?.usuario?.nombre || '' }} {{ movimiento?.usuario?.apellido || '' }}
                                         </p>
                                     </div>
                                 </div>
@@ -51,21 +51,21 @@
                             <div>
                                 <h3 class="text-lg font-semibold mb-4">Item Afectado</h3>
                                 <div class="space-y-3">
-                                    <div v-if="movimiento.material">
+                                    <div v-if="movimiento?.material">
                                         <label class="text-sm font-medium text-gray-500">Tipo</label>
                                         <p class="text-gray-900">Material</p>
                                     </div>
-                                    <div v-else-if="movimiento.producto">
+                                    <div v-else-if="movimiento?.producto">
                                         <label class="text-sm font-medium text-gray-500">Tipo</label>
                                         <p class="text-gray-900">Producto</p>
                                     </div>
-                                    <div v-if="movimiento.material">
+                                    <div v-if="movimiento?.material">
                                         <label class="text-sm font-medium text-gray-500">Nombre</label>
-                                        <p class="text-gray-900 font-medium">{{ movimiento.material.nombre }}</p>
+                                        <p class="text-gray-900 font-medium">{{ movimiento.material?.nombre || 'N/A' }}</p>
                                     </div>
-                                    <div v-if="movimiento.producto">
+                                    <div v-if="movimiento?.producto">
                                         <label class="text-sm font-medium text-gray-500">Nombre</label>
-                                        <p class="text-gray-900 font-medium">{{ movimiento.producto.nombre }}</p>
+                                        <p class="text-gray-900 font-medium">{{ movimiento.producto?.nombre || 'N/A' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -73,41 +73,41 @@
                             <!-- Motivo y Observaciones -->
                             <div>
                                 <h3 class="text-lg font-semibold mb-4">Motivo</h3>
-                                <p class="text-gray-900">{{ movimiento.motivo || 'Sin motivo especificado' }}</p>
+                                <p class="text-gray-900">{{ movimiento?.motivo || 'Sin motivo especificado' }}</p>
                             </div>
 
                             <div>
                                 <h3 class="text-lg font-semibold mb-4">Observaciones</h3>
-                                <p class="text-gray-900">{{ movimiento.observaciones || 'Sin observaciones' }}</p>
+                                <p class="text-gray-900">{{ movimiento?.observaciones || 'Sin observaciones' }}</p>
                             </div>
 
                             <!-- Origen del Movimiento -->
-                            <div v-if="movimiento.compra || movimiento.pedido">
+                            <div v-if="movimiento?.compra || movimiento?.pedido">
                                 <h3 class="text-lg font-semibold mb-4">Origen</h3>
                                 <div class="space-y-3">
-                                    <div v-if="movimiento.compra">
+                                    <div v-if="movimiento?.compra?.id">
                                         <label class="text-sm font-medium text-gray-500">Compra</label>
                                         <p class="text-gray-900">
                                             <Link
-                                                :href="route('compras.show', movimiento.compra.id)"
+                                                :href="getRoute('compras.show', movimiento.compra.id)"
                                                 class="text-blue-600 hover:text-blue-900"
                                             >
                                                 Compra #{{ movimiento.compra.id }}
                                             </Link>
                                         </p>
                                     </div>
-                                    <div v-if="movimiento.pedido">
+                                    <div v-if="movimiento?.pedido?.id">
                                         <label class="text-sm font-medium text-gray-500">Pedido</label>
                                         <p class="text-gray-900">
                                             <Link
-                                                :href="route('pedidos.show', movimiento.pedido.id)"
+                                                :href="getRoute('pedidos.show', movimiento.pedido.id)"
                                                 class="text-blue-600 hover:text-blue-900"
                                             >
                                                 Pedido #{{ movimiento.pedido.id }}
                                             </Link>
                                         </p>
                                     </div>
-                                    <div v-if="!movimiento.compra && !movimiento.pedido">
+                                    <div v-if="!movimiento?.compra && !movimiento?.pedido">
                                         <p class="text-gray-500">Movimiento manual</p>
                                     </div>
                                 </div>
@@ -122,13 +122,17 @@
 
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
 const props = defineProps({
-    movimiento: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    movimiento: {
+        type: Object,
+        default: () => ({}),
+    },
+    },
+    },
 });
 
 const formatDate = (date) => {

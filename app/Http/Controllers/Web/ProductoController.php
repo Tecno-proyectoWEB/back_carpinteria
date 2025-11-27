@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Producto;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ProductoController extends Controller
 {
+    use HasPermissions;
+
     public function index(Request $request)
     {
-        // Validar permisos
-        if (!Auth::user()->tienePermiso('productos.ver')) {
-            abort(403, 'No tiene permiso para ver productos');
-        }
+        $this->autorizarPermiso('productos.ver', 'No tiene permiso para ver productos');
 
         $query = Producto::with('categoria');
 
@@ -54,9 +53,7 @@ class ProductoController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('productos.crear')) {
-            abort(403, 'No tiene permiso para crear productos');
-        }
+        $this->autorizarPermiso('productos.crear', 'No tiene permiso para crear productos');
 
         $categorias = Categoria::where('activo', true)->get();
 
@@ -67,9 +64,7 @@ class ProductoController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('productos.crear')) {
-            abort(403, 'No tiene permiso para crear productos');
-        }
+        $this->autorizarPermiso('productos.crear', 'No tiene permiso para crear productos');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -105,7 +100,7 @@ class ProductoController extends Controller
             'tabla_afectada' => 'producto',
             'registro_id' => $producto->id,
             'datos_nuevos' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -115,9 +110,7 @@ class ProductoController extends Controller
 
     public function show(Producto $producto)
     {
-        if (!Auth::user()->tienePermiso('productos.ver')) {
-            abort(403, 'No tiene permiso para ver productos');
-        }
+        $this->autorizarPermiso('productos.ver', 'No tiene permiso para ver productos');
 
         $producto->load('categoria');
 
@@ -128,9 +121,7 @@ class ProductoController extends Controller
 
     public function edit(Producto $producto)
     {
-        if (!Auth::user()->tienePermiso('productos.editar')) {
-            abort(403, 'No tiene permiso para editar productos');
-        }
+        $this->autorizarPermiso('productos.editar', 'No tiene permiso para editar productos');
 
         $categorias = Categoria::where('activo', true)->get();
 
@@ -142,9 +133,7 @@ class ProductoController extends Controller
 
     public function update(Request $request, Producto $producto)
     {
-        if (!Auth::user()->tienePermiso('productos.editar')) {
-            abort(403, 'No tiene permiso para editar productos');
-        }
+        $this->autorizarPermiso('productos.editar', 'No tiene permiso para editar productos');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -182,7 +171,7 @@ class ProductoController extends Controller
             'registro_id' => $producto->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -192,9 +181,7 @@ class ProductoController extends Controller
 
     public function destroy(Producto $producto)
     {
-        if (!Auth::user()->tienePermiso('productos.eliminar')) {
-            abort(403, 'No tiene permiso para eliminar productos');
-        }
+        $this->autorizarPermiso('productos.eliminar', 'No tiene permiso para eliminar productos');
 
         // Eliminar imagen si existe
         if ($producto->imagen) {
@@ -210,7 +197,7 @@ class ProductoController extends Controller
             'tabla_afectada' => 'producto',
             'registro_id' => $producto->id,
             'datos_anteriores' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 

@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Material</h2>
 
@@ -114,7 +114,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('materiales.index')"
+                                :href="getRoute('materiales.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -138,16 +138,23 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 import Select from '@/Components/Form/Select.vue';
 
 defineProps({
-    categorias: Array,
-    sectores: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    sectores: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const form = useForm({
@@ -179,7 +186,7 @@ const handleImageChange = (event) => {
 };
 
 const submit = () => {
-    form.post(route('materiales.store'), {
+    form.post(getRoute('materiales.store'), {
         forceFormData: true,
     });
 };

@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-3xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Proveedor</h2>
 
@@ -60,7 +60,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('proveedores.index')"
+                                :href="getRoute('proveedores.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -83,13 +83,14 @@
 
 <script setup>
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 
 const props = defineProps({
-    menuItems: Array,
-    pageVisits: Number,
+    },
+    },
 });
 
 const form = useForm({
@@ -103,7 +104,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('proveedores.store'));
+    form.post(getRoute('proveedores.store'));
 };
 </script>
 

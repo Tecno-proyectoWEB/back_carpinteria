@@ -1,10 +1,10 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-4xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Editar Permisos del Rol: {{ rol.nombre }}</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">Editar Permisos del Rol: {{ rol?.nombre || 'N/A' }}</h2>
                         <p class="text-gray-600 mt-1">Seleccione los permisos que desea asignar a este rol</p>
                     </div>
 
@@ -53,7 +53,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('roles.index')"
+                                :href="getRoute('roles.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -77,23 +77,32 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
-    rol: Object,
-    permisos: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    rol: {
+        type: Object,
+        default: () => ({}),
+    },
+    permisos: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const form = useForm({
-    permisos: props.rol.permisos?.map(p => p.id) || [],
+    permisos: props.rol?.permisos?.map(p => p?.id).filter(id => id) || [],
 });
 
 // Agrupar permisos por módulo (asumiendo formato: modulo.accion)
 const permisosAgrupados = computed(() => {
     const grupos = {};
+    if (!props.permisos || !Array.isArray(props.permisos)) return grupos;
     props.permisos.forEach(permiso => {
+        if (!permiso?.nombre) return;
         const partes = permiso.nombre.split('.');
         const modulo = partes[0] || 'Otros';
         if (!grupos[modulo]) {
@@ -105,31 +114,33 @@ const permisosAgrupados = computed(() => {
 });
 
 const todosSeleccionados = (modulo) => {
-    const permisosModulo = permisosAgrupados.value[modulo];
-    return permisosModulo.every(p => form.permisos.includes(p.id));
+    const permisosModulo = permisosAgrupados.value[modulo] || [];
+    if (permisosModulo.length === 0) return false;
+    return permisosModulo.every(p => p?.id && form.permisos.includes(p.id));
 };
 
 const algunosSeleccionados = (modulo) => {
-    const permisosModulo = permisosAgrupados.value[modulo];
-    const seleccionados = permisosModulo.filter(p => form.permisos.includes(p.id));
+    const permisosModulo = permisosAgrupados.value[modulo] || [];
+    const seleccionados = permisosModulo.filter(p => p?.id && form.permisos.includes(p.id));
     return seleccionados.length > 0 && seleccionados.length < permisosModulo.length;
 };
 
 const toggleModulo = (modulo, checked) => {
-    const permisosModulo = permisosAgrupados.value[modulo];
+    const permisosModulo = permisosAgrupados.value[modulo] || [];
     if (checked) {
         permisosModulo.forEach(p => {
-            if (!form.permisos.includes(p.id)) {
+            if (p?.id && !form.permisos.includes(p.id)) {
                 form.permisos.push(p.id);
             }
         });
     } else {
-        form.permisos = form.permisos.filter(id => !permisosModulo.some(p => p.id === id));
+        form.permisos = form.permisos.filter(id => !permisosModulo.some(p => p?.id === id));
     }
 };
 
 const submit = () => {
-    form.put(route('roles.update', props.rol.id));
+    if (!props.rol?.id) return;
+    form.put(getRoute('roles.update', props.rol.id));
 };
 </script>
 

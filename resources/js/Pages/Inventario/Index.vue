@@ -1,7 +1,6 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-3xl font-bold text-gray-900">Movimientos de Inventario</h2>
@@ -10,13 +9,13 @@
                     <div class="flex space-x-2">
                         <Link
                             v-if="canCreate"
-                            :href="route('inventario.create')"
+                            :href="getRoute('inventario.create')"
                             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                         >
                             + Nuevo Movimiento
                         </Link>
                         <Link
-                            :href="route('inventario.stock')"
+                            :href="getRoute('inventario.stock')"
                             class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
                             Ver Stock
@@ -136,50 +135,51 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="movimiento in movimientos.data" :key="movimiento.id" class="hover:bg-gray-50">
+                            <tr v-for="movimiento in movimientosData" :key="movimiento?.id || Math.random()" class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ formatDate(movimiento.fecha) }}
+                                    {{ movimiento?.fecha ? formatDate(movimiento.fecha) : 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <Badge :variant="movimiento.tipo === 'INGRESO' ? 'success' : 'error'">
-                                        {{ movimiento.tipo }}
+                                    <Badge :variant="movimiento?.tipo === 'INGRESO' ? 'success' : 'error'">
+                                        {{ movimiento?.tipo || 'N/A' }}
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <div v-if="movimiento.material">
+                                    <div v-if="movimiento?.material">
                                         <span class="font-medium">{{ movimiento.material.nombre }}</span>
                                         <span class="text-gray-500 text-xs block">Material</span>
                                     </div>
-                                    <div v-else-if="movimiento.producto">
+                                    <div v-else-if="movimiento?.producto">
                                         <span class="font-medium">{{ movimiento.producto.nombre }}</span>
                                         <span class="text-gray-500 text-xs block">Producto</span>
                                     </div>
                                     <span v-else class="text-gray-400">N/A</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <span class="font-semibold">{{ movimiento.cantidad }}</span>
+                                    <span class="font-semibold">{{ movimiento?.cantidad || 0 }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    {{ movimiento.motivo || 'Sin motivo' }}
+                                    {{ movimiento?.motivo || 'Sin motivo' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ movimiento.usuario?.nombre }} {{ movimiento.usuario?.apellido }}
+                                    {{ movimiento?.usuario?.nombre || '' }} {{ movimiento?.usuario?.apellido || '' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <span v-if="movimiento.compra">Compra #{{ movimiento.compra.id }}</span>
-                                    <span v-else-if="movimiento.pedido">Pedido #{{ movimiento.pedido.id }}</span>
+                                    <span v-if="movimiento?.compra">Compra #{{ movimiento.compra.id }}</span>
+                                    <span v-else-if="movimiento?.pedido">Pedido #{{ movimiento.pedido.id }}</span>
                                     <span v-else class="text-gray-400">Manual</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <Link
-                                        :href="route('inventario.show', movimiento.id)"
+                                        v-if="movimiento?.id"
+                                        :href="getRoute('inventario.show', movimiento.id)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                     >
                                         Ver Detalle
                                     </Link>
                                 </td>
                             </tr>
-                            <tr v-if="movimientos.data.length === 0">
+                            <tr v-if="movimientosData.length === 0">
                                 <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                                     No se encontraron movimientos
                                 </td>
@@ -209,24 +209,44 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    movimientos: Object,
-    materiales: Array,
-    productos: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    movimientos: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    materiales: {
+        type: Array,
+        default: () => [],
+    },
+    productos: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que movimientos.data sea un array válido
+const movimientosData = computed(() => {
+    if (!props.movimientos || !props.movimientos.data) {
+        return [];
+    }
+    return Array.isArray(props.movimientos.data) ? props.movimientos.data : [];
 });
 
 const filters = ref({
@@ -239,12 +259,12 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
 const applyFilters = () => {
-    router.get(route('inventario.index'), filters.value, {
+    router.get(getRoute('inventario.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });

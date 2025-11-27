@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, debounce } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
 
@@ -64,8 +64,21 @@ const resultados = ref([]);
 const showResults = ref(false);
 const loading = ref(false);
 
-// Debounce para búsqueda mientras escribe
-const handleSearch = debounce(async () => {
+// Función debounce personalizada
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
+// Función de búsqueda
+const performSearchDebounced = async () => {
     if (searchTerm.value.length < 2) {
         resultados.value = [];
         return;
@@ -90,7 +103,10 @@ const handleSearch = debounce(async () => {
     } finally {
         loading.value = false;
     }
-}, 300);
+};
+
+// Debounce para búsqueda mientras escribe
+const handleSearch = debounce(performSearchDebounced, 300);
 
 const performSearch = () => {
     if (searchTerm.value.trim()) {

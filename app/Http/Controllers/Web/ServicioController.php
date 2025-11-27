@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Servicio;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ServicioController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('servicios.ver')) {
-            abort(403, 'No tiene permiso para ver servicios');
-        }
+        $this->autorizarPermiso('servicios.ver', 'No tiene permiso para ver servicios');
 
         $query = Servicio::with('categoria')->where('activo', true);
 
@@ -52,9 +51,7 @@ class ServicioController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('servicios.crear')) {
-            abort(403, 'No tiene permiso para crear servicios');
-        }
+        $this->autorizarPermiso('servicios.crear', 'No tiene permiso para crear servicios');
 
         $categorias = Categoria::where('activo', true)->get();
 
@@ -65,9 +62,7 @@ class ServicioController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('servicios.crear')) {
-            abort(403, 'No tiene permiso para crear servicios');
-        }
+        $this->autorizarPermiso('servicios.crear', 'No tiene permiso para crear servicios');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -94,7 +89,7 @@ class ServicioController extends Controller
             'tabla_afectada' => 'servicio',
             'registro_id' => $servicio->id,
             'datos_nuevos' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -104,9 +99,7 @@ class ServicioController extends Controller
 
     public function show(Servicio $servicio)
     {
-        if (!Auth::user()->tienePermiso('servicios.ver')) {
-            abort(403, 'No tiene permiso para ver servicios');
-        }
+        $this->autorizarPermiso('servicios.ver', 'No tiene permiso para ver servicios');
 
         $servicio->load('categoria');
 
@@ -117,9 +110,7 @@ class ServicioController extends Controller
 
     public function edit(Servicio $servicio)
     {
-        if (!Auth::user()->tienePermiso('servicios.editar')) {
-            abort(403, 'No tiene permiso para editar servicios');
-        }
+        $this->autorizarPermiso('servicios.editar', 'No tiene permiso para editar servicios');
 
         $categorias = Categoria::where('activo', true)->get();
 
@@ -131,9 +122,7 @@ class ServicioController extends Controller
 
     public function update(Request $request, Servicio $servicio)
     {
-        if (!Auth::user()->tienePermiso('servicios.editar')) {
-            abort(403, 'No tiene permiso para editar servicios');
-        }
+        $this->autorizarPermiso('servicios.editar', 'No tiene permiso para editar servicios');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -157,7 +146,7 @@ class ServicioController extends Controller
             'registro_id' => $servicio->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -167,9 +156,7 @@ class ServicioController extends Controller
 
     public function destroy(Servicio $servicio)
     {
-        if (!Auth::user()->tienePermiso('servicios.eliminar')) {
-            abort(403, 'No tiene permiso para eliminar servicios');
-        }
+        $this->autorizarPermiso('servicios.eliminar', 'No tiene permiso para eliminar servicios');
 
         // En lugar de eliminar, desactivar
         $servicio->update(['activo' => false]);
@@ -180,7 +167,7 @@ class ServicioController extends Controller
             'tabla_afectada' => 'servicio',
             'registro_id' => $servicio->id,
             'datos_anteriores' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 

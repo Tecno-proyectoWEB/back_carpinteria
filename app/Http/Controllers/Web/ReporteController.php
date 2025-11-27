@@ -3,29 +3,26 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Usuario;
 use App\Models\Proveedor;
 
 class ReporteController extends Controller
 {
+    use HasPermissions;
     public function index()
     {
-        if (!Auth::user()->tienePermiso('reportes.ver')) {
-            abort(403, 'No tiene permiso para ver reportes');
-        }
+        $this->autorizarPermiso('reportes.ver', 'No tiene permiso para ver reportes');
 
         return Inertia::render('Reportes/Index');
     }
 
     public function ventas(Request $request)
     {
-        if (!Auth::user()->tienePermiso('reportes.ver')) {
-            abort(403, 'No tiene permiso para ver reportes');
-        }
+        $this->autorizarPermiso('reportes.ver', 'No tiene permiso para ver reportes');
 
         $fechaInicio = $request->get('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
         $fechaFin = $request->get('fecha_fin', now()->format('Y-m-d'));
@@ -126,9 +123,7 @@ class ReporteController extends Controller
 
     public function compras(Request $request)
     {
-        if (!Auth::user()->tienePermiso('reportes.ver')) {
-            abort(403, 'No tiene permiso para ver reportes');
-        }
+        $this->autorizarPermiso('reportes.ver', 'No tiene permiso para ver reportes');
 
         $fechaInicio = $request->get('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
         $fechaFin = $request->get('fecha_fin', now()->format('Y-m-d'));
@@ -215,9 +210,7 @@ class ReporteController extends Controller
 
     public function inventario(Request $request)
     {
-        if (!Auth::user()->tienePermiso('reportes.ver')) {
-            abort(403, 'No tiene permiso para ver reportes');
-        }
+        $this->autorizarPermiso('reportes.ver', 'No tiene permiso para ver reportes');
 
         // Stock bajo
         $stockBajoProductos = DB::table('v_stock_bajo_productos')->get();

@@ -59,7 +59,7 @@
                     <tr
                         v-else
                         v-for="(row, index) in paginatedData"
-                        :key="row.id || index"
+                        :key="row?.id || index"
                         class="hover:bg-gray-50"
                     >
                         <td

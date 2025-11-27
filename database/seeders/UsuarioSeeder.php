@@ -6,7 +6,6 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Usuario;
 use App\Models\Rol;
-use Illuminate\Support\Facades\Hash;
 
 class UsuarioSeeder extends Seeder
 {
@@ -22,13 +21,13 @@ class UsuarioSeeder extends Seeder
 
         // Propietario
         if ($propietario) {
-            Usuario::firstOrCreate(
-                ['email' => 'propietario@carpinteria.com'],
-                [
+            $usuario = Usuario::firstOrNew(['email' => 'propietario@carpinteria.com']);
+            if (!$usuario->exists) {
+                $usuario->fill([
                     'nombre' => 'Juan',
                     'apellido' => 'Pérez',
                     'email' => 'propietario@carpinteria.com',
-                    'password' => Hash::make('password123'),
+                    'password' => 'password123', // El cast 'hashed' se encargará de hashearlo
                     'telefono' => '0987654321',
                     'rol_id' => $propietario->id,
                     'estado' => true,
@@ -36,19 +35,20 @@ class UsuarioSeeder extends Seeder
                     'cuenta_no_expirada' => true,
                     'cuenta_no_bloqueada' => true,
                     'credenciales_no_expiradas' => true,
-                ]
-            );
+                ]);
+                $usuario->save();
+            }
         }
 
         // Secretaria
         if ($secretaria) {
-            Usuario::firstOrCreate(
-                ['email' => 'secretaria@carpinteria.com'],
-                [
+            $usuario = Usuario::firstOrNew(['email' => 'secretaria@carpinteria.com']);
+            if (!$usuario->exists) {
+                $usuario->fill([
                     'nombre' => 'María',
                     'apellido' => 'González',
                     'email' => 'secretaria@carpinteria.com',
-                    'password' => Hash::make('password123'),
+                    'password' => 'password123', // El cast 'hashed' se encargará de hashearlo
                     'telefono' => '0987654322',
                     'rol_id' => $secretaria->id,
                     'estado' => true,
@@ -56,19 +56,20 @@ class UsuarioSeeder extends Seeder
                     'cuenta_no_expirada' => true,
                     'cuenta_no_bloqueada' => true,
                     'credenciales_no_expiradas' => true,
-                ]
-            );
+                ]);
+                $usuario->save();
+            }
         }
 
         // Carpintero
         if ($carpintero) {
-            Usuario::firstOrCreate(
-                ['email' => 'carpintero@carpinteria.com'],
-                [
+            $usuario = Usuario::firstOrNew(['email' => 'carpintero@carpinteria.com']);
+            if (!$usuario->exists) {
+                $usuario->fill([
                     'nombre' => 'Carlos',
                     'apellido' => 'Rodríguez',
                     'email' => 'carpintero@carpinteria.com',
-                    'password' => Hash::make('password123'),
+                    'password' => 'password123', // El cast 'hashed' se encargará de hashearlo
                     'telefono' => '0987654323',
                     'rol_id' => $carpintero->id,
                     'estado' => true,
@@ -76,19 +77,20 @@ class UsuarioSeeder extends Seeder
                     'cuenta_no_expirada' => true,
                     'cuenta_no_bloqueada' => true,
                     'credenciales_no_expiradas' => true,
-                ]
-            );
+                ]);
+                $usuario->save();
+            }
         }
 
         // Cliente de ejemplo
         if ($cliente) {
-            Usuario::firstOrCreate(
-                ['email' => 'cliente@example.com'],
-                [
+            $usuario = Usuario::firstOrNew(['email' => 'cliente@example.com']);
+            if (!$usuario->exists) {
+                $usuario->fill([
                     'nombre' => 'Pedro',
                     'apellido' => 'Martínez',
                     'email' => 'cliente@example.com',
-                    'password' => Hash::make('password123'),
+                    'password' => 'password123', // El cast 'hashed' se encargará de hashearlo
                     'telefono' => '0987654324',
                     'rol_id' => $cliente->id,
                     'estado' => true,
@@ -96,8 +98,9 @@ class UsuarioSeeder extends Seeder
                     'cuenta_no_expirada' => true,
                     'cuenta_no_bloqueada' => true,
                     'credenciales_no_expiradas' => true,
-                ]
-            );
+                ]);
+                $usuario->save();
+            }
         }
     }
 }

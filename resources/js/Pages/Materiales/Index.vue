@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Materiales</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('materiales.create')"
+                        :href="getRoute('materiales.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nuevo Material
@@ -74,7 +73,7 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="materiales.data"
+                    :data="materialesData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
@@ -87,39 +86,40 @@
                         {{ value?.nombre || 'Sin sector' }}
                     </template>
                     <template #cell-precio="{ value }">
-                        {{ value ? `$${parseFloat(value).toFixed(2)}` : 'N/A' }}
+                        {{ value ? `$${parseFloat(value || 0).toFixed(2)}` : 'N/A' }}
                     </template>
                     <template #cell-stock_actual="{ row }">
-                        <span :class="row.stock_actual <= row.stock_minimo ? 'text-red-600 font-bold' : ''">
-                            {{ row.stock_actual }} {{ row.unidad_medida || '' }}
-                            <span v-if="row.stock_actual <= row.stock_minimo" class="text-xs">⚠️</span>
+                        <span :class="(row?.stock_actual || 0) <= (row?.stock_minimo || 0) ? 'text-red-600 font-bold' : ''">
+                            {{ row?.stock_actual || 0 }} {{ row?.unidad_medida || '' }}
+                            <span v-if="(row?.stock_actual || 0) <= (row?.stock_minimo || 0)" class="text-xs">⚠️</span>
                         </span>
                     </template>
                     <template #cell-imagen="{ row }">
                         <img
-                            v-if="row.imagen"
+                            v-if="row?.imagen"
                             :src="`/storage/${row.imagen}`"
-                            :alt="row.nombre"
+                            :alt="row?.nombre || 'Material'"
                             class="h-12 w-12 object-cover rounded"
                         />
                         <span v-else class="text-gray-400">Sin imagen</span>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('materiales.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('materiales.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver
                         </Link>
                         <Link
-                            v-if="canEdit"
-                            :href="route('materiales.edit', row.id)"
+                            v-if="canEdit && row?.id"
+                            :href="getRoute('materiales.edit', row.id)"
                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                             Editar
                         </Link>
                         <button
-                            v-if="canDelete"
+                            v-if="canDelete && row?.id"
                             @click="deleteMaterial(row)"
                             class="text-red-600 hover:text-red-900"
                         >
@@ -149,25 +149,45 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    materiales: Object,
-    categorias: Array,
-    sectores: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    materiales: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    sectores: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que materiales.data sea un array válido
+const materialesData = computed(() => {
+    if (!props.materiales || !props.materiales.data) {
+        return [];
+    }
+    return Array.isArray(props.materiales.data) ? props.materiales.data : [];
 });
 
 const columns = [
@@ -188,15 +208,15 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
 const canEdit = computed(() => canCreate.value);
 const canDelete = computed(() => canCreate.value);
 
 const applyFilters = () => {
-    router.get(route('materiales.index'), filters.value, {
+    router.get(getRoute('materiales.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -208,8 +228,9 @@ const clearFilters = () => {
 };
 
 const deleteMaterial = (material) => {
-    if (confirm(`¿Está seguro de eliminar el material "${material.nombre}"?`)) {
-        router.delete(route('materiales.destroy', material.id), {
+    if (!material?.id) return;
+    if (confirm(`¿Está seguro de eliminar el material "${material?.nombre || 'este material'}"?`)) {
+        router.delete(getRoute('materiales.destroy', material.id), {
             preserveScroll: true,
         });
     }

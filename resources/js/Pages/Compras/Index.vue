@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Compras</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('compras.create')"
+                        :href="getRoute('compras.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nueva Compra
@@ -64,37 +63,38 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="compras.data"
+                    :data="comprasData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
                     :paginated="false"
                 >
                     <template #cell-fecha="{ value }">
-                        {{ new Date(value).toLocaleDateString('es-AR') }}
+                        {{ value ? new Date(value).toLocaleDateString('es-AR') : 'N/A' }}
                     </template>
                     <template #cell-proveedor="{ value }">
-                        {{ value?.nombre }}
+                        {{ value?.nombre || 'N/A' }}
                     </template>
                     <template #cell-estado="{ row }">
                         <Badge
-                            :variant="row.estado === 'COMPLETADA' ? 'success' : row.estado === 'CANCELADA' ? 'error' : 'warning'"
+                            :variant="row?.estado === 'COMPLETADA' ? 'success' : row?.estado === 'CANCELADA' ? 'error' : 'warning'"
                         >
-                            {{ row.estado }}
+                            {{ row?.estado || 'N/A' }}
                         </Badge>
                     </template>
                     <template #cell-importe_total="{ value }">
-                        <span class="font-semibold text-green-600">${{ parseFloat(value).toFixed(2) }}</span>
+                        <span class="font-semibold text-green-600">${{ parseFloat(value || 0).toFixed(2) }}</span>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('compras.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('compras.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver Detalle
                         </Link>
                         <button
-                            v-if="row.estado === 'PENDIENTE' && canConfirm"
+                            v-if="row?.estado === 'PENDIENTE' && canConfirm && row?.id"
                             @click="confirmarCompra(row)"
                             class="text-green-600 hover:text-green-900"
                         >
@@ -124,24 +124,41 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    compras: Object,
-    proveedores: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    compras: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    proveedores: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que compras.data sea un array válido
+const comprasData = computed(() => {
+    if (!props.compras || !props.compras.data) {
+        return [];
+    }
+    return Array.isArray(props.compras.data) ? props.compras.data : [];
 });
 
 const columns = [
@@ -160,14 +177,14 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'SECRETARIA'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'SECRETARIA'].includes(rol);
 });
 
 const canConfirm = computed(() => canCreate.value);
 
 const applyFilters = () => {
-    router.get(route('compras.index'), filters.value, {
+    router.get(getRoute('compras.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -179,8 +196,9 @@ const clearFilters = () => {
 };
 
 const confirmarCompra = (compra) => {
+    if (!compra?.id) return;
     if (confirm(`¿Está seguro de confirmar la compra #${compra.id}? Esto actualizará el stock de los materiales.`)) {
-        router.post(route('compras.confirmar', compra.id), {}, {
+        router.post(getRoute('compras.confirmar', compra.id), {}, {
             preserveScroll: true,
         });
     }

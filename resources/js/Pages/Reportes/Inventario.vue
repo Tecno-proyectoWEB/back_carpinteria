@@ -1,11 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-7xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Reporte de Inventario</h2>
                     <Link
-                        :href="route('reportes.index')"
+                        :href="getRoute('reportes.index')"
                         class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                     >
                         Volver
@@ -159,12 +159,24 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
 const props = defineProps({
-    stock_bajo_productos: Array,
-    stock_bajo_materiales: Array,
-    movimientos_recientes: Array,
-    resumen: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    stock_bajo_productos: {
+        type: Array,
+        default: () => [],
+    },
+    stock_bajo_materiales: {
+        type: Array,
+        default: () => [],
+    },
+    movimientos_recientes: {
+        type: Array,
+        default: () => [],
+    },
+    resumen: {
+        type: Object,
+        default: () => ({}),
+    },
+    },
+    },
 });
 
 const formatDate = (date) => {

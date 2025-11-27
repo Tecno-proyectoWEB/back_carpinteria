@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Pedidos</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('pedidos.create')"
+                        :href="getRoute('pedidos.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nuevo Pedido
@@ -59,29 +58,30 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="pedidos.data"
+                    :data="pedidosData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
                     :paginated="false"
                 >
                     <template #cell-fecha="{ value }">
-                        {{ new Date(value).toLocaleDateString('es-AR') }}
+                        {{ value ? new Date(value).toLocaleDateString('es-AR') : 'N/A' }}
                     </template>
                     <template #cell-usuario="{ value }">
-                        {{ value?.nombre }} {{ value?.apellido }}
+                        {{ value?.nombre || '' }} {{ value?.apellido || '' }}
                     </template>
                     <template #cell-estado="{ row }">
-                        <Badge :variant="row.estado ? 'success' : 'warning'">
-                            {{ row.estado ? 'Completado' : 'Pendiente' }}
+                        <Badge :variant="row?.estado ? 'success' : 'warning'">
+                            {{ row?.estado ? 'Completado' : 'Pendiente' }}
                         </Badge>
                     </template>
                     <template #cell-importe_total_desc="{ value }">
-                        <span class="font-semibold text-green-600">${{ parseFloat(value).toFixed(2) }}</span>
+                        <span class="font-semibold text-green-600">${{ parseFloat(value || 0).toFixed(2) }}</span>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('pedidos.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('pedidos.show', row.id)"
                             class="text-blue-600 hover:text-blue-900"
                         >
                             Ver Detalle
@@ -110,23 +110,37 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    pedidos: Object,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    pedidos: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que pedidos.data sea un array válido
+const pedidosData = computed(() => {
+    if (!props.pedidos || !props.pedidos.data) {
+        return [];
+    }
+    return Array.isArray(props.pedidos.data) ? props.pedidos.data : [];
 });
 
 const columns = [
@@ -144,12 +158,12 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'SECRETARIA', 'CLIENTE'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'SECRETARIA', 'CLIENTE'].includes(rol);
 });
 
 const applyFilters = () => {
-    router.get(route('pedidos.index'), filters.value, {
+    router.get(getRoute('pedidos.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });

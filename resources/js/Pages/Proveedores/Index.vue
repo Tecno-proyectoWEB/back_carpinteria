@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Proveedores</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('proveedores.create')"
+                        :href="getRoute('proveedores.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nuevo Proveedor
@@ -51,33 +50,34 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="proveedores.data"
+                    :data="proveedoresData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
                     :paginated="false"
                 >
                     <template #cell-activo="{ row }">
-                        <Badge :variant="row.activo ? 'success' : 'error'">
-                            {{ row.activo ? 'Activo' : 'Inactivo' }}
+                        <Badge :variant="row?.activo ? 'success' : 'error'">
+                            {{ row?.activo ? 'Activo' : 'Inactivo' }}
                         </Badge>
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('proveedores.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('proveedores.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver
                         </Link>
                         <Link
-                            v-if="canEdit"
-                            :href="route('proveedores.edit', row.id)"
+                            v-if="canEdit && row?.id"
+                            :href="getRoute('proveedores.edit', row.id)"
                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                             Editar
                         </Link>
                         <button
-                            v-if="canDelete"
+                            v-if="canDelete && row?.id"
                             @click="deleteProveedor(row)"
                             class="text-red-600 hover:text-red-900"
                         >
@@ -107,23 +107,37 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    proveedores: Object,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    proveedores: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que proveedores.data sea un array válido
+const proveedoresData = computed(() => {
+    if (!props.proveedores || !props.proveedores.data) {
+        return [];
+    }
+    return Array.isArray(props.proveedores.data) ? props.proveedores.data : [];
 });
 
 const columns = [
@@ -142,15 +156,15 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'SECRETARIA'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'SECRETARIA'].includes(rol);
 });
 
 const canEdit = computed(() => canCreate.value);
 const canDelete = computed(() => canCreate.value);
 
 const applyFilters = () => {
-    router.get(route('proveedores.index'), filters.value, {
+    router.get(getRoute('proveedores.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -162,8 +176,9 @@ const clearFilters = () => {
 };
 
 const deleteProveedor = (proveedor) => {
-    if (confirm(`¿Está seguro de eliminar al proveedor "${proveedor.nombre}"?`)) {
-        router.delete(route('proveedores.destroy', proveedor.id), {
+    if (!proveedor?.id) return;
+    if (confirm(`¿Está seguro de eliminar al proveedor "${proveedor?.nombre || 'este proveedor'}"?`)) {
+        router.delete(getRoute('proveedores.destroy', proveedor.id), {
             preserveScroll: true,
         });
     }

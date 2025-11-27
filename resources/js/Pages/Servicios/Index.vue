@@ -1,12 +1,11 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-900">Servicios</h2>
                     <Link
                         v-if="canCreate"
-                        :href="route('servicios.create')"
+                        :href="getRoute('servicios.create')"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         + Nuevo Servicio
@@ -52,7 +51,7 @@
 
                 <!-- Tabla -->
                 <DataTable
-                    :data="servicios.data"
+                    :data="serviciosData"
                     :columns="columns"
                     :loading="false"
                     :show-search="false"
@@ -62,27 +61,28 @@
                         <Badge variant="info">{{ value?.nombre || 'Sin categoría' }}</Badge>
                     </template>
                     <template #cell-precio_base="{ value }">
-                        ${{ parseFloat(value).toFixed(2) }}
+                        ${{ parseFloat(value || 0).toFixed(2) }}
                     </template>
                     <template #cell-tiempo_estimado="{ value }">
                         {{ value ? `${value} horas` : 'N/A' }}
                     </template>
                     <template #actions="{ row }">
                         <Link
-                            :href="route('servicios.show', row.id)"
+                            v-if="row?.id"
+                            :href="getRoute('servicios.show', row.id)"
                             class="text-blue-600 hover:text-blue-900 mr-3"
                         >
                             Ver
                         </Link>
                         <Link
-                            v-if="canEdit"
-                            :href="route('servicios.edit', row.id)"
+                            v-if="canEdit && row?.id"
+                            :href="getRoute('servicios.edit', row.id)"
                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                             Editar
                         </Link>
                         <button
-                            v-if="canDelete"
+                            v-if="canDelete && row?.id"
                             @click="deleteServicio(row)"
                             class="text-red-600 hover:text-red-900"
                         >
@@ -112,24 +112,41 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Table/DataTable.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    servicios: Object,
-    categorias: Array,
-    menuItems: Array,
-    pageVisits: Number,
-    filters: Object,
+    servicios: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
+// Asegurar que servicios.data sea un array válido
+const serviciosData = computed(() => {
+    if (!props.servicios || !props.servicios.data) {
+        return [];
+    }
+    return Array.isArray(props.servicios.data) ? props.servicios.data : [];
 });
 
 const columns = [
@@ -146,15 +163,16 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
 const canEdit = computed(() => canCreate.value);
 const canDelete = computed(() => canCreate.value);
 
+
 const applyFilters = () => {
-    router.get(route('servicios.index'), filters.value, {
+    router.get(getRoute('servicios.index'), filters.value, {
         preserveState: true,
         preserveScroll: true,
     });
@@ -166,8 +184,9 @@ const clearFilters = () => {
 };
 
 const deleteServicio = (servicio) => {
-    if (confirm(`¿Está seguro de desactivar el servicio "${servicio.nombre}"?`)) {
-        router.delete(route('servicios.destroy', servicio.id), {
+    if (!servicio?.id) return;
+    if (confirm(`¿Está seguro de desactivar el servicio "${servicio?.nombre || 'este servicio'}"?`)) {
+        router.delete(getRoute('servicios.destroy', servicio.id), {
             preserveScroll: true,
         });
     }

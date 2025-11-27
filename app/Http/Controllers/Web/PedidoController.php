@@ -3,29 +3,28 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Servicio;
 use App\Models\Usuario;
 use App\Models\MetodoPago;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PedidoController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('pedidos.ver')) {
-            abort(403, 'No tiene permiso para ver pedidos');
-        }
+        $this->autorizarPermiso('pedidos.ver', 'No tiene permiso para ver pedidos');
 
         $query = Pedido::with(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']);
 
         // Si es cliente, solo ver sus pedidos
-        if (Auth::user()->rol->nombre === 'CLIENTE') {
-            $query->where('usuario_id', Auth::id());
+        if (auth()->user()->rol->nombre === 'CLIENTE') {
+            $query->where('usuario_id', auth()->id());
         }
 
         // Filtros
@@ -56,9 +55,7 @@ class PedidoController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            abort(403, 'No tiene permiso para crear pedidos');
-        }
+        $this->autorizarPermiso('pedidos.crear', 'No tiene permiso para crear pedidos');
 
         $productos = Producto::where('stock', '>', 0)->get();
         $servicios = Servicio::where('activo', true)->get();
@@ -77,9 +74,7 @@ class PedidoController extends Controller
 
     public function storeContado(Request $request)
     {
-        if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            abort(403, 'No tiene permiso para crear pedidos');
-        }
+        $this->autorizarPermiso('pedidos.crear', 'No tiene permiso para crear pedidos');
 
         $validated = $request->validate([
             'fecha' => 'nullable|date',
@@ -152,7 +147,7 @@ class PedidoController extends Controller
                             'motivo' => 'Venta al contado',
                             'producto_id' => $producto->id,
                             'pedido_id' => $pedido->id,
-                            'usuario_id' => Auth::id(),
+                            'usuario_id' => auth()->id(),
                             'fecha' => now(),
                         ]);
                     }
@@ -195,9 +190,7 @@ class PedidoController extends Controller
 
     public function storeCredito(Request $request)
     {
-        if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            abort(403, 'No tiene permiso para crear pedidos');
-        }
+        $this->autorizarPermiso('pedidos.crear', 'No tiene permiso para crear pedidos');
 
         $validated = $request->validate([
             'fecha' => 'nullable|date',
@@ -315,12 +308,10 @@ class PedidoController extends Controller
 
     public function show(Pedido $pedido)
     {
-        if (!Auth::user()->tienePermiso('pedidos.ver')) {
-            abort(403, 'No tiene permiso para ver pedidos');
-        }
+        $this->autorizarPermiso('pedidos.ver', 'No tiene permiso para ver pedidos');
 
         // Si es cliente, solo puede ver sus propios pedidos
-        if (Auth::user()->rol->nombre === 'CLIENTE' && $pedido->usuario_id !== Auth::id()) {
+        if (auth()->user()->rol->nombre === 'CLIENTE' && $pedido->usuario_id !== auth()->id()) {
             abort(403, 'No tiene permiso para ver este pedido');
         }
 

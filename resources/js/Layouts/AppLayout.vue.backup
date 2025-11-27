@@ -191,6 +191,94 @@ import Alert from '@/Components/UI/Alert.vue';
 
 const page = usePage();
 
+// Usar un ref para mantener los menuItems y asegurar reactividad
+// Inicializar con los menuItems actuales si existen
+const menuItemsRef = ref(Array.isArray(page.props.menuItems) ? page.props.menuItems : []);
+
+// Función para actualizar el ref solo si hay items válidos o si no hay usuario
+const updateMenuItems = (newItems, forceUpdate = false) => {
+    const items = newItems ?? [];
+    const validItems = Array.isArray(items) ? items : [];
+    const hasUser = !!page.props.auth?.user;
+    const hasPreviousItems = menuItemsRef.value.length > 0;
+
+    // Si hay items válidos, siempre actualizar
+    if (validItems.length > 0) {
+        menuItemsRef.value = validItems;
+        if (import.meta.env.DEV) {
+            console.log('✅ Menú actualizado:', {
+                count: validItems.length,
+                items: validItems.map(i => i.nombre),
+                path: window.location.pathname
+            });
+        }
+        return;
+    }
+
+    // Si no hay items pero hay usuario autenticado, mantener los anteriores
+    // Esto evita que el menú desaparezca durante la navegación
+    if (hasUser && hasPreviousItems && !forceUpdate) {
+        if (import.meta.env.DEV) {
+            console.warn('⚠️ Menú vacío recibido, manteniendo items anteriores', {
+                menuItemsRecibidos: newItems,
+                menuItemsAnteriores: menuItemsRef.value.length,
+                user: page.props.auth?.user,
+                userRol: page.props.auth?.user?.rol,
+                currentPath: window.location.pathname,
+            });
+        }
+        // No actualizar, mantener los anteriores
+        return;
+    }
+
+    // Si no hay usuario o se fuerza la actualización, actualizar a vacío
+    menuItemsRef.value = [];
+};
+
+// Watch para detectar cambios en menuItems y actualizar el ref
+watch(
+    () => page.props.menuItems,
+    (newItems) => {
+        updateMenuItems(newItems);
+    },
+    { immediate: true, deep: true }
+);
+
+// También watch para cambios en el usuario autenticado
+watch(
+    () => page.props.auth?.user,
+    (newUser, oldUser) => {
+        // Si el usuario cambia (login/logout) y hay menuItems en props, actualizar
+        if (newUser) {
+            const items = page.props.menuItems ?? [];
+            updateMenuItems(items, false);
+        } else if (!newUser && oldUser) {
+            // Si el usuario cerró sesión, limpiar el menú
+            menuItemsRef.value = [];
+        }
+    },
+    { immediate: true }
+);
+
+// Asegurar que el menú se cargue al montar el componente
+onMounted(() => {
+    // Si hay usuario pero no hay items en el ref, intentar cargar de props
+    if (page.props.auth?.user && menuItemsRef.value.length === 0) {
+        const items = page.props.menuItems ?? [];
+        const validItems = Array.isArray(items) ? items : [];
+        if (validItems.length > 0) {
+            menuItemsRef.value = validItems;
+            if (import.meta.env.DEV) {
+                console.log('✅ Menú cargado en onMounted:', {
+                    count: validItems.length,
+                    items: validItems.map(i => i.nombre)
+                });
+            }
+        }
+    }
+});
+
+// SOLUCIÓN DEFINITIVA: Mantener menú persistente con localStorage como respaldo
 // Esto asegura que el menú nunca desaparezca durante la navegación
 
 // Inicializar desde localStorage si existe, o desde props

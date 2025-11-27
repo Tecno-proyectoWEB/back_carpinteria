@@ -31,38 +31,49 @@ class AuthController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        $usuario = Usuario::where('email', $request->email)->with('rol')->first();
+        // Cargar usuario con rol y permisos
+        $usuario = Usuario::where('email', $request->email)->with('rol.permisos')->first();
 
-        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
+        if (!$usuario) {
             return back()->withErrors([
                 'message' => 'Credenciales inválidas',
-            ]);
+            ])->withInput($request->only('email'));
+        }
+
+        // Verificar contraseña - usar getRawOriginal para obtener el valor sin el cast
+        if (!Hash::check($request->password, $usuario->getRawOriginal('password'))) {
+            return back()->withErrors([
+                'message' => 'Credenciales inválidas',
+            ])->withInput($request->only('email'));
         }
 
         // Validar todos los estados de seguridad según modelo de negocio
         if (!$usuario->estado) {
-            return back()->withErrors(['message' => 'Usuario inactivo']);
+            return back()->withErrors(['message' => 'Usuario inactivo'])->withInput($request->only('email'));
         }
 
         if (!$usuario->disponibilidad) {
-            return back()->withErrors(['message' => 'Usuario no disponible']);
+            return back()->withErrors(['message' => 'Usuario no disponible'])->withInput($request->only('email'));
         }
 
         if (!$usuario->cuenta_no_expirada) {
-            return back()->withErrors(['message' => 'Cuenta expirada']);
+            return back()->withErrors(['message' => 'Cuenta expirada'])->withInput($request->only('email'));
         }
 
         if (!$usuario->cuenta_no_bloqueada) {
-            return back()->withErrors(['message' => 'Cuenta bloqueada']);
+            return back()->withErrors(['message' => 'Cuenta bloqueada'])->withInput($request->only('email'));
         }
 
         if (!$usuario->credenciales_no_expiradas) {
-            return back()->withErrors(['message' => 'Credenciales expiradas']);
+            return back()->withErrors(['message' => 'Credenciales expiradas'])->withInput($request->only('email'));
         }
 
-        Auth::login($usuario);
+        // Autenticar al usuario
+        Auth::login($usuario, $request->boolean('remember', false));
 
-        return redirect()->route('dashboard');
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request)

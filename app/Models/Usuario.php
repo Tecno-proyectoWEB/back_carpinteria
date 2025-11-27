@@ -72,17 +72,72 @@ class Usuario extends Authenticatable
         return $this->hasMany(Pago::class);
     }
 
+    /**
+     * Obtiene los permisos del usuario a través de su rol
+     */
     public function permisos()
     {
-        return $this->rol->permisos() ?? collect();
+        if (!$this->rol) {
+            return collect();
+        }
+        
+        // Cargar la relación si no está cargada
+        if (!$this->relationLoaded('rol')) {
+            $this->load('rol.permisos');
+        }
+        
+        return $this->rol->permisos ?? collect();
     }
 
+    /**
+     * Verifica si el usuario tiene un permiso específico
+     * El PROPIETARIO tiene acceso a todo automáticamente
+     */
     public function tienePermiso($permiso)
     {
+        // Si no tiene rol, no tiene permisos
         if (!$this->rol) {
             return false;
         }
-        return $this->rol->permisos()->where('nombre', $permiso)->exists();
+        
+        // El PROPIETARIO tiene acceso a todo
+        if ($this->rol->nombre === 'PROPIETARIO') {
+            return true;
+        }
+        
+        // Cargar permisos si no están cargados
+        if (!$this->rol->relationLoaded('permisos')) {
+            $this->rol->load('permisos');
+        }
+        
+        // Verificar si el rol tiene el permiso
+        return $this->rol->permisos->contains('nombre', $permiso);
+    }
+
+    /**
+     * Verifica si el usuario tiene alguno de los permisos especificados
+     */
+    public function tieneAlgunPermiso(array $permisos)
+    {
+        foreach ($permisos as $permiso) {
+            if ($this->tienePermiso($permiso)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica si el usuario tiene todos los permisos especificados
+     */
+    public function tieneTodosLosPermisos(array $permisos)
+    {
+        foreach ($permisos as $permiso) {
+            if (!$this->tienePermiso($permiso)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function getAuthIdentifierName()

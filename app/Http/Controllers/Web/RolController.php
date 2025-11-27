@@ -3,21 +3,21 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Rol;
 use App\Models\Permiso;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class RolController extends Controller
 {
+    use HasPermissions;
+
     public function index()
     {
-        if (!Auth::user()->tienePermiso('roles.ver')) {
-            abort(403, 'No tiene permiso para ver roles');
-        }
+        $this->autorizarPermiso('roles.ver', 'No tiene permiso para ver roles');
 
-        $roles = Rol::with('permisos')->get();
+        $roles = Rol::with(['permisos', 'usuarios'])->get();
         $permisos = Permiso::all();
 
         return Inertia::render('Roles/Index', [
@@ -26,11 +26,55 @@ class RolController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        $this->autorizarPermiso('roles.crear', 'No tiene permiso para crear roles');
+
+        $permisos = Permiso::all();
+
+        return Inertia::render('Roles/Create', [
+            'permisos' => $permisos,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $this->autorizarPermiso('roles.crear', 'No tiene permiso para crear roles');
+
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255|unique:rol,nombre',
+            'permisos' => 'array',
+            'permisos.*' => 'exists:permiso,id',
+        ], [
+            'nombre.required' => 'El nombre del rol es obligatorio.',
+            'nombre.unique' => 'Ya existe un rol con ese nombre.',
+        ]);
+
+        $rol = Rol::create([
+            'nombre' => $validated['nombre'],
+        ]);
+
+        if (!empty($validated['permisos'])) {
+            $rol->permisos()->sync($validated['permisos']);
+        }
+
+        \App\Models\Bitacora::create([
+            'accion' => 'Rol creado',
+            'modulo' => 'Rol',
+            'tabla_afectada' => 'rol',
+            'registro_id' => $rol->id,
+            'datos_nuevos' => $rol->toArray(),
+            'usuario_id' => auth()->id(),
+            'fecha' => now(),
+        ]);
+
+        return redirect()->route('roles.index')
+            ->with('success', 'Rol creado exitosamente');
+    }
+
     public function edit(Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('roles.editar')) {
-            abort(403, 'No tiene permiso para editar roles');
-        }
+        $this->autorizarPermiso('roles.editar', 'No tiene permiso para editar roles');
 
         $rol->load('permisos');
         $permisos = Permiso::all();
@@ -43,9 +87,7 @@ class RolController extends Controller
 
     public function update(Request $request, Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('roles.editar')) {
-            abort(403, 'No tiene permiso para editar roles');
-        }
+        $this->autorizarPermiso('roles.editar', 'No tiene permiso para editar roles');
 
         $validated = $request->validate([
             'permisos' => 'array',
@@ -65,12 +107,49 @@ class RolController extends Controller
             'registro_id' => $rol->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => ['permisos' => $validated['permisos'] ?? []],
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
         return redirect()->route('roles.index')
             ->with('success', 'Permisos del rol actualizados exitosamente');
+    }
+
+    public function destroy(Rol $rol)
+    {
+        $this->autorizarPermiso('roles.eliminar', 'No tiene permiso para eliminar roles');
+
+        // No permitir eliminar el rol PROPIETARIO
+        if ($rol->nombre === 'PROPIETARIO') {
+            return back()->withErrors(['error' => 'No se puede eliminar el rol PROPIETARIO']);
+        }
+
+        // Verificar si hay usuarios con este rol
+        if ($rol->usuarios()->count() > 0) {
+            return back()->withErrors(['error' => 'No se puede eliminar el rol porque tiene usuarios asignados']);
+        }
+
+        $datosAnteriores = [
+            'id' => $rol->id,
+            'nombre' => $rol->nombre,
+            'permisos' => $rol->permisos->pluck('id')->toArray(),
+        ];
+
+        $rol->permisos()->detach();
+        $rol->delete();
+
+        \App\Models\Bitacora::create([
+            'accion' => 'Rol eliminado',
+            'modulo' => 'Rol',
+            'tabla_afectada' => 'rol',
+            'registro_id' => $datosAnteriores['id'],
+            'datos_anteriores' => $datosAnteriores,
+            'usuario_id' => auth()->id(),
+            'fecha' => now(),
+        ]);
+
+        return redirect()->route('roles.index')
+            ->with('success', 'Rol eliminado exitosamente');
     }
 }
 

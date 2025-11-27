@@ -1,21 +1,20 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-4xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <!-- Header -->
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-gray-900">{{ producto.nombre }}</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ producto?.nombre || 'Producto' }}</h2>
                         <div class="flex space-x-2">
                             <Link
-                                v-if="canEdit"
-                                :href="route('productos.edit', producto.id)"
+                                v-if="canEdit && producto?.id"
+                                :href="getRoute('productos.edit', producto.id)"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                             >
                                 Editar
                             </Link>
                             <Link
-                                :href="route('productos.index')"
+                                :href="getRoute('productos.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Volver
@@ -29,9 +28,9 @@
                             <!-- Imagen -->
                             <div>
                                 <img
-                                    v-if="producto.imagen"
+                                    v-if="producto?.imagen"
                                     :src="`/storage/${producto.imagen}`"
-                                    :alt="producto.nombre"
+                                    :alt="producto?.nombre || 'Producto'"
                                     class="w-full h-64 object-cover rounded-lg"
                                 />
                                 <div v-else class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -43,13 +42,13 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500">Descripción</label>
-                                    <p class="mt-1 text-gray-900">{{ producto.descripcion || 'Sin descripción' }}</p>
+                                    <p class="mt-1 text-gray-900">{{ producto?.descripcion || 'Sin descripción' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="text-sm font-medium text-gray-500">Categoría</label>
                                     <p class="mt-1">
-                                        <Badge variant="info">{{ producto.categoria?.nombre || 'Sin categoría' }}</Badge>
+                                        <Badge variant="info">{{ producto?.categoria?.nombre || 'Sin categoría' }}</Badge>
                                     </p>
                                 </div>
 
@@ -58,49 +57,52 @@
                                         <label class="text-sm font-medium text-gray-500">Stock</label>
                                         <p
                                             class="mt-1 text-lg font-semibold"
-                                            :class="producto.stock <= producto.stock_minimo ? 'text-red-600' : 'text-gray-900'"
+                                            :class="(producto?.stock || 0) <= (producto?.stock_minimo || 0) ? 'text-red-600' : 'text-gray-900'"
                                         >
-                                            {{ producto.stock }}
-                                            <span v-if="producto.stock <= producto.stock_minimo" class="text-xs">⚠️ Stock bajo</span>
+                                            {{ producto?.stock || 0 }}
+                                            <span v-if="(producto?.stock || 0) <= (producto?.stock_minimo || 0)" class="text-xs">⚠️ Stock bajo</span>
                                         </p>
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Stock Mínimo</label>
-                                        <p class="mt-1 text-lg font-semibold text-gray-900">{{ producto.stock_minimo || 0 }}</p>
+                                        <p class="mt-1 text-lg font-semibold text-gray-900">{{ producto?.stock_minimo || 0 }}</p>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="text-sm font-medium text-gray-500">Precio Unitario</label>
                                     <p class="mt-1 text-2xl font-bold text-green-600">
-                                        ${{ parseFloat(producto.precio_unitario).toFixed(2) }}
+                                        ${{ parseFloat(producto?.precio_unitario || 0).toFixed(2) }}
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
+const page = usePage();
+
 const props = defineProps({
-    producto: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    producto: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const canEdit = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    const rol = page.props.auth?.user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 </script>
 

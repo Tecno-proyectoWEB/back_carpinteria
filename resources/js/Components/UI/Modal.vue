@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
+import { watch, onUnmounted } from 'vue';
 
 const props = defineProps({
     show: {
@@ -83,19 +83,37 @@ const close = () => {
 };
 
 // Cerrar con ESC
+let escHandler = null;
+
 watch(() => props.show, (newVal) => {
     if (newVal) {
-        document.body.style.overflow = 'hidden';
-        const handleEsc = (e) => {
+        if (document && document.body) {
+            document.body.style.overflow = 'hidden';
+        }
+        escHandler = (e) => {
             if (e.key === 'Escape') close();
         };
-        document.addEventListener('keydown', handleEsc);
-        return () => {
-            document.body.style.overflow = '';
-            document.removeEventListener('keydown', handleEsc);
-        };
+        if (document) {
+            document.addEventListener('keydown', escHandler);
+        }
     } else {
+        if (document && document.body) {
+            document.body.style.overflow = '';
+        }
+        if (escHandler && document) {
+            document.removeEventListener('keydown', escHandler);
+            escHandler = null;
+        }
+    }
+});
+
+// Cleanup al desmontar el componente
+onUnmounted(() => {
+    if (document && document.body) {
         document.body.style.overflow = '';
+    }
+    if (escHandler && document) {
+        document.removeEventListener('keydown', escHandler);
     }
 });
 </script>

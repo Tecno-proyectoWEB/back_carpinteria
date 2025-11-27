@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\MovimientoInventario;
 use App\Models\Material;
 use App\Models\Producto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class InventarioController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('inventario.ver')) {
-            abort(403, 'No tiene permiso para ver inventario');
-        }
+        $this->autorizarPermiso('inventario.ver', 'No tiene permiso para ver inventario');
 
         $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'compra', 'pedido']);
 
@@ -71,9 +70,7 @@ class InventarioController extends Controller
 
     public function stock(Request $request)
     {
-        if (!Auth::user()->tienePermiso('inventario.ver')) {
-            abort(403, 'No tiene permiso para ver inventario');
-        }
+        $this->autorizarPermiso('inventario.ver', 'No tiene permiso para ver inventario');
 
         $queryMateriales = Material::with('categoria', 'sector');
         $queryProductos = Producto::with('categoria');
@@ -122,7 +119,7 @@ class InventarioController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('inventario.ingreso') && !Auth::user()->tienePermiso('inventario.salida')) {
+        if (!$this->tieneAlgunPermiso(['inventario.ingreso', 'inventario.salida'])) {
             abort(403, 'No tiene permiso para crear movimientos de inventario');
         }
 
@@ -138,11 +135,11 @@ class InventarioController extends Controller
     public function store(Request $request)
     {
         // Validar permisos según tipo
-        if ($request->tipo === 'INGRESO' && !Auth::user()->tienePermiso('inventario.ingreso')) {
+        if ($request->tipo === 'INGRESO' && !$this->tienePermiso('inventario.ingreso')) {
             abort(403, 'No tiene permiso para registrar ingresos');
         }
 
-        if ($request->tipo === 'SALIDA' && !Auth::user()->tienePermiso('inventario.salida')) {
+        if ($request->tipo === 'SALIDA' && !$this->tienePermiso('inventario.salida')) {
             abort(403, 'No tiene permiso para registrar salidas');
         }
 
@@ -174,7 +171,7 @@ class InventarioController extends Controller
                 'producto_id' => $validated['producto_id'] ?? null,
                 'compra_id' => null,
                 'pedido_id' => null,
-                'usuario_id' => Auth::id(),
+                'usuario_id' => auth()->id(),
                 'fecha' => now(),
             ]);
 
@@ -214,7 +211,7 @@ class InventarioController extends Controller
                 'tabla_afectada' => 'movimiento_inventario',
                 'registro_id' => $movimiento->id,
                 'datos_nuevos' => $movimiento->toArray(),
-                'usuario_id' => Auth::id(),
+                'usuario_id' => auth()->id(),
                 'fecha' => now(),
             ]);
 
@@ -228,9 +225,7 @@ class InventarioController extends Controller
 
     public function show(MovimientoInventario $movimientoInventario)
     {
-        if (!Auth::user()->tienePermiso('inventario.ver')) {
-            abort(403, 'No tiene permiso para ver inventario');
-        }
+        $this->autorizarPermiso('inventario.ver', 'No tiene permiso para ver inventario');
 
         $movimientoInventario->load(['material', 'producto', 'usuario', 'compra', 'pedido']);
 

@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Compra;
 use App\Models\Material;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CompraController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('compras.ver')) {
-            abort(403, 'No tiene permiso para ver compras');
-        }
+        $this->autorizarPermiso('compras.ver', 'No tiene permiso para ver compras');
 
         $query = Compra::with(['proveedor', 'usuario', 'detalles.material']);
 
@@ -56,9 +55,7 @@ class CompraController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('compras.crear')) {
-            abort(403, 'No tiene permiso para crear compras');
-        }
+        $this->autorizarPermiso('compras.crear', 'No tiene permiso para crear compras');
 
         $materiales = Material::where('activo', true)->get();
         $proveedores = Proveedor::where('activo', true)->get();
@@ -71,9 +68,7 @@ class CompraController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('compras.crear')) {
-            abort(403, 'No tiene permiso para crear compras');
-        }
+        $this->autorizarPermiso('compras.crear', 'No tiene permiso para crear compras');
 
         $validated = $request->validate([
             'fecha' => 'nullable|date',
@@ -101,7 +96,7 @@ class CompraController extends Controller
                     'fecha' => $validated['fecha'] ?? now(),
                     'estado' => $validated['estado'],
                     'proveedor_id' => $validated['proveedor_id'],
-                    'usuario_id' => Auth::id(),
+                    'usuario_id' => auth()->id(),
                     'importe_total' => 0,
                     'importe_descuento' => $validated['importe_descuento'] ?? 0,
                 ]);
@@ -135,7 +130,7 @@ class CompraController extends Controller
                             'motivo' => 'Compra de materiales',
                             'material_id' => $detalle->material_id,
                             'compra_id' => $compra->id,
-                            'usuario_id' => Auth::id(),
+                            'usuario_id' => auth()->id(),
                             'fecha' => now(),
                         ]);
 
@@ -150,7 +145,7 @@ class CompraController extends Controller
                     'modulo' => 'Compra',
                     'tabla_afectada' => 'compra',
                     'registro_id' => $compra->id,
-                    'usuario_id' => Auth::id(),
+                    'usuario_id' => auth()->id(),
                     'fecha' => now(),
                 ]);
 
@@ -166,9 +161,7 @@ class CompraController extends Controller
 
     public function show(Compra $compra)
     {
-        if (!Auth::user()->tienePermiso('compras.ver')) {
-            abort(403, 'No tiene permiso para ver compras');
-        }
+        $this->autorizarPermiso('compras.ver', 'No tiene permiso para ver compras');
 
         $compra->load(['proveedor', 'usuario', 'detalles.material', 'movimientosInventario']);
 
@@ -179,9 +172,7 @@ class CompraController extends Controller
 
     public function confirmar(Compra $compra)
     {
-        if (!Auth::user()->tienePermiso('compras.editar')) {
-            abort(403, 'No tiene permiso para confirmar compras');
-        }
+        $this->autorizarPermiso('compras.confirmar', 'No tiene permiso para confirmar compras');
 
         if ($compra->estado === 'COMPLETADA') {
             return back()->withErrors(['error' => 'La compra ya está completada']);
@@ -202,7 +193,7 @@ class CompraController extends Controller
                             'motivo' => 'Compra de materiales',
                             'material_id' => $detalle->material_id,
                             'compra_id' => $compra->id,
-                            'usuario_id' => Auth::id(),
+                            'usuario_id' => auth()->id(),
                             'fecha' => now(),
                         ]);
 
@@ -223,7 +214,7 @@ class CompraController extends Controller
                     'modulo' => 'Compra',
                     'tabla_afectada' => 'compra',
                     'registro_id' => $compra->id,
-                    'usuario_id' => Auth::id(),
+                    'usuario_id' => auth()->id(),
                     'fecha' => now(),
                 ]);
             });

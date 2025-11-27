@@ -1,7 +1,7 @@
 <template>
-    <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
-        <div class="py-12">
-            <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+    <AppLayout>
+        <div class="max-w-7xl mx-auto">
+            <div class="max-w-5xl mx-auto">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Pedido</h2>
 
@@ -116,7 +116,7 @@
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
-                                :href="route('pedidos.index')"
+                                :href="getRoute('pedidos.index')"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
@@ -140,6 +140,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
+import { getRoute } from '@/utils/routeHelper';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
@@ -148,12 +149,24 @@ import DatePicker from '@/Components/Form/DatePicker.vue';
 import ProductoSelector from '@/Components/ProductoSelector.vue';
 
 const props = defineProps({
-    productos: Array,
-    servicios: Array,
-    clientes: Array,
-    metodosPago: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    productos: {
+        type: Array,
+        default: () => [],
+    },
+    servicios: {
+        type: Array,
+        default: () => [],
+    },
+    clientes: {
+        type: Array,
+        default: () => [],
+    },
+    metodosPago: {
+        type: Array,
+        default: () => [],
+    },
+    },
+    },
 });
 
 const tipoVenta = ref('contado');
@@ -161,9 +174,10 @@ const today = new Date().toISOString().split('T')[0];
 
 // Preparar clientes con nombre completo
 const clientesConNombre = computed(() => {
+    if (!props.clientes || !Array.isArray(props.clientes)) return [];
     return props.clientes.map(cliente => ({
         ...cliente,
-        nombreCompleto: `${cliente.nombre} ${cliente.apellido}`
+        nombreCompleto: `${cliente?.nombre || ''} ${cliente?.apellido || ''}`
     }));
 });
 
@@ -183,9 +197,9 @@ const total = computed(() => {
 
 const submit = () => {
     if (tipoVenta.value === 'contado') {
-        form.post(route('pedidos.store-contado'));
+        form.post(getRoute('pedidos.store-contado'));
     } else {
-        form.post(route('pedidos.store-credito'));
+        form.post(getRoute('pedidos.store-credito'));
     }
 };
 </script>

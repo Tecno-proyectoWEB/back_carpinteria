@@ -38,9 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('usuarios', \App\Http\Controllers\Web\UsuarioController::class);
     
     // Roles
-    Route::get('roles', [\App\Http\Controllers\Web\RolController::class, 'index'])->name('roles.index');
-    Route::get('roles/{rol}/edit', [\App\Http\Controllers\Web\RolController::class, 'edit'])->name('roles.edit');
-    Route::put('roles/{rol}', [\App\Http\Controllers\Web\RolController::class, 'update'])->name('roles.update');
+    Route::resource('roles', \App\Http\Controllers\Web\RolController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     
     // Inventario
     Route::get('inventario', [\App\Http\Controllers\Web\InventarioController::class, 'index'])->name('inventario.index');

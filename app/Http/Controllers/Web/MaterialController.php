@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasPermissions;
 use App\Models\Material;
 use App\Models\Categoria;
 use App\Models\Sector;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class MaterialController extends Controller
 {
+    use HasPermissions;
     public function index(Request $request)
     {
-        if (!Auth::user()->tienePermiso('materiales.ver')) {
-            abort(403, 'No tiene permiso para ver materiales');
-        }
+        $this->autorizarPermiso('materiales.ver', 'No tiene permiso para ver materiales');
 
         $query = Material::with(['categoria', 'sector']);
 
@@ -62,9 +61,7 @@ class MaterialController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('materiales.crear')) {
-            abort(403, 'No tiene permiso para crear materiales');
-        }
+        $this->autorizarPermiso('materiales.crear', 'No tiene permiso para crear materiales');
 
         $categorias = Categoria::where('activo', true)->get();
         $sectores = Sector::with('almacen')->get();
@@ -77,9 +74,7 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('materiales.crear')) {
-            abort(403, 'No tiene permiso para crear materiales');
-        }
+        $this->autorizarPermiso('materiales.crear', 'No tiene permiso para crear materiales');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -117,7 +112,7 @@ class MaterialController extends Controller
             'tabla_afectada' => 'material',
             'registro_id' => $material->id,
             'datos_nuevos' => $material->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -127,9 +122,7 @@ class MaterialController extends Controller
 
     public function show(Material $material)
     {
-        if (!Auth::user()->tienePermiso('materiales.ver')) {
-            abort(403, 'No tiene permiso para ver materiales');
-        }
+        $this->autorizarPermiso('materiales.ver', 'No tiene permiso para ver materiales');
 
         $material->load(['categoria', 'sector.almacen']);
 
@@ -140,9 +133,7 @@ class MaterialController extends Controller
 
     public function edit(Material $material)
     {
-        if (!Auth::user()->tienePermiso('materiales.editar')) {
-            abort(403, 'No tiene permiso para editar materiales');
-        }
+        $this->autorizarPermiso('materiales.editar', 'No tiene permiso para editar materiales');
 
         $categorias = Categoria::where('activo', true)->get();
         $sectores = Sector::with('almacen')->get();
@@ -156,9 +147,7 @@ class MaterialController extends Controller
 
     public function update(Request $request, Material $material)
     {
-        if (!Auth::user()->tienePermiso('materiales.editar')) {
-            abort(403, 'No tiene permiso para editar materiales');
-        }
+        $this->autorizarPermiso('materiales.editar', 'No tiene permiso para editar materiales');
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
@@ -196,7 +185,7 @@ class MaterialController extends Controller
             'registro_id' => $material->id,
             'datos_anteriores' => $datosAnteriores,
             'datos_nuevos' => $material->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
@@ -206,9 +195,7 @@ class MaterialController extends Controller
 
     public function destroy(Material $material)
     {
-        if (!Auth::user()->tienePermiso('materiales.eliminar')) {
-            abort(403, 'No tiene permiso para eliminar materiales');
-        }
+        $this->autorizarPermiso('materiales.eliminar', 'No tiene permiso para eliminar materiales');
 
         if ($material->imagen) {
             \Storage::disk('public')->delete($material->imagen);
@@ -222,7 +209,7 @@ class MaterialController extends Controller
             'tabla_afectada' => 'material',
             'registro_id' => $material->id,
             'datos_anteriores' => $material->toArray(),
-            'usuario_id' => Auth::id(),
+            'usuario_id' => auth()->id(),
             'fecha' => now(),
         ]);
 
