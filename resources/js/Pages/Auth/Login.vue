@@ -31,7 +31,7 @@
                         />
                     </div>
                 </div>
-                
+
                 <div v-if="$page.props.errors?.email" class="text-red-600 text-sm text-center">
                     {{ $page.props.errors.email }}
                 </div>
@@ -52,6 +52,7 @@
 
 <script setup>
 import { useForm } from '@inertiajs/vue3'
+import { route } from '../../ziggy.js'
 
 const form = useForm({
     email: '',
@@ -59,7 +60,7 @@ const form = useForm({
 })
 
 const submit = () => {
-    form.post('/login')
+    form.post(route('login'))
 }
 </script>
 

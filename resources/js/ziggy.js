@@ -1,64 +1,102 @@
 import ziggyRoute from '@tofandel/ziggy-js/dist/index.m.js'
 
-// Rutas de fallback
+// Rutas de fallback - Todas las rutas de web.php
 const fallbackRoutes = {
+    // Dashboard
     'dashboard': '/dashboard',
+    
+    // Auth
+    'login': '/login',
+    'logout': '/logout',
+    
+    // Productos (resource)
     'productos.index': '/productos',
     'productos.create': '/productos/create',
     'productos.store': '/productos',
+    'productos.show': (id) => `/productos/${id}`,
+    'productos.edit': (id) => `/productos/${id}/edit`,
     'productos.update': (id) => `/productos/${id}`,
     'productos.destroy': (id) => `/productos/${id}`,
-    'productos.edit': (id) => `/productos/${id}/edit`,
-    'productos.show': (id) => `/productos/${id}`,
+    
+    // Materiales (resource)
     'materiales.index': '/materiales',
     'materiales.create': '/materiales/create',
     'materiales.store': '/materiales',
+    'materiales.show': (id) => `/materiales/${id}`,
+    'materiales.edit': (id) => `/materiales/${id}/edit`,
     'materiales.update': (id) => `/materiales/${id}`,
     'materiales.destroy': (id) => `/materiales/${id}`,
-    'materiales.edit': (id) => `/materiales/${id}/edit`,
-    'pedidos.index': '/pedidos',
-    'pedidos.create': '/pedidos/create',
-    'pedidos.storeContado': '/pedidos/contado',
-    'pedidos.storeCredito': '/pedidos/credito',
-    'pedidos.show': (id) => `/pedidos/${id}`,
-    'usuarios.index': '/usuarios',
-    'usuarios.create': '/usuarios/create',
-    'usuarios.destroy': (id) => `/usuarios/${id}`,
-    'usuarios.edit': (id) => `/usuarios/${id}/edit`,
-    'roles.index': '/roles',
-    'roles.create': '/roles/create',
-    'roles.store': '/roles',
-    'roles.update': (id) => `/roles/${id}`,
-    'roles.destroy': (id) => `/roles/${id}`,
-    'roles.edit': (id) => `/roles/${id}/edit`,
+    
+    // Servicios (resource)
     'servicios.index': '/servicios',
     'servicios.create': '/servicios/create',
     'servicios.store': '/servicios',
+    'servicios.show': (id) => `/servicios/${id}`,
+    'servicios.edit': (id) => `/servicios/${id}/edit`,
     'servicios.update': (id) => `/servicios/${id}`,
     'servicios.destroy': (id) => `/servicios/${id}`,
-    'servicios.edit': (id) => `/servicios/${id}/edit`,
+    
+    // Usuarios (resource)
+    'usuarios.index': '/usuarios',
+    'usuarios.create': '/usuarios/create',
+    'usuarios.store': '/usuarios',
+    'usuarios.show': (id) => `/usuarios/${id}`,
+    'usuarios.edit': (id) => `/usuarios/${id}/edit`,
+    'usuarios.update': (id) => `/usuarios/${id}`,
+    'usuarios.destroy': (id) => `/usuarios/${id}`,
+    
+    // Roles (resource)
+    'roles.index': '/roles',
+    'roles.create': '/roles/create',
+    'roles.store': '/roles',
+    'roles.show': (id) => `/roles/${id}`,
+    'roles.edit': (id) => `/roles/${id}/edit`,
+    'roles.update': (id) => `/roles/${id}`,
+    'roles.destroy': (id) => `/roles/${id}`,
+    
+    // Inventarios (resource - solo index, create, store, show)
     'inventarios.index': '/inventarios',
     'inventarios.create': '/inventarios/create',
     'inventarios.store': '/inventarios',
     'inventarios.show': (id) => `/inventarios/${id}`,
+    
+    // Ventas (resource + rutas adicionales)
+    'ventas.index': '/ventas',
+    'ventas.create': '/ventas/create',
+    'ventas.store': '/ventas',
+    'ventas.show': (id) => `/ventas/${id}`,
+    'ventas.edit': (id) => `/ventas/${id}/edit`,
+    'ventas.update': (id) => `/ventas/${id}`,
+    'ventas.destroy': (id) => `/ventas/${id}`,
+    'ventas.storeContado': '/ventas/contado',
+    'ventas.storeCredito': '/ventas/credito',
+    'ventas.confirmarCredito': (id) => `/ventas/${id}/confirmar-credito`,
+    
+    // Materiales - rutas adicionales que faltaban
+    'materiales.show': (id) => `/materiales/${id}`,
+    
+    // Pagos (resource + rutas adicionales)
     'pagos.index': '/pagos',
     'pagos.create': '/pagos/create',
     'pagos.store': '/pagos',
-    'pagos.update': (id) => `/pagos/${id}`,
-    'pagos.destroy': (id) => `/pagos/${id}`,
     'pagos.show': (id) => `/pagos/${id}`,
     'pagos.edit': (id) => `/pagos/${id}/edit`,
+    'pagos.update': (id) => `/pagos/${id}`,
+    'pagos.destroy': (id) => `/pagos/${id}`,
     'pagos.registrar': (id) => `/pagos/${id}/registrar`,
+    
+    // Reportes
     'reportes.index': '/reportes',
     'reportes.ventas': '/reportes/ventas',
     'reportes.estadisticas': '/reportes/estadisticas',
     'reportes.inventario': '/reportes/inventario',
+    
+    // Búsqueda
     'busqueda.buscar': '/buscar',
-    'ventas.index': '/ventas',
-    'ventas.create': '/ventas/create',
-    'ventas.storeContado': '/ventas/contado',
-    'ventas.storeCredito': '/ventas/credito',
-    'ventas.show': (id) => `/ventas/${id}`,
+    
+    // Payment (PagoFácil)
+    'payment.callback': '/payment/callback',
+    'payment.status': (id) => `/payment/${id}/status`,
 }
 
 // Helper global para usar route() en todos los componentes

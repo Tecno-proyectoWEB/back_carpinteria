@@ -390,6 +390,6 @@ const buscar = () => {
 }
 
 const logout = () => {
-    router.post('/logout')
+    router.post(route('logout'))
 }
 </script>
