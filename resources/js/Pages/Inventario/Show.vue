@@ -6,17 +6,17 @@
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <div>
                             <h2 class="text-2xl font-bold text-gray-900">Detalle del Movimiento</h2>
-                            <p class="text-sm text-gray-500 mt-1">ID: {{ movimiento.id }}</p>
+                            <p class="text-sm text-gray-500 mt-1">ID: {{ movimiento?.id || 'Cargando...' }}</p>
                         </div>
-                        <Link
-                            :href="route('inventario.index')"
+                        <button
+                            @click="goBack"
                             class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                         >
                             Volver
-                        </Link>
+                        </button>
                     </div>
 
-                    <div class="px-6 py-4">
+                    <div class="px-6 py-4" v-if="movimiento && movimiento.id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Información General -->
                             <div>
@@ -26,13 +26,13 @@
                                         <label class="text-sm font-medium text-gray-500">Tipo de Movimiento</label>
                                         <p class="mt-1">
                                             <Badge :variant="movimiento.tipo === 'INGRESO' ? 'success' : 'error'">
-                                                {{ movimiento.tipo }}
+                                                {{ movimiento.tipo || 'N/A' }}
                                             </Badge>
                                         </p>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Cantidad</label>
-                                        <p class="text-gray-900 font-semibold">{{ movimiento.cantidad }}</p>
+                                        <p class="text-gray-900 font-semibold">{{ movimiento.cantidad || 0 }}</p>
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Fecha y Hora</label>
@@ -41,7 +41,8 @@
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Usuario</label>
                                         <p class="text-gray-900">
-                                            {{ movimiento.usuario?.nombre }} {{ movimiento.usuario?.apellido }}
+                                            {{ movimiento.usuario?.nombre || '' }} {{ movimiento.usuario?.apellido || '' }}
+                                            <span v-if="!movimiento.usuario" class="text-gray-400">N/A</span>
                                         </p>
                                     </div>
                                 </div>
@@ -59,13 +60,17 @@
                                         <label class="text-sm font-medium text-gray-500">Tipo</label>
                                         <p class="text-gray-900">Producto</p>
                                     </div>
+                                    <div v-else>
+                                        <label class="text-sm font-medium text-gray-500">Tipo</label>
+                                        <p class="text-gray-400">N/A</p>
+                                    </div>
                                     <div v-if="movimiento.material">
                                         <label class="text-sm font-medium text-gray-500">Nombre</label>
-                                        <p class="text-gray-900 font-medium">{{ movimiento.material.nombre }}</p>
+                                        <p class="text-gray-900 font-medium">{{ movimiento.material.nombre || 'N/A' }}</p>
                                     </div>
                                     <div v-if="movimiento.producto">
                                         <label class="text-sm font-medium text-gray-500">Nombre</label>
-                                        <p class="text-gray-900 font-medium">{{ movimiento.producto.nombre }}</p>
+                                        <p class="text-gray-900 font-medium">{{ movimiento.producto.nombre || 'N/A' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -85,22 +90,22 @@
                             <div v-if="movimiento.compra || movimiento.pedido">
                                 <h3 class="text-lg font-semibold mb-4">Origen</h3>
                                 <div class="space-y-3">
-                                    <div v-if="movimiento.compra">
+                                    <div v-if="movimiento.compra && movimiento.compra.id">
                                         <label class="text-sm font-medium text-gray-500">Compra</label>
                                         <p class="text-gray-900">
                                             <Link
-                                                :href="route('compras.show', movimiento.compra.id)"
+                                                :href="getRoute('compras.show', movimiento.compra.id)"
                                                 class="text-blue-600 hover:text-blue-900"
                                             >
                                                 Compra #{{ movimiento.compra.id }}
                                             </Link>
                                         </p>
                                     </div>
-                                    <div v-if="movimiento.pedido">
+                                    <div v-if="movimiento.pedido && movimiento.pedido.id">
                                         <label class="text-sm font-medium text-gray-500">Pedido</label>
                                         <p class="text-gray-900">
                                             <Link
-                                                :href="route('pedidos.show', movimiento.pedido.id)"
+                                                :href="getRoute('pedidos.show', movimiento.pedido.id)"
                                                 class="text-blue-600 hover:text-blue-900"
                                             >
                                                 Pedido #{{ movimiento.pedido.id }}
@@ -114,6 +119,9 @@
                             </div>
                         </div>
                     </div>
+                    <div v-else class="px-6 py-4">
+                        <p class="text-red-600">⚠️ No se pudo cargar la información del movimiento</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,15 +129,53 @@
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
 const props = defineProps({
-    movimiento: Object,
-    menuItems: Array,
-    pageVisits: Number,
+    movimiento: {
+        type: Object,
+        default: () => ({}),
+    },
+    menuItems: {
+        type: Array,
+        default: () => [],
+    },
+    pageVisits: {
+        type: Number,
+        default: 0,
+    },
 });
+
+const getRoute = (name, params = null) => {
+    if (window.route && typeof window.route === 'function') {
+        try {
+            return params ? window.route(name, params) : window.route(name);
+        } catch (e) {
+            console.error(`Error al generar ruta '${name}' con params:`, params, e);
+            if (name === 'inventario.index') return '/inventario';
+            if (name === 'compras.show' && params) return `/compras/${params}`;
+            if (name === 'pedidos.show' && params) return `/pedidos/${params}`;
+            return '#';
+        }
+    }
+    console.warn('route function not available');
+    if (name === 'inventario.index') return '/inventario';
+    if (name === 'compras.show' && params) return `/compras/${params}`;
+    if (name === 'pedidos.show' && params) return `/pedidos/${params}`;
+    return '#';
+};
+
+const goBack = () => {
+    try {
+        const routeUrl = getRoute('inventario.index');
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al volver:', e);
+        router.visit('/inventario');
+    }
+};
 
 const formatDate = (date) => {
     if (!date) return '';

@@ -8,19 +8,19 @@
                         <p class="text-gray-600 mt-1">Historial de todos los movimientos de inventario</p>
                     </div>
                     <div class="flex space-x-2">
-                        <Link
+                        <button
                             v-if="canCreate"
-                            :href="route('inventario.create')"
+                            @click="createMovimiento"
                             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                         >
                             + Nuevo Movimiento
-                        </Link>
-                        <Link
-                            :href="route('inventario.stock')"
+                        </button>
+                        <button
+                            @click="viewStock"
                             class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
                             Ver Stock
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -171,12 +171,13 @@
                                     <span v-else class="text-gray-400">Manual</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <Link
-                                        :href="route('inventario.show', movimiento.id)"
+                                    <button
+                                        v-if="movimiento && movimiento.id"
+                                        @click="() => viewMovimiento(movimiento)"
                                         class="text-indigo-600 hover:text-indigo-900"
                                     >
                                         Ver Detalle
-                                    </Link>
+                                    </button>
                                 </td>
                             </tr>
                             <tr v-if="movimientos.data.length === 0">
@@ -216,7 +217,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
@@ -229,6 +230,8 @@ const props = defineProps({
     filters: Object,
 });
 
+const page = usePage();
+
 const filters = ref({
     search: props.filters?.search || '',
     tipo: props.filters?.tipo || '',
@@ -239,15 +242,82 @@ const filters = ref({
 });
 
 const canCreate = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    const user = page.props.auth?.user;
+    const rol = user?.rol?.nombre;
+    return rol && ['PROPIETARIO', 'CARPINTERO'].includes(rol);
 });
 
+const getRoute = (name, params = null) => {
+    if (window.route && typeof window.route === 'function') {
+        try {
+            return params ? window.route(name, params) : window.route(name);
+        } catch (e) {
+            console.error(`Error al generar ruta '${name}' con params:`, params, e);
+            // Fallback a URL directa
+            if (name === 'inventario.index') return '/inventario';
+            if (name === 'inventario.create') return '/inventario/create';
+            if (name === 'inventario.stock') return '/inventario/stock';
+            if (name === 'inventario.show' && params) return `/inventario/${params}`;
+            return '#';
+        }
+    }
+    console.warn('route function not available');
+    // Fallback a URL directa
+    if (name === 'inventario.index') return '/inventario';
+    if (name === 'inventario.create') return '/inventario/create';
+    if (name === 'inventario.stock') return '/inventario/stock';
+    if (name === 'inventario.show' && params) return `/inventario/${params}`;
+    return '#';
+};
+
+const createMovimiento = () => {
+    try {
+        const routeUrl = getRoute('inventario.create');
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al crear movimiento:', e);
+        router.visit('/inventario/create');
+    }
+};
+
+const viewStock = () => {
+    try {
+        const routeUrl = getRoute('inventario.stock');
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al ver stock:', e);
+        router.visit('/inventario/stock');
+    }
+};
+
+const viewMovimiento = (movimiento) => {
+    if (!movimiento || !movimiento.id) {
+        console.error('Movimiento inválido para ver:', movimiento);
+        return;
+    }
+    try {
+        const routeUrl = getRoute('inventario.show', movimiento.id);
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al ver movimiento:', e);
+        router.visit(`/inventario/${movimiento.id}`);
+    }
+};
+
 const applyFilters = () => {
-    router.get(route('inventario.index'), filters.value, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    try {
+        const routeUrl = getRoute('inventario.index');
+        router.get(routeUrl, filters.value, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    } catch (e) {
+        console.error('Error aplicando filtros:', e);
+        router.get('/inventario', filters.value, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
 };
 
 const clearFilters = () => {

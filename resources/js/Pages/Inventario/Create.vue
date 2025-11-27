@@ -116,12 +116,13 @@
                         />
 
                         <div class="flex justify-end space-x-4 mt-6">
-                            <Link
-                                :href="route('inventario.index')"
+                            <button
+                                type="button"
+                                @click="goBack"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
-                            </Link>
+                            </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
@@ -140,7 +141,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Select from '@/Components/Form/Select.vue';
@@ -181,8 +182,44 @@ const onProductoChange = () => {
     form.material_id = null;
 };
 
+const getRoute = (name, params = null) => {
+    if (window.route && typeof window.route === 'function') {
+        try {
+            return params ? window.route(name, params) : window.route(name);
+        } catch (e) {
+            console.error(`Error al generar ruta '${name}' con params:`, params, e);
+            if (name === 'inventario.index') return '/inventario';
+            if (name === 'inventario.store') return '/inventario';
+            return '#';
+        }
+    }
+    console.warn('route function not available');
+    if (name === 'inventario.index') return '/inventario';
+    if (name === 'inventario.store') return '/inventario';
+    return '#';
+};
+
+const goBack = () => {
+    try {
+        const routeUrl = getRoute('inventario.index');
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al volver:', e);
+        router.visit('/inventario');
+    }
+};
+
 const submit = () => {
-    form.post(route('inventario.store'));
+    const routeUrl = getRoute('inventario.store');
+    form.post(routeUrl, {
+        preserveScroll: true,
+        onSuccess: () => {
+            router.visit(getRoute('inventario.index'));
+        },
+        onError: (errors) => {
+            console.error('Error al crear movimiento:', errors);
+        }
+    });
 };
 </script>
 
