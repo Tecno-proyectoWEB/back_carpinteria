@@ -1,0 +1,242 @@
+/* Variables CSS para Temas */
+:root {
+    --font-size-base: 1rem;
+    --contrast-multiplier: 1;
+}
+
+/* Temas de edad - Mejorados para legibilidad */
+.theme-ninos {
+    --primary-color: #FF6B9D;
+    --secondary-color: #C44569;
+    --accent-color: #F8B500;
+    --bg-primary: #FFF5F7;
+    --bg-secondary: #FFE5EC;
+    /* Textos con alto contraste para legibilidad */
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #FFB3D1;
+    /* Colores para botones con buen contraste */
+    --button-primary-bg: #FF6B9D;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #C44569;
+    --button-secondary-text: #FFFFFF;
+}
+
+.theme-jovenes {
+    --primary-color: #4ECDC4;
+    --secondary-color: #45B7B8;
+    --accent-color: #FFE66D;
+    --bg-primary: #F0FDFC;
+    --bg-secondary: #E0FAF8;
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #A8E6E0;
+    --button-primary-bg: #4ECDC4;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #45B7B8;
+    --button-secondary-text: #FFFFFF;
+}
+
+.theme-adultos {
+    --primary-color: #2C3E50;
+    --secondary-color: #34495E;
+    --accent-color: #3498DB;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F8F9FA;
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-heading: #1A1A1A;
+    --text-button: #FFFFFF;
+    --border-color: #D1D5DB;
+    --button-primary-bg: #2C3E50;
+    --button-primary-text: #FFFFFF;
+    --button-secondary-bg: #34495E;
+    --button-secondary-text: #FFFFFF;
+}
+
+/* Modo oscuro - Mejorado para legibilidad */
+.dark-mode {
+    --bg-primary: #1A1A1A;
+    --bg-secondary: #2D2D2D;
+    /* Textos claros con alto contraste */
+    --text-primary: #F5F5F5;
+    --text-secondary: #D0D0D0;
+    --text-heading: #FFFFFF;
+    --text-button: #FFFFFF;
+    --border-color: #404040;
+}
+
+.dark-mode.theme-ninos {
+    --bg-primary: #2D1A1F;
+    --bg-secondary: #3D2A2F;
+    --text-primary: #FFE5EC;
+    --text-secondary: #FFB3D1;
+}
+
+.dark-mode.theme-jovenes {
+    --bg-primary: #1A2D2C;
+    --bg-secondary: #2A3D3C;
+    --text-primary: #E0FAF8;
+    --text-secondary: #A8E6E0;
+}
+
+.dark-mode.theme-adultos {
+    --bg-primary: #1A1A1A;
+    --bg-secondary: #2D2D2D;
+    --text-primary: #F5F5F5;
+    --text-secondary: #D0D0D0;
+}
+
+/* Aplicar variables CSS */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
+}
+
+/* Clases de utilidad */
+.text-primary {
+    color: var(--text-primary) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.text-heading {
+    color: var(--text-heading) !important;
+    font-weight: 600;
+}
+
+/* Clases para textos legibles en todos los temas */
+.text-legible {
+    color: var(--text-primary) !important;
+}
+
+.text-legible-heading {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+}
+
+/* Asegurar que los títulos siempre sean legibles */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-heading) !important;
+    font-weight: 700;
+}
+
+/* Textos en modo oscuro */
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6 {
+    color: #FFFFFF !important;
+}
+
+.dark-mode p,
+.dark-mode span,
+.dark-mode div {
+    color: var(--text-primary) !important;
+}
+
+/* Bordes */
+.border-theme {
+    border-color: var(--border-color) !important;
+}
+
+/* General button styles */
+button,
+a[role="button"],
+input[type="submit"],
+input[type="button"] {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    transition: all 0.2s ease;
+}
+
+/* Specific Tailwind button classes */
+.bg-blue-600, .bg-green-600, .bg-red-600, .bg-purple-600, .bg-indigo-600, .bg-gray-600 {
+    color: #FFFFFF !important;
+}
+
+.dark-mode .bg-blue-600, .dark-mode .bg-green-600, .dark-mode .bg-red-600, .dark-mode .bg-purple-600, .dark-mode .bg-indigo-600, .dark-mode .bg-gray-600 {
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover effects for all colored buttons */
+.bg-blue-600:hover, .bg-green-600:hover, .bg-red-600:hover, .bg-purple-600:hover, .bg-indigo-600:hover, .bg-gray-600:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .bg-blue-600:hover, .dark-mode .bg-green-600:hover, .dark-mode .bg-red-600:hover, .dark-mode .bg-purple-600:hover, .dark-mode .bg-indigo-600:hover, .dark-mode .bg-gray-600:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Inputs */
+input, textarea, select {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+/* Labels */
+label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Cards */
+.bg-white {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .bg-white {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Aplicar contraste */
+.high-contrast {
+    filter: contrast(calc(1 * var(--contrast-multiplier)));
+}
+
+.very-high-contrast {
+    filter: contrast(calc(1.2 * var(--contrast-multiplier)));
+}
+

@@ -42,7 +42,7 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venta</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -54,8 +54,8 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         <tr v-for="pago in pagos.data" :key="pago.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <Link :href="route('pedidos.show', pago.pedido_id)" class="text-blue-600 hover:text-blue-900">
-                                    Pedido #{{ pago.pedido_id }}
+                                <Link :href="route('ventas.show', pago.venta_id)" class="text-blue-600 hover:text-blue-900">
+                                    Venta #{{ pago.venta_id }}
                                 </Link>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

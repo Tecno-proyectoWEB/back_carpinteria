@@ -35,9 +35,9 @@ class Producto extends Model
         return $this->belongsTo(Categoria::class);
     }
 
-    public function detallesPedido()
+    public function detallesVenta()
     {
-        return $this->hasMany(DetallePedido::class);
+        return $this->hasMany(DetalleVenta::class);
     }
 
     public function movimientosInventario()

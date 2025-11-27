@@ -29,4 +29,19 @@ class Rol extends Model
     {
         return $this->belongsToMany(Permiso::class, 'rol_permiso', 'rol_id', 'permiso_id');
     }
+
+    /**
+     * Verificar si el rol tiene un permiso específico
+     * Corrección 5.4
+     */
+    public function tienePermiso($permiso)
+    {
+        // Si los permisos ya están cargados, usar la colección en memoria
+        if ($this->relationLoaded('permisos') && $this->permisos) {
+            return $this->permisos->contains('nombre', $permiso);
+        }
+
+        // Si no están cargados, hacer consulta a la BD
+        return $this->permisos()->where('nombre', $permiso)->exists();
+    }
 }

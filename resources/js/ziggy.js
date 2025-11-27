@@ -16,11 +16,16 @@ const fallbackRoutes = {
     'materiales.update': (id) => `/materiales/${id}`,
     'materiales.destroy': (id) => `/materiales/${id}`,
     'materiales.edit': (id) => `/materiales/${id}/edit`,
-    'pedidos.index': '/pedidos',
-    'pedidos.create': '/pedidos/create',
-    'pedidos.storeContado': '/pedidos/contado',
-    'pedidos.storeCredito': '/pedidos/credito',
-    'pedidos.show': (id) => `/pedidos/${id}`,
+    'ventas.index': '/ventas',
+    'ventas.create': '/ventas/create',
+    'ventas.storeContado': '/ventas/contado',
+    'ventas.storeCredito': '/ventas/credito',
+    'ventas.show': (id) => `/ventas/${id}`,
+    'ventas.update': (id) => `/ventas/${id}`,
+    'ventas.destroy': (id) => `/ventas/${id}`,
+    'buscar': '/buscar',
+    'payment.callback': '/payment/callback',
+    'payment.status': (id) => `/payment/status/${id}`,
     'usuarios.index': '/usuarios',
     'usuarios.create': '/usuarios/create',
     'usuarios.destroy': (id) => `/usuarios/${id}`,
@@ -71,7 +76,15 @@ export function route(name, params = {}, absolute = true) {
         // Usar fallback
         const routePath = fallbackRoutes[name]
         if (typeof routePath === 'function') {
-            const id = params.id || (typeof params === 'number' ? params : (params && Object.keys(params).length > 0 ? Object.values(params)[0] : null))
+            // Corrección 5.7: Manejar diferentes formatos de parámetros
+            let id = null
+            if (typeof params === 'number') {
+                id = params
+            } else if (typeof params === 'object' && params !== null) {
+                id = params.id || (Object.keys(params).length > 0 ? Object.values(params)[0] : null)
+            } else if (params !== null && params !== undefined) {
+                id = params
+            }
             return routePath(id)
         }
         return routePath || '#'

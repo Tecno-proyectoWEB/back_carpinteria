@@ -19,7 +19,7 @@ class MovimientoInventarioController extends Controller
             return back()->withErrors(['message' => 'No tiene permiso para ver inventario']);
         }
 
-        $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'pedido']);
+        $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'venta']);
 
         if ($request->has('tipo')) {
             $query->where('tipo', $request->tipo);
@@ -74,15 +74,32 @@ class MovimientoInventarioController extends Controller
             return back()->withErrors(['message' => 'No tiene permiso para registrar salidas']);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'tipo' => 'required|in:INGRESO,SALIDA',
             'cantidad' => 'required|integer|min:1',
             'motivo' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
-            'material_id' => 'required_without:producto_id|exists:material,id',
-            'producto_id' => 'required_without:material_id|exists:producto,id',
-            'pedido_id' => 'nullable|exists:pedido,id',
+            'venta_id' => 'nullable|exists:venta,id',
         ]);
+
+        // Corrección 5.3: Validar material_id o producto_id manualmente
+        if (empty($request->material_id) && empty($request->producto_id)) {
+            return back()->withErrors([
+                'material_id' => 'Debe seleccionar un material o un producto',
+            ])->withInput();
+        }
+
+        if (!empty($request->material_id) && !Material::where('id', $request->material_id)->exists()) {
+            return back()->withErrors([
+                'material_id' => 'El material seleccionado no existe',
+            ])->withInput();
+        }
+
+        if (!empty($request->producto_id) && !Producto::where('id', $request->producto_id)->exists()) {
+            return back()->withErrors([
+                'producto_id' => 'El producto seleccionado no existe',
+            ])->withInput();
+        }
 
         DB::beginTransaction();
         try {
@@ -91,9 +108,9 @@ class MovimientoInventarioController extends Controller
                 'cantidad' => $request->cantidad,
                 'motivo' => $request->motivo,
                 'observaciones' => $request->observaciones,
-                'material_id' => $request->material_id,
-                'producto_id' => $request->producto_id,
-                'pedido_id' => $request->pedido_id,
+                'material_id' => $request->material_id ?? null,
+                'producto_id' => $request->producto_id ?? null,
+                'venta_id' => $request->venta_id ?? null,
                 'usuario_id' => Auth::id(),
                 'fecha' => now(),
             ]);
@@ -137,7 +154,7 @@ class MovimientoInventarioController extends Controller
     public function show(MovimientoInventario $movimientoInventario)
     {
         return Inertia::render('Inventarios/Show', [
-            'movimiento' => $movimientoInventario->load(['material', 'producto', 'usuario', 'pedido']),
+            'movimiento' => $movimientoInventario->load(['material', 'producto', 'usuario', 'venta']),
         ]);
     }
 }

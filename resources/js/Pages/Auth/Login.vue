@@ -31,7 +31,7 @@
                         />
                     </div>
                 </div>
-                
+
                 <div v-if="$page.props.errors?.email" class="text-red-600 text-sm text-center">
                     {{ $page.props.errors.email }}
                 </div>

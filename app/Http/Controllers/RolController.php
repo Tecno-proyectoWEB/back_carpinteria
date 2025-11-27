@@ -12,7 +12,8 @@ class RolController extends Controller
 {
     public function index()
     {
-        if (!Auth::user()->tienePermiso('usuarios.ver')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.ver')) {
             return back()->withErrors(['message' => 'No tiene permiso para ver roles']);
         }
 
@@ -23,7 +24,8 @@ class RolController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.crear')) {
             return back()->withErrors(['message' => 'No tiene permiso para crear roles']);
         }
 
@@ -34,7 +36,8 @@ class RolController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->tienePermiso('usuarios.crear')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.crear')) {
             return back()->withErrors(['message' => 'No tiene permiso para crear roles']);
         }
 
@@ -57,19 +60,34 @@ class RolController extends Controller
 
     public function edit(Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.editar')) {
             return back()->withErrors(['message' => 'No tiene permiso para editar roles']);
         }
 
+        // Corrección 5.6: Serialización explícita para asegurar estructura correcta
+        $rol->load('permisos');
+        $rolSerializado = [
+            'id' => $rol->id,
+            'nombre' => $rol->nombre,
+            'permisos' => $rol->permisos->map(function($permiso) {
+                return [
+                    'id' => $permiso->id,
+                    'nombre' => $permiso->nombre,
+                ];
+            })->toArray(),
+        ];
+
         return Inertia::render('Roles/Edit', [
-            'rol' => $rol->load('permisos'),
+            'rol' => $rolSerializado,
             'permisos' => Permiso::all(),
         ]);
     }
 
     public function update(Request $request, Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('usuarios.editar')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.editar')) {
             return back()->withErrors(['message' => 'No tiene permiso para editar roles']);
         }
 
@@ -83,8 +101,10 @@ class RolController extends Controller
             'nombre' => $request->nombre,
         ]);
 
+        // Corrección 5.6: Manejar array vacío correctamente
         if ($request->has('permisos')) {
-            $rol->permisos()->sync($request->permisos);
+            $permisos = is_array($request->permisos) ? $request->permisos : [];
+            $rol->permisos()->sync($permisos);
         } else {
             $rol->permisos()->detach();
         }
@@ -94,7 +114,8 @@ class RolController extends Controller
 
     public function destroy(Rol $rol)
     {
-        if (!Auth::user()->tienePermiso('usuarios.eliminar')) {
+        // Corrección 5.4: Usar permisos específicos de roles
+        if (!Auth::user()->tienePermiso('roles.eliminar')) {
             return back()->withErrors(['message' => 'No tiene permiso para eliminar roles']);
         }
 

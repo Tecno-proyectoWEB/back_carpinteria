@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pedido extends Model
+class Venta extends Model
 {
     use HasFactory;
 
-    protected $table = 'pedido';
+    protected $table = 'venta';
 
     protected $fillable = [
         'fecha',
@@ -42,7 +42,7 @@ class Pedido extends Model
 
     public function detalles()
     {
-        return $this->hasMany(DetallePedido::class);
+        return $this->hasMany(DetalleVenta::class);
     }
 
     public function pagos()
@@ -55,3 +55,4 @@ class Pedido extends Model
         return $this->hasMany(MovimientoInventario::class);
     }
 }
+

@@ -13,8 +13,8 @@
                     <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalMateriales || 0 }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500">Pedidos Pendientes</h3>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.pedidosPendientes || 0 }}</p>
+                    <h3 class="text-sm font-medium text-gray-500">Ventas Pendientes</h3>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.ventasPendientes || 0 }}</p>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-sm font-medium text-gray-500">Pagos Pendientes</h3>

@@ -1,6 +1,6 @@
 <template>
     <Layout :auth="auth">
-        <div>
+        <div v-if="rol && rol.id">
             <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-900">Editar Rol</h1>
             </div>
@@ -41,11 +41,18 @@
                 </form>
             </div>
         </div>
+        <div v-else class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p class="text-red-800">Error: No se encontraron los datos del rol. Por favor, vuelva a la lista de roles.</p>
+            <Link :href="route('roles.index')" class="mt-2 inline-block text-blue-600 hover:text-blue-900">
+                Volver a Roles
+            </Link>
+        </div>
     </Layout>
 </template>
 
 <script setup>
 import { useForm, Link } from '@inertiajs/vue3'
+import { computed, watchEffect } from 'vue'
 import { route } from '../../ziggy.js'
 import Layout from '../Layout.vue'
 
@@ -56,13 +63,49 @@ const props = defineProps({
     errors: Object,
 })
 
+// Corrección 5.6: Computed property para permisos seleccionados
+const permisosSeleccionados = computed(() => {
+    if (!props.rol || !props.rol.permisos) {
+        return []
+    }
+    
+    // Asegurarse de que permisos es un array
+    const permisosArray = Array.isArray(props.rol.permisos) 
+        ? props.rol.permisos 
+        : []
+    
+    // Extraer los IDs
+    return permisosArray.map(p => {
+        // Manejar tanto objetos como IDs directos
+        return typeof p === 'object' ? p.id : p
+    }).filter(id => id !== null && id !== undefined)
+})
+
+// Inicializar el formulario con los datos del rol disponibles
 const form = useForm({
-    nombre: props.rol.nombre,
-    permisos: props.rol.permisos?.map(p => p.id) || [],
+    nombre: props.rol?.nombre || '',
+    permisos: permisosSeleccionados.value,
+})
+
+// Corrección 5.6: Actualizar el formulario cuando los props cambien
+watchEffect(() => {
+    if (props.rol) {
+        form.nombre = props.rol.nombre || ''
+        form.permisos = permisosSeleccionados.value
+    }
 })
 
 const submit = () => {
-    form.put(route('roles.update', props.rol.id))
+    // Corrección 5.7: Validar que el rol tenga ID
+    if (!props.rol || !props.rol.id) {
+        console.error('Error: No se puede actualizar el rol porque no se encontró el ID', props.rol)
+        alert('Error: No se puede actualizar el rol porque no se encontraron los datos')
+        return
+    }
+    
+    // Usar el ID directamente o como objeto según lo que espere la ruta
+    const rolId = props.rol.id
+    form.put(route('roles.update', rolId))
 }
 </script>
 

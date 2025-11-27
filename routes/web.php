@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\MaterialController;
-use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\MovimientoInventarioController;
@@ -12,6 +12,8 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\BusquedaController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -36,11 +38,10 @@ Route::middleware('auth')->group(function () {
     // CU5: Gestión de Inventarios
     Route::resource('inventarios', MovimientoInventarioController::class)->only(['index', 'create', 'store', 'show']);
 
-    // CU6: Gestión de Ventas (Pedidos)
-    Route::resource('pedidos', PedidoController::class);
-    Route::post('/pedidos/contado', [PedidoController::class, 'storeContado'])->name('pedidos.storeContado');
-    Route::post('/pedidos/credito', [PedidoController::class, 'storeCredito'])->name('pedidos.storeCredito');
-    Route::post('/pedidos/{pedido}/confirmar-credito', [PedidoController::class, 'confirmarCredito'])->name('pedidos.confirmarCredito');
+    // CU6: Gestión de Ventas
+    Route::resource('ventas', VentaController::class);
+    Route::post('/ventas/contado', [VentaController::class, 'storeContado'])->name('ventas.storeContado');
+    Route::post('/ventas/credito', [VentaController::class, 'storeCredito'])->name('ventas.storeCredito');
 
     // CU7: Gestión de Pagos
     Route::resource('pagos', PagoController::class);
@@ -54,9 +55,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventario', [ReporteController::class, 'inventario'])->name('inventario');
     });
 
+    // Búsqueda
+    Route::get('/buscar', [BusquedaController::class, 'index'])->name('buscar');
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
+
+// Rutas de PagoFácil (sin autenticación para callback)
+Route::post('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/payment/status/{id}', [PaymentController::class, 'checkStatus'])->name('payment.status')->middleware('auth');
 
 // Login
 Route::get('/login', function () {

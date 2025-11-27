@@ -47,16 +47,12 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'inventario.ingreso'],
             ['nombre' => 'inventario.salida'],
 
-            // Pedidos/Ventas
-            ['nombre' => 'pedidos.ver'],
-            ['nombre' => 'pedidos.crear'],
-            ['nombre' => 'pedidos.editar'],
-            ['nombre' => 'pedidos.eliminar'],
-            ['nombre' => 'pedidos.aprobar'],
+            // Ventas
             ['nombre' => 'ventas.ver'],
             ['nombre' => 'ventas.crear'],
             ['nombre' => 'ventas.editar'],
-            ['nombre' => 'ventas.anular'],
+            ['nombre' => 'ventas.eliminar'],
+            ['nombre' => 'ventas.aprobar'],
 
             // Pagos
             ['nombre' => 'pagos.ver'],

@@ -9,14 +9,14 @@
                 <form @submit.prevent="submit">
                     <div class="grid grid-cols-1 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Pedido *</label>
-                            <select v-model="form.pedido_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Seleccione un pedido</option>
-                                <option v-for="pedido in pedidos" :key="pedido.id" :value="pedido.id">
-                                    Pedido #{{ pedido.id }} - {{ pedido.usuario?.nombre }} {{ pedido.usuario?.apellido }} - ${{ pedido.importe_total?.toFixed(2) }}
+                            <label class="block text-sm font-medium text-gray-700">Venta *</label>
+                            <select v-model="form.venta_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Seleccione una venta</option>
+                                <option v-for="venta in ventas" :key="venta.id" :value="venta.id">
+                                    Venta #{{ venta.id }} - {{ venta.usuario?.nombre }} {{ venta.usuario?.apellido }} - ${{ venta.importe_total?.toFixed(2) }}
                                 </option>
                             </select>
-                            <div v-if="errors.pedido_id" class="mt-1 text-sm text-red-600">{{ errors.pedido_id }}</div>
+                            <div v-if="errors.venta_id" class="mt-1 text-sm text-red-600">{{ errors.venta_id }}</div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-6">
@@ -99,14 +99,14 @@ import Layout from '../Layout.vue'
 
 const props = defineProps({
     auth: Object,
-    pedidos: Array,
+    ventas: Array,
     metodosPago: Array,
-    pedido_id: Number,
+    venta_id: Number,
     errors: Object,
 })
 
 const form = useForm({
-    pedido_id: props.pedido_id || null,
+    venta_id: props.venta_id || null,
     monto: 0,
     metodo_pago_id: null,
     tipo: 'CONTADO',

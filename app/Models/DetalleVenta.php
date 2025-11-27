@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DetallePedido extends Model
+class DetalleVenta extends Model
 {
     use HasFactory;
 
-    protected $table = 'detalle_pedido';
+    protected $table = 'detalle_venta';
 
     protected $fillable = [
         'producto_id',
         'servicio_id',
-        'pedido_id',
+        'venta_id',
         'cantidad',
         'estado',
         'importe_total',
@@ -32,9 +32,9 @@ class DetallePedido extends Model
 
     public $timestamps = false;
 
-    public function pedido()
+    public function venta()
     {
-        return $this->belongsTo(Pedido::class);
+        return $this->belongsTo(Venta::class);
     }
 
     public function producto()
@@ -47,3 +47,4 @@ class DetallePedido extends Model
         return $this->belongsTo(Servicio::class);
     }
 }
+

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use App\Models\Material;
-use App\Models\Pedido;
+use App\Models\Venta;
 use App\Models\Pago;
 use Inertia\Inertia;
 
@@ -19,7 +19,7 @@ class DashboardController extends Controller
             'stats' => [
                 'totalProductos' => Producto::count(),
                 'totalMateriales' => Material::count(),
-                'pedidosPendientes' => Pedido::where('estado', false)->count(),
+                'ventasPendientes' => Venta::where('estado', false)->count(),
                 'pagosPendientes' => Pago::where('estado', 'PENDIENTE')->count(),
             ],
             'productosStockBajo' => $productosStockBajo,

@@ -52,9 +52,9 @@ class Usuario extends Authenticatable
         return $this->belongsTo(Rol::class);
     }
 
-    public function pedidos()
+    public function ventas()
     {
-        return $this->hasMany(Pedido::class);
+        return $this->hasMany(Venta::class);
     }
 
     public function movimientosInventario()
@@ -69,19 +69,59 @@ class Usuario extends Authenticatable
 
     public function permisos()
     {
-        return $this->rol->permisos() ?? collect();
+        // Cargar el rol si no está cargado
+        if (!$this->relationLoaded('rol')) {
+            $this->load('rol');
+        }
+        
+        // Si no tiene rol, retornar colección vacía
+        if (!$this->rol) {
+            return collect();
+        }
+        
+        // Cargar los permisos del rol si no están cargados
+        if (!$this->rol->relationLoaded('permisos')) {
+            $this->rol->load('permisos');
+        }
+        
+        return $this->rol->permisos ?? collect();
     }
 
     public function tienePermiso($permiso)
     {
+        // Asegurar que el rol esté cargado
+        if (!$this->relationLoaded('rol')) {
+            $this->load('rol');
+        }
+
         if (!$this->rol) {
             return false;
         }
+
+        // Asegurar que los permisos estén cargados en el rol
+        if (!$this->rol->relationLoaded('permisos')) {
+            $this->rol->load('permisos');
+        }
+
+        // Verificar el permiso en la colección cargada o hacer consulta
+        if ($this->rol->relationLoaded('permisos') && $this->rol->permisos) {
+            return $this->rol->permisos->contains('nombre', $permiso);
+        }
+
         return $this->rol->permisos()->where('nombre', $permiso)->exists();
     }
 
     public function getAuthIdentifierName()
     {
         return 'email';
+    }
+
+    /**
+     * Get the value of the model's primary key for authentication.
+     * This ensures auth()->id() returns the numeric ID, not the email.
+     */
+    public function getAuthIdentifier()
+    {
+        return $this->getKey();
     }
 }

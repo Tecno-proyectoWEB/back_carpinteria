@@ -94,11 +94,29 @@ const form = useForm({
     observaciones: '',
     material_id: null,
     producto_id: null,
-    pedido_id: null,
+    venta_id: null,
 })
 
 const submit = () => {
-    form.post(route('inventarios.store'))
+    // Corrección 5.3: Solo enviar material_id o producto_id si tienen valor
+    const data = {
+        tipo: form.tipo,
+        cantidad: form.cantidad,
+        motivo: form.motivo,
+        observaciones: form.observaciones,
+        venta_id: form.venta_id,
+    }
+    
+    // Solo incluir material_id o producto_id si tienen valor
+    if (form.material_id) {
+        data.material_id = form.material_id
+    }
+    
+    if (form.producto_id) {
+        data.producto_id = form.producto_id
+    }
+    
+    form.transform(() => data).post(route('inventarios.store'))
 }
 </script>
 

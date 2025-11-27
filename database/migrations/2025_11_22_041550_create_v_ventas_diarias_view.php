@@ -10,16 +10,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("CREATE VIEW \"v_ventas_diarias\" AS SELECT date(p.fecha) AS fecha,
-    count(*) AS total_pedidos,
-    sum(p.importe_total) AS monto_total,
-    avg(p.importe_total) AS promedio_venta,
+        DB::statement("CREATE VIEW \"v_ventas_diarias\" AS SELECT date(v.fecha) AS fecha,
+    count(*) AS total_ventas,
+    sum(v.importe_total) AS monto_total,
+    avg(v.importe_total) AS promedio_venta,
     mp.nombre AS metodo_pago
-   FROM (pedido p
-     JOIN metodo_pago mp ON ((p.metodo_pago_id = mp.id)))
-  WHERE (p.estado = true)
-  GROUP BY (date(p.fecha)), mp.nombre
-  ORDER BY (date(p.fecha)) DESC;");
+   FROM (venta v
+     JOIN metodo_pago mp ON ((v.metodo_pago_id = mp.id)))
+  WHERE (v.estado = true)
+  GROUP BY (date(v.fecha)), mp.nombre
+  ORDER BY (date(v.fecha)) DESC;");
     }
 
     /**

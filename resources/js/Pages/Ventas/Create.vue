@@ -2,18 +2,18 @@
     <Layout :auth="auth">
         <div class="max-w-4xl">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Nuevo Pedido</h1>
+                <h1 class="text-3xl font-bold text-primary">Nueva Venta</h1>
                 <div class="flex space-x-2">
                     <button
                         @click="tipoVenta = 'contado'"
-                        :class="tipoVenta === 'contado' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        :class="tipoVenta === 'contado' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'"
                         class="px-4 py-2 rounded-lg font-medium"
                     >
                         Venta al Contado
                     </button>
                     <button
                         @click="tipoVenta = 'credito'"
-                        :class="tipoVenta === 'credito' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        :class="tipoVenta === 'credito' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'"
                         class="px-4 py-2 rounded-lg font-medium"
                     >
                         Venta a Crédito
@@ -21,12 +21,12 @@
                 </div>
             </div>
 
-            <form @submit.prevent="submit" class="bg-white rounded-lg shadow p-6">
+            <form @submit.prevent="submit" class="bg-secondary rounded-lg shadow p-6">
                 <div class="space-y-6">
                     <!-- Información básica -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Cliente</label>
+                            <label class="block text-sm font-medium text-primary">Cliente *</label>
                             <select v-model="form.usuario_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                 <option value="">Seleccione un cliente</option>
                                 <option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">
@@ -37,7 +37,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                            <label class="block text-sm font-medium text-primary">Método de Pago *</label>
                             <select v-model="form.metodo_pago_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                 <option value="">Seleccione un método</option>
                                 <option v-for="metodo in metodosPago" :key="metodo.id" :value="metodo.id">
@@ -49,14 +49,14 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <label class="block text-sm font-medium text-primary">Descripción</label>
                         <textarea v-model="form.descripcion" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
                     </div>
 
-                    <!-- Detalles del pedido -->
+                    <!-- Detalles de la venta -->
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">Detalles del Pedido</h2>
+                            <h2 class="text-lg font-semibold text-primary">Detalles de la Venta</h2>
                             <button type="button" @click="agregarDetalle" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                                 Agregar Item
                             </button>
@@ -66,7 +66,7 @@
                             <div v-for="(detalle, index) in form.detalles" :key="index" class="border rounded-lg p-4">
                                 <div class="grid grid-cols-5 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                                        <label class="block text-sm font-medium text-primary">Tipo</label>
                                         <select v-model="detalle.tipo" @change="cambiarTipoDetalle(index)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                             <option value="producto">Producto</option>
                                             <option value="servicio">Servicio</option>
@@ -74,8 +74,8 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">
-                                            {{ detalle.tipo === 'producto' ? 'Producto' : 'Servicio' }}
+                                        <label class="block text-sm font-medium text-primary">
+                                            {{ detalle.tipo === 'producto' ? 'Producto' : 'Servicio' }} *
                                         </label>
                                         <select
                                             v-model="detalle[detalle.tipo + '_id']"
@@ -101,10 +101,16 @@
                                                 {{ servicio.nombre }}
                                             </option>
                                         </select>
+                                        <div v-if="errors[`detalles.${index}.producto_id`]" class="text-red-600 text-sm mt-1">
+                                            {{ errors[`detalles.${index}.producto_id`] }}
+                                        </div>
+                                        <div v-if="errors[`detalles.${index}.servicio_id`]" class="text-red-600 text-sm mt-1">
+                                            {{ errors[`detalles.${index}.servicio_id`] }}
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                                        <label class="block text-sm font-medium text-primary">Cantidad *</label>
                                         <input
                                             v-model.number="detalle.cantidad"
                                             @input="calcularTotal(index)"
@@ -113,10 +119,13 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                                             required
                                         />
+                                        <div v-if="errors[`detalles.${index}.cantidad`]" class="text-red-600 text-sm mt-1">
+                                            {{ errors[`detalles.${index}.cantidad`] }}
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario</label>
+                                        <label class="block text-sm font-medium text-primary">Precio Unitario *</label>
                                         <input
                                             v-model.number="detalle.precio_unitario"
                                             @input="calcularTotal(index)"
@@ -126,6 +135,9 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                                             required
                                         />
+                                        <div v-if="errors[`detalles.${index}.precio_unitario`]" class="text-red-600 text-sm mt-1">
+                                            {{ errors[`detalles.${index}.precio_unitario`] }}
+                                        </div>
                                     </div>
 
                                     <div class="flex items-end">
@@ -139,23 +151,23 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-2 text-sm text-gray-600">
+                                <div class="mt-2 text-sm text-secondary">
                                     Total: ${{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }}
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="form.detalles.length === 0" class="text-center py-8 text-gray-500">
+                        <div v-if="form.detalles.length === 0" class="text-center py-8 text-secondary">
                             No hay items agregados. Haga clic en "Agregar Item" para comenzar.
                         </div>
                     </div>
 
                     <!-- Información de crédito (solo si es crédito) -->
                     <div v-if="tipoVenta === 'credito'" class="border-t pt-4">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Información de Crédito</h2>
+                        <h2 class="text-lg font-semibold text-primary mb-4">Información de Crédito</h2>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Número de Cuotas</label>
+                                <label class="block text-sm font-medium text-primary">Número de Cuotas *</label>
                                 <input
                                     v-model.number="form.numero_cuotas"
                                     type="number"
@@ -168,7 +180,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Fecha Primera Cuota</label>
+                                <label class="block text-sm font-medium text-primary">Fecha Primera Cuota *</label>
                                 <input
                                     v-model="form.fecha_primera_cuota"
                                     type="date"
@@ -184,8 +196,8 @@
                     <!-- Resumen -->
                     <div class="border-t pt-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-900">Total:</span>
-                            <span class="text-2xl font-bold text-blue-600">${{ total.toFixed(2) }}</span>
+                            <span class="text-lg font-semibold text-primary">Total:</span>
+                            <span class="text-2xl font-bold text-primary">${{ total.toFixed(2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -194,11 +206,11 @@
                     <button
                         type="submit"
                         :disabled="form.processing || form.detalles.length === 0"
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                        class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary disabled:bg-gray-400"
                     >
-                        {{ form.processing ? 'Procesando...' : 'Guardar Pedido' }}
+                        {{ form.processing ? 'Procesando...' : 'Guardar Venta' }}
                     </button>
-                    <Link :href="route('pedidos.index')" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400">
+                    <Link :href="route('ventas.index')" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400">
                         Cancelar
                     </Link>
                 </div>
@@ -281,24 +293,35 @@ const total = computed(() => {
 })
 
 const submit = () => {
-    // Preparar los detalles según el formato esperado por el backend
-    const detallesFormateados = form.detalles.map(detalle => ({
-        producto_id: detalle.tipo === 'producto' ? detalle.producto_id : null,
-        servicio_id: detalle.tipo === 'servicio' ? detalle.servicio_id : null,
-        cantidad: detalle.cantidad,
-        precio_unitario: detalle.precio_unitario,
-    }))
+    // Corrección 5.2: Solo enviar producto_id o servicio_id si tienen valor
+    const detallesFormateados = form.detalles.map(detalle => {
+        const detalleFormateado = {
+            cantidad: detalle.cantidad,
+            precio_unitario: detalle.precio_unitario,
+        }
+        
+        // Solo incluir producto_id o servicio_id según el tipo, no ambos
+        if (detalle.tipo === 'producto' && detalle.producto_id) {
+            detalleFormateado.producto_id = detalle.producto_id
+        } else if (detalle.tipo === 'servicio' && detalle.servicio_id) {
+            detalleFormateado.servicio_id = detalle.servicio_id
+        }
+        
+        return detalleFormateado
+    })
 
     if (tipoVenta.value === 'contado') {
         form.transform((data) => ({
             ...data,
             detalles: detallesFormateados,
-        })).post(route('pedidos.storeContado'))
+        })).post(route('ventas.storeContado'))
     } else {
         form.transform((data) => ({
             ...data,
             detalles: detallesFormateados,
-        })).post(route('pedidos.storeCredito'))
+            numero_cuotas: form.numero_cuotas,
+            fecha_primera_cuota: form.fecha_primera_cuota,
+        })).post(route('ventas.storeCredito'))
     }
 }
 </script>

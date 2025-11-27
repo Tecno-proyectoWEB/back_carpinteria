@@ -46,10 +46,10 @@
                         <p class="mt-1 text-sm text-gray-900">{{ movimiento.observaciones }}</p>
                     </div>
 
-                    <div v-if="movimiento.pedido" class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Pedido Relacionado</label>
-                        <Link :href="route('pedidos.show', movimiento.pedido.id)" class="mt-1 text-sm text-blue-600 hover:text-blue-900">
-                            Pedido #{{ movimiento.pedido.id }}
+                    <div v-if="movimiento.venta" class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Venta Relacionada</label>
+                        <Link :href="route('ventas.show', movimiento.venta.id)" class="mt-1 text-sm text-blue-600 hover:text-blue-900">
+                            Venta #{{ movimiento.venta.id }}
                         </Link>
                     </div>
                 </div>
