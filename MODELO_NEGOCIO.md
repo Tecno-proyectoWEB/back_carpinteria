@@ -1,4 +1,4 @@
-# Modelo de Negocio - Sistema de Gestión de Carpintería
+![1764198312370](image/MODELO_NEGOCIO/1764198312370.png)![1764198316335](image/MODELO_NEGOCIO/1764198316335.png)# Modelo de Negocio - Sistema de Gestión de Carpintería
 
 ## 1. Descripción General del Negocio
 

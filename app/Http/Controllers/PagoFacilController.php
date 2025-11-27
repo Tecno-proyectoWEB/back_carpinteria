@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Pedido;
 use App\Models\Pago;
 use App\Models\Bitacora;
+use App\Http\Controllers\MenuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PagoFacilController extends Controller
 {
@@ -57,7 +59,7 @@ class PagoFacilController extends Controller
             'fecha' => now(),
         ]);
 
-        return response()->json([
+        $response = [
             'success' => true,
             'cupon' => [
                 'id' => $cuponId,
@@ -67,6 +69,31 @@ class PagoFacilController extends Controller
                 'vencimiento' => now()->addDays(7)->format('Y-m-d'),
                 'instrucciones' => 'Puede pagar este cupón en cualquier local de Pagofacil o mediante transferencia.',
             ],
+        ];
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($response);
+        }
+
+        // Si es petición web, retornar Inertia
+        return Inertia::render('PagoFacil/Cupon', [
+            'cupon' => $response['cupon'],
+            'pedido' => $pedido->load(['usuario', 'metodoPago']),
+        ]);
+    }
+
+    public function showPlanPagos(Request $request, Pedido $pedido)
+    {
+        // Solo para web
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/pagofacil/crear-plan-pagos para crear plan'], 405);
+        }
+
+        $pedido->load(['usuario', 'metodoPago', 'pagos']);
+
+        return Inertia::render('PagoFacil/PlanPagos', [
+            'pedido' => $pedido,
         ]);
     }
 
@@ -189,7 +216,7 @@ class PagoFacilController extends Controller
 
             DB::commit();
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => 'Plan de pagos creado exitosamente',
                 'plan' => [
@@ -200,14 +227,26 @@ class PagoFacilController extends Controller
                     'fecha_primera_cuota' => $fechaPrimeraCuota->format('Y-m-d'),
                     'pagos' => $pagos,
                 ],
-            ], 201);
+            ];
+
+            // Si es petición API, retornar JSON
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json($response, 201);
+            }
+
+            // Si es petición web, redirigir
+            return redirect()->route('pedidos.show', $pedido->id)
+                ->with('success', 'Plan de pagos creado exitosamente');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear el plan de pagos: ' . $e->getMessage(),
-            ], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al crear el plan de pagos: ' . $e->getMessage(),
+                ], 500);
+            }
+            return back()->withErrors(['error' => 'Error al crear el plan de pagos: ' . $e->getMessage()]);
         }
     }
 }

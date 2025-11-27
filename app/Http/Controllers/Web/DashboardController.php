@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -13,10 +13,17 @@ use App\Models\Servicio;
 use App\Models\Usuario;
 use App\Models\Compra;
 
-class DashboardController extends Controller
+class DashboardController extends BaseController
 {
     public function index(Request $request)
     {
+        \Log::debug('DashboardController::index() ejecutándose', [
+            'path' => $request->path(),
+            'auth_check' => \Illuminate\Support\Facades\Auth::check(),
+            'user_id' => $request->user() ? $request->user()->id : null,
+            'session_id' => $request->session()->getId(),
+        ]);
+        
         $menuController = new MenuController();
         $menuItems = $menuController->getMenuForUser($request->user());
         
@@ -25,6 +32,9 @@ class DashboardController extends Controller
 
         // Estadísticas del negocio
         $estadisticas = $this->obtenerEstadisticas($request->user());
+        
+        // Compartir usuario autenticado (solución temporal porque el middleware no se ejecuta)
+        $this->shareAuthUser($request);
 
         return Inertia::render('Dashboard', [
             'menuItems' => $menuItems,

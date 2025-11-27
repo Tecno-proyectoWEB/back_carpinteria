@@ -6,9 +6,11 @@ use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\MovimientoInventario;
+use App\Http\Controllers\MenuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PagoController extends Controller
 {
@@ -16,7 +18,10 @@ class PagoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pagos.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver pagos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para ver pagos'], 403);
+            }
+            abort(403, 'No tiene permiso para ver pagos');
         }
 
         $query = Pago::with(['pedido', 'metodoPago', 'usuario']);
@@ -33,7 +38,30 @@ class PagoController extends Controller
             $query->where('tipo', $request->tipo);
         }
 
-        return response()->json($query->orderBy('fecha_pago', 'desc')->paginate(20));
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'fecha_pago');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($query->paginate(20));
+        }
+
+        // Si es petición web, retornar Inertia con paginación
+        $pagos = $query->paginate($request->get('per_page', 15));
+
+        // Obtener menú y visitas para web
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser($request->user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador($request->path());
+
+        return Inertia::render('Pagos/Index', [
+            'pagos' => $pagos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
+            'filters' => $request->only(['pedido_id', 'estado', 'tipo', 'sort_by', 'sort_dir']),
+        ]);
     }
 
     public function store(Request $request)
@@ -82,9 +110,19 @@ class PagoController extends Controller
         return response()->json($pago->load(['pedido', 'metodoPago', 'usuario']), 201);
     }
 
-    public function show(Pago $pago)
+    public function show(Request $request, Pago $pago)
     {
-        return response()->json($pago->load(['pedido', 'metodoPago', 'usuario']));
+        $pago->load(['pedido', 'metodoPago', 'usuario']);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($pago);
+        }
+
+        // Si es petición web, retornar Inertia
+        return Inertia::render('Pagos/Show', [
+            'pago' => $pago,
+        ]);
     }
 
     public function update(Request $request, Pago $pago)
@@ -113,11 +151,17 @@ class PagoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pagos.registrar')) {
-            return response()->json(['message' => 'No tiene permiso para registrar pagos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para registrar pagos'], 403);
+            }
+            abort(403, 'No tiene permiso para registrar pagos');
         }
 
         if ($pago->estado === 'PAGADO') {
-            return response()->json(['error' => 'El pago ya está registrado'], 400);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'El pago ya está registrado'], 400);
+            }
+            return back()->withErrors(['error' => 'El pago ya está registrado']);
         }
 
         $datos_anteriores = $pago->toArray();
@@ -178,6 +222,13 @@ class PagoController extends Controller
             'fecha' => now(),
         ]);
 
-        return response()->json($pago->load(['pedido', 'metodoPago', 'usuario']));
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($pago->load(['pedido', 'metodoPago', 'usuario']));
+        }
+
+        // Si es petición web, redirigir
+        return redirect()->route('pagos.show', $pago->id)
+            ->with('success', 'Pago registrado exitosamente');
     }
 }

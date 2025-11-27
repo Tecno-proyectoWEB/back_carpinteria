@@ -19,7 +19,8 @@
             ]"
         />
         <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
-        <p v-if="hint && !error" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
+        <p v-if="helpText && !error" class="mt-1 text-sm text-gray-500">{{ helpText }}</p>
+        <p v-if="hint && !error && !helpText" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
     </div>
 </template>
 
@@ -40,6 +41,7 @@ defineProps({
     disabled: Boolean,
     error: String,
     hint: String,
+    helpText: String,
 });
 
 defineEmits(['update:modelValue']);

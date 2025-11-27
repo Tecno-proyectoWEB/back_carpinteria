@@ -16,6 +16,10 @@ class TrackPageVisits
      */
     public function handle(Request $request, Closure $next): Response
     {
+        \Log::error('🟢 TrackPageVisits::handle() ejecutándose', [
+            'path' => $request->path(),
+        ]);
+        
         $response = $next($request);
 
         // Solo contar visitas para rutas web (no API)

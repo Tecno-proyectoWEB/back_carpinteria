@@ -2,9 +2,9 @@
     <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white shadow-sm rounded-lg p-6">
+                <div class="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-indigo-100">
                     <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900">Editar Permisos del Rol: {{ rol.nombre }}</h2>
+                        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Editar Permisos del Rol: {{ rol.nombre }}</h2>
                         <p class="text-gray-600 mt-1">Seleccione los permisos que desea asignar a este rol</p>
                     </div>
 
@@ -45,23 +45,23 @@
                         </div>
 
                         <!-- Resumen -->
-                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                            <p class="text-sm text-blue-800">
-                                <strong>Permisos seleccionados:</strong> {{ form.permisos.length }} de {{ permisos.length }}
+                        <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
+                            <p class="text-sm text-indigo-800">
+                                <strong>Permisos seleccionados:</strong> <span class="font-bold text-indigo-600">{{ form.permisos.length }}</span> de {{ permisos.length }}
                             </p>
                         </div>
 
                         <div class="flex justify-end space-x-4 mt-6">
                             <Link
                                 :href="route('roles.index')"
-                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                                class="px-5 py-2.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-700 transition-colors"
                             >
                                 Cancelar
                             </Link>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
                             >
                                 <span v-if="form.processing">Guardando...</span>
                                 <span v-else>Guardar Permisos</span>

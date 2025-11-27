@@ -2,8 +2,15 @@
     <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
         <div class="py-12">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white shadow-sm rounded-lg p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Editar Usuario</h2>
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                            Editar Usuario
+                        </h2>
+                        <p class="text-gray-600 text-sm">
+                            {{ usuario?.nombre || '' }} {{ usuario?.apellido || '' }} - {{ usuario?.email || '' }}
+                        </p>
+                    </div>
 
                     <form @submit.prevent="submit">
                         <div class="grid grid-cols-2 gap-4">
@@ -129,16 +136,17 @@
                         </div>
 
                         <div class="flex justify-end space-x-4 mt-6">
-                            <Link
-                                :href="route('usuarios.index')"
-                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            <button
+                                type="button"
+                                @click="cancelEdit"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 font-medium"
                             >
                                 Cancelar
-                            </Link>
+                            </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                             >
                                 <span v-if="form.processing">Actualizando...</span>
                                 <span v-else>Actualizar Usuario</span>
@@ -152,7 +160,7 @@
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Select from '@/Components/Form/Select.vue';
@@ -165,23 +173,109 @@ const props = defineProps({
 });
 
 const form = useForm({
-    nombre: props.usuario.nombre,
-    apellido: props.usuario.apellido,
-    email: props.usuario.email,
-    telefono: props.usuario.telefono || '',
+    nombre: props.usuario?.nombre || '',
+    apellido: props.usuario?.apellido || '',
+    email: props.usuario?.email || '',
+    telefono: props.usuario?.telefono || '',
     password: '',
     password_confirmation: '',
-    rol_id: props.usuario.rol_id,
-    estado: props.usuario.estado,
-    disponibilidad: props.usuario.disponibilidad,
-    cuenta_no_expirada: props.usuario.cuenta_no_expirada,
-    cuenta_no_bloqueada: props.usuario.cuenta_no_bloqueada,
-    credenciales_no_expiradas: props.usuario.credenciales_no_expiradas,
-    _method: 'PUT',
+    rol_id: props.usuario?.rol_id || '',
+    estado: props.usuario?.estado ?? true,
+    disponibilidad: props.usuario?.disponibilidad ?? true,
+    cuenta_no_expirada: props.usuario?.cuenta_no_expirada ?? true,
+    cuenta_no_bloqueada: props.usuario?.cuenta_no_bloqueada ?? true,
+    credenciales_no_expiradas: props.usuario?.credenciales_no_expiradas ?? true,
+    _method: 'PATCH',
 });
 
+// Función route segura
+const getRoute = (name, params = null) => {
+    try {
+        if (typeof window !== 'undefined' && window.route) {
+            return params !== null ? window.route(name, params) : window.route(name);
+        }
+        if (typeof globalThis !== 'undefined' && globalThis.route) {
+            return params !== null ? globalThis.route(name, params) : globalThis.route(name);
+        }
+        if (typeof route !== 'undefined') {
+            return params !== null ? route(name, params) : route(name);
+        }
+        // Fallback
+        const baseUrl = window.location.origin;
+        if (name === 'usuarios.index') return `${baseUrl}/usuarios`;
+        if (name === 'usuarios.update' && params) return `${baseUrl}/usuarios/${params}`;
+        return '#';
+    } catch (e) {
+        console.warn('Error getting route:', e, name, params);
+        const baseUrl = window.location.origin;
+        if (name === 'usuarios.update' && params) return `${baseUrl}/usuarios/${params}`;
+        return '#';
+    }
+};
+
 const submit = () => {
-    form.post(route('usuarios.update', props.usuario.id));
+    // Validar que la contraseña coincida si se proporciona
+    if (form.password && form.password !== form.password_confirmation) {
+        alert('Las contraseñas no coinciden');
+        return;
+    }
+
+    // Preparar los datos del formulario
+    const formData = {
+        nombre: form.nombre,
+        apellido: form.apellido,
+        email: form.email,
+        telefono: form.telefono || null,
+        rol_id: form.rol_id ? parseInt(form.rol_id) : form.rol_id,
+        estado: form.estado ?? true,
+        disponibilidad: form.disponibilidad ?? true,
+        cuenta_no_expirada: form.cuenta_no_expirada ?? true,
+        cuenta_no_bloqueada: form.cuenta_no_bloqueada ?? true,
+        credenciales_no_expiradas: form.credenciales_no_expiradas ?? true,
+        _method: 'PATCH',
+    };
+
+    // Solo agregar password si se proporciona
+    if (form.password && form.password.length > 0) {
+        formData.password = form.password;
+        formData.password_confirmation = form.password_confirmation;
+    }
+
+    console.log('Enviando datos de actualización:', {
+        ...formData,
+        password: formData.password ? '***' : '(no enviado)',
+        password_confirmation: formData.password_confirmation ? '***' : '(no enviado)',
+    });
+
+    const routeUrl = `/usuarios/${props.usuario?.id}`;
+    
+    form.post(routeUrl, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            console.log('Usuario actualizado exitosamente', page);
+            router.visit('/usuarios');
+        },
+        onError: (errors) => {
+            console.error('Errores al actualizar usuario:', errors);
+            // Mostrar errores específicos
+            if (errors.email) {
+                alert('Error: ' + errors.email);
+            } else if (errors.password) {
+                alert('Error: ' + errors.password);
+            } else if (errors.rol_id) {
+                alert('Error: ' + errors.rol_id);
+            } else {
+                alert('Error al actualizar usuario. Por favor, verifique los datos e intente nuevamente.');
+            }
+        },
+        onFinish: () => {
+            console.log('Request finished');
+        },
+    });
+};
+
+const cancelEdit = () => {
+    router.visit(getRoute('usuarios.index'));
 };
 </script>
 

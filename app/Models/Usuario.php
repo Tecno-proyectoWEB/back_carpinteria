@@ -79,14 +79,41 @@ class Usuario extends Authenticatable
 
     public function tienePermiso($permiso)
     {
+        // Cargar el rol si no está cargado
+        if (!$this->relationLoaded('rol')) {
+            $this->load('rol');
+        }
+
         if (!$this->rol) {
+            \Log::warning('Usuario sin rol', ['usuario_id' => $this->id]);
             return false;
         }
-        return $this->rol->permisos()->where('nombre', $permiso)->exists();
+
+        // El rol PROPIETARIO tiene acceso a todo
+        if ($this->rol->nombre === 'PROPIETARIO') {
+            return true;
+        }
+
+        // Cargar permisos si no están cargados
+        if (!$this->rol->relationLoaded('permisos')) {
+            $this->rol->load('permisos');
+        }
+
+        // Verificar si el rol tiene el permiso
+        $tienePermiso = $this->rol->permisos->contains('nombre', $permiso);
+        
+        \Log::debug('Verificación de permiso', [
+            'usuario_id' => $this->id,
+            'rol' => $this->rol->nombre,
+            'permiso' => $permiso,
+            'tiene_permiso' => $tienePermiso,
+        ]);
+
+        return $tienePermiso;
     }
 
     public function getAuthIdentifierName()
     {
-        return 'email';
+        return 'id';
     }
 }

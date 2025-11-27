@@ -3,7 +3,15 @@
         <div class="py-12">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm rounded-lg p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Editar Material</h2>
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Editar Material</h2>
+                        <p v-if="materialData?.nombre" class="text-gray-600 text-sm">
+                            {{ materialData.nombre }}
+                        </p>
+                        <p v-else class="text-red-600 text-sm">
+                            ⚠️ No se pudo cargar la información del material
+                        </p>
+                    </div>
 
                     <form @submit.prevent="submit">
                         <Input
@@ -86,9 +94,9 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Imagen Actual
                             </label>
-                            <div v-if="material.imagen" class="mb-2">
+                            <div v-if="materialData?.imagen" class="mb-2">
                                 <img
-                                    :src="`/storage/${material.imagen}`"
+                                    :src="`/storage/${materialData.imagen}`"
                                     alt="Imagen actual"
                                     class="h-32 w-32 object-cover rounded"
                                 />
@@ -123,15 +131,16 @@
                         </div>
 
                         <div class="flex justify-end space-x-4 mt-6">
-                            <Link
-                                :href="route('materiales.index')"
+                            <button
+                                type="button"
+                                @click="goBack"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Cancelar
-                            </Link>
+                            </button>
                             <button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !materialData?.id"
                                 class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                             >
                                 <span v-if="form.processing">Actualizando...</span>
@@ -146,34 +155,72 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useForm, Link } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
+import { useForm, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
 import Textarea from '@/Components/Form/Textarea.vue';
 import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    material: Object,
-    categorias: Array,
-    sectores: Array,
-    menuItems: Array,
-    pageVisits: Number,
+    material: {
+        type: Object,
+        default: () => ({}),
+    },
+    categorias: {
+        type: Array,
+        default: () => [],
+    },
+    sectores: {
+        type: Array,
+        default: () => [],
+    },
+    menuItems: {
+        type: Array,
+        default: () => [],
+    },
+    pageVisits: {
+        type: Number,
+        default: 0,
+    },
+});
+
+const page = usePage();
+
+// Verificar que material existe
+const materialData = computed(() => {
+    return props.material || {};
 });
 
 const form = useForm({
-    nombre: props.material.nombre,
-    descripcion: props.material.descripcion || '',
-    categoria_id: props.material.categoria_id,
-    sector_id: props.material.sector_id,
-    stock_actual: props.material.stock_actual,
-    stock_minimo: props.material.stock_minimo || 0,
-    punto_reorden: props.material.punto_reorden || 0,
-    precio: props.material.precio || 0,
-    unidad_medida: props.material.unidad_medida || '',
+    nombre: materialData.value?.nombre || '',
+    descripcion: materialData.value?.descripcion || '',
+    categoria_id: materialData.value?.categoria_id || '',
+    sector_id: materialData.value?.sector_id || '',
+    stock_actual: materialData.value?.stock_actual || 0,
+    stock_minimo: materialData.value?.stock_minimo || 0,
+    punto_reorden: materialData.value?.punto_reorden || 0,
+    precio: materialData.value?.precio || 0,
+    unidad_medida: materialData.value?.unidad_medida || '',
     imagen: null,
-    activo: props.material.activo,
-    _method: 'PUT',
+    activo: materialData.value?.activo ?? true,
+    _method: 'PATCH',
+});
+
+// Actualizar form cuando material cambie
+onMounted(() => {
+    if (materialData.value && Object.keys(materialData.value).length > 0) {
+        form.nombre = materialData.value.nombre || '';
+        form.descripcion = materialData.value.descripcion || '';
+        form.categoria_id = materialData.value.categoria_id || '';
+        form.sector_id = materialData.value.sector_id || '';
+        form.stock_actual = materialData.value.stock_actual || 0;
+        form.stock_minimo = materialData.value.stock_minimo || 0;
+        form.punto_reorden = materialData.value.punto_reorden || 0;
+        form.precio = materialData.value.precio || 0;
+        form.unidad_medida = materialData.value.unidad_medida || '';
+        form.activo = materialData.value.activo ?? true;
+    }
 });
 
 const imagePreview = ref(null);
@@ -190,9 +237,71 @@ const handleImageChange = (event) => {
     }
 };
 
+const getRoute = (name, params = null) => {
+    try {
+        if (window.route && typeof window.route === 'function') {
+            return params ? window.route(name, params) : window.route(name);
+        }
+    } catch (e) {
+        console.warn('route function not available:', e);
+    }
+    // Fallback a URLs directas
+    if (name === 'materiales.index') return '/materiales';
+    if (name === 'materiales.edit' && params) return `/materiales/${params}/edit`;
+    return '#';
+};
+
+const goBack = () => {
+    try {
+        const routeUrl = getRoute('materiales.index');
+        if (routeUrl && routeUrl !== '#') {
+            router.visit(routeUrl);
+        } else {
+            router.visit('/materiales');
+        }
+    } catch (e) {
+        console.error('Error al volver:', e);
+        router.visit('/materiales');
+    }
+};
+
 const submit = () => {
-    form.post(route('materiales.update', props.material.id), {
+    if (!materialData.value?.id) {
+        console.error('Material ID no disponible');
+        alert('Error: No se pudo identificar el material a actualizar');
+        return;
+    }
+
+    const formData = {
+        nombre: form.nombre,
+        descripcion: form.descripcion,
+        categoria_id: parseInt(form.categoria_id),
+        sector_id: parseInt(form.sector_id),
+        stock_actual: parseInt(form.stock_actual) || 0,
+        stock_minimo: parseInt(form.stock_minimo) || 0,
+        punto_reorden: parseInt(form.punto_reorden) || 0,
+        precio: parseFloat(form.precio) || 0,
+        unidad_medida: form.unidad_medida,
+        activo: form.activo,
+        _method: 'PATCH',
+    };
+    
+    if (form.imagen) {
+        formData.imagen = form.imagen;
+    }
+    
+    console.log('Enviando datos:', formData);
+    console.log('Material ID:', materialData.value.id);
+    
+    form.transform(() => formData).post(`/materiales/${materialData.value.id}`, {
         forceFormData: true,
+        preserveScroll: true,
+        onError: (errors) => {
+            console.error('Errores de validación:', errors);
+        },
+        onSuccess: () => {
+            console.log('Material actualizado exitosamente');
+        },
     });
 };
 </script>

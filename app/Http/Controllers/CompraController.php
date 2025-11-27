@@ -6,27 +6,100 @@ use App\Models\Compra;
 use App\Models\DetallePedidoCompra;
 use App\Models\MovimientoInventario;
 use App\Models\Material;
+use App\Models\Proveedor;
+use App\Http\Controllers\MenuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class CompraController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('compras.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver compras'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para ver compras'], 403);
+            }
+            abort(403, 'No tiene permiso para ver compras');
         }
 
-        return response()->json(Compra::with(['proveedor', 'usuario', 'detalles.material'])->get());
+        $query = Compra::with(['proveedor', 'usuario', 'detalles.material']);
+
+        // Filtros
+        if ($request->has('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->has('proveedor_id')) {
+            $query->where('proveedor_id', $request->proveedor_id);
+        }
+
+        if ($request->has('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+
+        if ($request->has('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'fecha');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($query->get());
+        }
+
+        // Si es petición web, retornar Inertia con paginación
+        $compras = $query->paginate($request->get('per_page', 15));
+        $proveedores = Proveedor::where('activo', true)->get();
+
+        // Obtener menú y visitas para web
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser($request->user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador($request->path());
+
+        return Inertia::render('Compras/Index', [
+            'compras' => $compras,
+            'proveedores' => $proveedores,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
+            'filters' => $request->only(['estado', 'proveedor_id', 'fecha_desde', 'fecha_hasta', 'sort_by', 'sort_dir']),
+        ]);
+    }
+
+    public function create()
+    {
+        // Solo para web
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/compras para crear'], 405);
+        }
+
+        if (!Auth::user()->tienePermiso('compras.crear')) {
+            abort(403, 'No tiene permiso para crear compras');
+        }
+
+        $materiales = Material::where('activo', true)->get();
+        $proveedores = Proveedor::where('activo', true)->get();
+
+        return Inertia::render('Compras/Create', [
+            'materiales' => $materiales,
+            'proveedores' => $proveedores,
+        ]);
     }
 
     public function store(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('compras.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear compras'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para crear compras'], 403);
+            }
+            abort(403, 'No tiene permiso para crear compras');
         }
 
         $request->validate([
@@ -110,23 +183,46 @@ class CompraController extends Controller
                     'fecha' => now(),
                 ]);
 
-                return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']), 201);
+                // Si es petición API, retornar JSON
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']), 201);
+                }
+
+                // Si es petición web, redirigir
+                return redirect()->route('compras.show', $compra->id)
+                    ->with('success', 'Compra creada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al crear compra: ' . $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Error al crear compra: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Error al crear compra: ' . $e->getMessage()]);
         }
     }
 
-    public function show(Compra $compra)
+    public function show(Request $request, Compra $compra)
     {
-        return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']));
+        $compra->load(['proveedor', 'usuario', 'detalles.material']);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($compra);
+        }
+
+        // Si es petición web, retornar Inertia
+        return Inertia::render('Compras/Show', [
+            'compra' => $compra,
+        ]);
     }
 
     public function update(Request $request, Compra $compra)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('compras.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar compras'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para editar compras'], 403);
+            }
+            abort(403, 'No tiene permiso para editar compras');
         }
 
         $request->validate([
@@ -196,18 +292,31 @@ class CompraController extends Controller
             'fecha' => now(),
         ]);
 
-        return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']));
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']));
+        }
+
+        // Si es petición web, redirigir
+        return redirect()->route('compras.index')
+            ->with('success', 'Compra actualizada exitosamente');
     }
 
-    public function destroy(Compra $compra)
+    public function destroy(Request $request, Compra $compra)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('compras.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar compras'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para eliminar compras'], 403);
+            }
+            abort(403, 'No tiene permiso para eliminar compras');
         }
 
         if ($compra->estado === 'COMPLETADA') {
-            return response()->json(['error' => 'No se puede eliminar una compra completada'], 400);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'No se puede eliminar una compra completada'], 400);
+            }
+            return back()->withErrors(['error' => 'No se puede eliminar una compra completada']);
         }
 
         // Registrar en bitácora antes de eliminar
@@ -222,22 +331,36 @@ class CompraController extends Controller
         ]);
 
         $compra->delete();
-        return response()->json(null, 204);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(null, 204);
+        }
+
+        // Si es petición web, redirigir
+        return redirect()->route('compras.index')
+            ->with('success', 'Compra eliminada exitosamente');
     }
 
-    public function confirmar(Compra $compra)
+    public function confirmar(Request $request, Compra $compra)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('compras.editar')) {
-            return response()->json(['message' => 'No tiene permiso para confirmar compras'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para confirmar compras'], 403);
+            }
+            abort(403, 'No tiene permiso para confirmar compras');
         }
-    {
+
         if ($compra->estado === 'COMPLETADA') {
-            return response()->json(['error' => 'La compra ya está completada'], 400);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'La compra ya está completada'], 400);
+            }
+            return back()->withErrors(['error' => 'La compra ya está completada']);
         }
 
         try {
-            return DB::transaction(function () use ($compra) {
+            return DB::transaction(function () use ($request, $compra) {
                 foreach ($compra->detalles as $detalle) {
                     // Verificar si ya existe movimiento
                     $movimientoExistente = MovimientoInventario::where('compra_id', $compra->id)
@@ -281,10 +404,20 @@ class CompraController extends Controller
                     'fecha' => now(),
                 ]);
 
-                return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']));
+                // Si es petición API, retornar JSON
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json($compra->load(['proveedor', 'usuario', 'detalles.material']));
+                }
+
+                // Si es petición web, redirigir
+                return redirect()->route('compras.show', $compra->id)
+                    ->with('success', 'Compra confirmada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al confirmar compra: ' . $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Error al confirmar compra: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Error al confirmar compra: ' . $e->getMessage()]);
         }
     }
 }

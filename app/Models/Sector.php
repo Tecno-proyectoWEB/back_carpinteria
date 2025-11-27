@@ -18,11 +18,13 @@ class Sector extends Model
         'tipo',
         'descripcion',
         'almacen_id',
+        'activo',
     ];
 
     protected $casts = [
         'stock' => 'float',
         'capacidad_maxima' => 'float',
+        'activo' => 'boolean',
     ];
 
     public $timestamps = false;

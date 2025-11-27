@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\MenuController;
 use App\Models\Rol;
 use App\Models\Permiso;
 use Illuminate\Http\Request;
@@ -19,10 +20,15 @@ class RolController extends Controller
 
         $roles = Rol::with('permisos')->get();
         $permisos = Permiso::all();
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser(Auth::user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador(request()->path());
 
         return Inertia::render('Roles/Index', [
             'roles' => $roles,
             'permisos' => $permisos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
         ]);
     }
 
@@ -34,10 +40,15 @@ class RolController extends Controller
 
         $rol->load('permisos');
         $permisos = Permiso::all();
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser(Auth::user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador(request()->path());
 
         return Inertia::render('Roles/Edit', [
             'rol' => $rol,
             'permisos' => $permisos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
         ]);
     }
 

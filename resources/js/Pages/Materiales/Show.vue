@@ -6,19 +6,19 @@
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <h2 class="text-2xl font-bold text-gray-900">{{ material.nombre }}</h2>
                         <div class="flex space-x-2">
-                            <Link
+                            <button
                                 v-if="canEdit"
-                                :href="route('materiales.edit', material.id)"
+                                @click="() => router.visit(getRoute('materiales.edit', material?.id) || `/materiales/${material?.id}/edit`)"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                             >
                                 Editar
-                            </Link>
-                            <Link
-                                :href="route('materiales.index')"
+                            </button>
+                            <button
+                                @click="goBack"
                                 class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Volver
-                            </Link>
+                            </button>
                         </div>
                     </div>
 
@@ -113,7 +113,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Badge from '@/Components/UI/Badge.vue';
 
@@ -123,8 +123,45 @@ const props = defineProps({
     pageVisits: Number,
 });
 
+const page = usePage();
+
+const getRoute = (name, params = null) => {
+    try {
+        if (window.route && typeof window.route === 'function') {
+            return params ? window.route(name, params) : window.route(name);
+        }
+    } catch (e) {
+        console.warn('route function not available:', e);
+    }
+    // Fallback a URLs directas
+    if (name === 'materiales.index') return '/materiales';
+    if (name === 'materiales.edit' && params) return `/materiales/${params}/edit`;
+    if (name === 'materiales.show' && params) return `/materiales/${params}`;
+    return '#';
+};
+
 const canEdit = computed(() => {
-    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
-    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+    try {
+        const user = page.props.auth?.user;
+        const rol = user?.rol?.nombre;
+        return rol === 'PROPIETARIO' || rol === 'CARPINTERO';
+    } catch (e) {
+        console.error('Error checking canEdit:', e);
+        return false;
+    }
 });
+
+const goBack = () => {
+    try {
+        const routeUrl = getRoute('materiales.index');
+        if (routeUrl && routeUrl !== '#') {
+            router.visit(routeUrl);
+        } else {
+            router.visit('/materiales');
+        }
+    } catch (e) {
+        console.error('Error al volver:', e);
+        router.visit('/materiales');
+    }
+};
 </script>

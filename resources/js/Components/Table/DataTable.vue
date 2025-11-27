@@ -23,17 +23,17 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th
-                            v-for="column in columns"
-                            :key="column.key"
+                            v-for="(column, colIdx) in (columns || [])"
+                            :key="column?.key || `col-${colIdx}`"
                             :class="[
                                 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
-                                column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                                column?.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
                             ]"
-                            @click="column.sortable && handleSort(column.key)"
+                            @click="column?.sortable && column?.key && handleSort(column.key)"
                         >
                             <div class="flex items-center space-x-1">
-                                <span>{{ column.label }}</span>
-                                <span v-if="column.sortable && sortColumn === column.key">
+                                <span>{{ column?.label || '' }}</span>
+                                <span v-if="column?.sortable && sortColumn === column?.key">
                                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                                 </span>
                             </div>
@@ -45,50 +45,64 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <tr v-if="loading">
-                        <td :colspan="columns.length + (showActions ? 1 : 0)" class="px-6 py-4 text-center">
+                        <td :colspan="(columns?.length || 0) + (showActions ? 1 : 0)" class="px-6 py-4 text-center">
                             <div class="flex justify-center">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                             </div>
                         </td>
                     </tr>
                     <tr v-else-if="filteredData.length === 0">
-                        <td :colspan="columns.length + (showActions ? 1 : 0)" class="px-6 py-4 text-center text-gray-500">
+                        <td :colspan="(columns?.length || 0) + (showActions ? 1 : 0)" class="px-6 py-4 text-center text-gray-500">
                             No hay datos disponibles
                         </td>
                     </tr>
                     <tr
                         v-else
                         v-for="(row, index) in paginatedData"
-                        :key="row.id || index"
+                        :key="row?.id || index"
                         class="hover:bg-gray-50"
                     >
-                        <td
-                            v-for="column in columns"
-                            :key="column.key"
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                        >
-                            <slot :name="`cell-${column.key}`" :row="row" :value="getValue(row, column.key)">
-                                {{ formatValue(getValue(row, column.key), column) }}
-                            </slot>
-                        </td>
-                        <td v-if="showActions" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <slot name="actions" :row="row">
-                                <button
-                                    v-if="onEdit"
-                                    @click="onEdit(row)"
-                                    class="text-blue-600 hover:text-blue-900 mr-3"
-                                >
-                                    Editar
-                                </button>
-                                <button
-                                    v-if="onDelete"
-                                    @click="handleDelete(row)"
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    Eliminar
-                                </button>
-                            </slot>
-                        </td>
+                        <template v-if="row && typeof row === 'object'">
+                            <td
+                                v-for="(column, colIndex) in (columns || [])"
+                                :key="column?.key || `col-${colIndex}`"
+                                class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            >
+                                <template v-if="column && column.key">
+                                    <slot 
+                                        :name="`cell-${column.key}`" 
+                                        :row="row" 
+                                        :value="safeGetValue(row, column.key)"
+                                    >
+                                        {{ safeFormatValue(safeGetValue(row, column.key), column) }}
+                                    </slot>
+                                </template>
+                                <span v-else>-</span>
+                            </td>
+                            <td v-if="showActions" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <slot name="actions" :row="row">
+                                    <button
+                                        v-if="props.onEdit && typeof props.onEdit === 'function' && row && row.id"
+                                        @click="() => safeEdit(row)"
+                                        class="text-blue-600 hover:text-blue-900 mr-3"
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        v-if="props.onDelete && typeof props.onDelete === 'function' && row && row.id"
+                                        @click="() => safeDelete(row)"
+                                        class="text-red-600 hover:text-red-900"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </slot>
+                            </td>
+                        </template>
+                        <template v-else>
+                            <td :colspan="(columns?.length || 0) + (showActions ? 1 : 0)" class="px-6 py-4 text-center text-gray-400 text-xs">
+                                Fila inválida
+                            </td>
+                        </template>
                     </tr>
                 </tbody>
             </table>
@@ -143,12 +157,14 @@ import { ref, computed } from 'vue';
 
 const props = defineProps({
     data: {
-        type: Array,
+        type: [Array, Object],
         required: true,
+        default: () => [],
     },
     columns: {
         type: Array,
         required: true,
+        default: () => [],
     },
     showActions: {
         type: Boolean,
@@ -180,15 +196,23 @@ const sortColumn = ref(null);
 const sortDirection = ref('asc');
 
 const filteredData = computed(() => {
-    let result = [...props.data];
+    if (!props.data) {
+        return [];
+    }
+    
+    // Asegurar que data sea un array
+    const dataArray = Array.isArray(props.data) ? props.data : [];
+    let result = [...dataArray];
 
     // Búsqueda
-    if (searchTerm.value) {
+    if (searchTerm.value && props.columns && Array.isArray(props.columns)) {
         const term = searchTerm.value.toLowerCase();
         result = result.filter(row => {
+            if (!row) return false;
             return props.columns.some(column => {
-                const value = getValue(row, column.key);
-                return String(value).toLowerCase().includes(term);
+                if (!column || typeof column !== 'object' || !column.key) return false;
+                const value = safeGetValue(row, column.key);
+                return String(value || '').toLowerCase().includes(term);
             });
         });
     }
@@ -196,8 +220,12 @@ const filteredData = computed(() => {
     // Ordenamiento
     if (sortColumn.value) {
         result.sort((a, b) => {
-            const aVal = getValue(a, sortColumn.value);
-            const bVal = getValue(b, sortColumn.value);
+            if (!a || typeof a !== 'object' || !b || typeof b !== 'object') return 0;
+            const aVal = safeGetValue(a, sortColumn.value);
+            const bVal = safeGetValue(b, sortColumn.value);
+            // Manejar valores undefined/null
+            if (aVal === undefined || aVal === null) return 1;
+            if (bVal === undefined || bVal === null) return -1;
             const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
             return sortDirection.value === 'asc' ? comparison : -comparison;
         });
@@ -229,27 +257,86 @@ const handleSort = (column) => {
 };
 
 const handleDelete = (row) => {
+    if (!row) {
+        console.warn('Cannot delete: row is undefined or null');
+        return;
+    }
     if (confirm('¿Está seguro de eliminar este registro?')) {
-        props.onDelete?.(row);
+        if (props.onDelete && typeof props.onDelete === 'function') {
+            props.onDelete(row);
+        }
     }
 };
 
-const getValue = (obj, path) => {
-    return path.split('.').reduce((o, p) => o?.[p], obj);
+const safeGetValue = (obj, path) => {
+    if (!obj || typeof obj !== 'object' || !path || typeof path !== 'string') {
+        return undefined;
+    }
+    try {
+        const keys = path.split('.');
+        let result = obj;
+        for (const key of keys) {
+            if (result === null || result === undefined) {
+                return undefined;
+            }
+            result = result[key];
+        }
+        return result;
+    } catch (e) {
+        console.warn('Error getting value:', e, { obj, path });
+        return undefined;
+    }
 };
 
-const formatValue = (value, column) => {
+const safeFormatValue = (value, column) => {
     if (value === null || value === undefined) return '-';
-    if (column.format === 'currency') {
-        return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value);
+    if (!column || typeof column !== 'object') {
+        return String(value || '');
     }
-    if (column.format === 'date') {
-        return new Date(value).toLocaleDateString('es-AR');
+    
+    try {
+        if (column.format === 'currency') {
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) return '-';
+            return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(numValue);
+        }
+        if (column.format === 'date') {
+            const dateValue = new Date(value);
+            if (isNaN(dateValue.getTime())) return '-';
+            return dateValue.toLocaleDateString('es-AR');
+        }
+        if (column.format === 'boolean') {
+            return value ? 'Sí' : 'No';
+        }
+        return String(value || '');
+    } catch (error) {
+        console.warn('Error formatting value:', error, value, column);
+        return String(value || '');
     }
-    if (column.format === 'boolean') {
-        return value ? 'Sí' : 'No';
+};
+
+const safeEdit = (row) => {
+    if (!row || !row.id || !props.onEdit || typeof props.onEdit !== 'function') {
+        console.warn('Cannot edit: invalid row or handler', row);
+        return;
     }
-    return value;
+    try {
+        props.onEdit(row);
+    } catch (e) {
+        console.error('Error in edit handler:', e);
+    }
+};
+
+const safeDelete = (row) => {
+    if (!row || !row.id || !props.onDelete || typeof props.onDelete !== 'function') {
+        console.warn('Cannot delete: invalid row or handler', row);
+        return;
+    }
+    try {
+        handleDelete(row);
+    } catch (e) {
+        console.error('Error in delete handler:', e);
+    }
 };
 </script>
 

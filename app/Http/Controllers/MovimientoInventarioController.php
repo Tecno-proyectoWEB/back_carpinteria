@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\MovimientoInventario;
 use App\Models\Material;
 use App\Models\Producto;
+use App\Http\Controllers\MenuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class MovimientoInventarioController extends Controller
 {
@@ -15,7 +17,10 @@ class MovimientoInventarioController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('inventario.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver inventario'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para ver inventario'], 403);
+            }
+            abort(403, 'No tiene permiso para ver inventario');
         }
 
         $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'compra', 'pedido']);
@@ -40,7 +45,91 @@ class MovimientoInventarioController extends Controller
             $query->where('fecha', '<=', $request->fecha_hasta);
         }
 
-        return response()->json($query->orderBy('fecha', 'desc')->paginate(20));
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'fecha');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($query->paginate(20));
+        }
+
+        // Si es petición web, retornar Inertia con paginación
+        $movimientos = $query->paginate($request->get('per_page', 15));
+        $materiales = Material::where('activo', true)->get();
+        $productos = Producto::all();
+
+        // Obtener menú y visitas para web
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser($request->user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador($request->path());
+
+        return Inertia::render('Inventario/Index', [
+            'movimientos' => $movimientos,
+            'materiales' => $materiales,
+            'productos' => $productos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
+            'filters' => $request->only(['tipo', 'material_id', 'producto_id', 'fecha_desde', 'fecha_hasta', 'sort_by', 'sort_dir']),
+        ]);
+    }
+
+    public function stock(Request $request)
+    {
+        // Solo para web
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json(['message' => 'Use GET /api/movimientos-inventario para ver movimientos'], 405);
+        }
+
+        if (!Auth::user()->tienePermiso('inventario.ver')) {
+            abort(403, 'No tiene permiso para ver inventario');
+        }
+
+        $materiales = Material::with('categoria', 'sector')->get();
+        $productos = Producto::with('categoria')->get();
+
+        // Alertas de stock bajo
+        $alertasMateriales = $materiales->filter(function($m) {
+            return $m->stock_actual <= $m->stock_minimo;
+        });
+        $alertasProductos = $productos->filter(function($p) {
+            return $p->stock <= $p->stock_minimo;
+        });
+
+        // Obtener menú y visitas para web
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser($request->user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador($request->path());
+
+        return Inertia::render('Inventario/Stock', [
+            'materiales' => $materiales,
+            'productos' => $productos,
+            'alertasMateriales' => $alertasMateriales,
+            'alertasProductos' => $alertasProductos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
+        ]);
+    }
+
+    public function create()
+    {
+        // Solo para web
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/movimientos-inventario para crear'], 405);
+        }
+
+        if (!Auth::user()->tienePermiso('inventario.crear')) {
+            abort(403, 'No tiene permiso para crear movimientos de inventario');
+        }
+
+        $materiales = Material::where('activo', true)->get();
+        $productos = Producto::all();
+
+        return Inertia::render('Inventario/Create', [
+            'materiales' => $materiales,
+            'productos' => $productos,
+        ]);
     }
 
     public function store(Request $request)
@@ -120,15 +209,35 @@ class MovimientoInventarioController extends Controller
                 'fecha' => now(),
             ]);
 
-            return response()->json($movimiento->load(['material', 'producto', 'usuario']), 201);
+            // Si es petición API, retornar JSON
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json($movimiento->load(['material', 'producto', 'usuario']), 201);
+            }
+
+            // Si es petición web, redirigir
+            return redirect()->route('inventario.index')
+                ->with('success', 'Movimiento de inventario creado exitosamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
-    public function show(MovimientoInventario $movimientoInventario)
+    public function show(Request $request, MovimientoInventario $movimientoInventario)
     {
-        return response()->json($movimientoInventario->load(['material', 'producto', 'usuario', 'compra', 'pedido']));
+        $movimientoInventario->load(['material', 'producto', 'usuario', 'compra', 'pedido']);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($movimientoInventario);
+        }
+
+        // Si es petición web, retornar Inertia
+        return Inertia::render('Inventario/Show', [
+            'movimiento' => $movimientoInventario,
+        ]);
     }
 }

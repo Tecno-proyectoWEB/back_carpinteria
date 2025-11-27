@@ -2,10 +2,15 @@
     <AppLayout :menu-items="menuItems" :page-visits="pageVisits">
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">Bitácora del Sistema</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Bitácora del Sistema</h2>
+                        <p class="text-gray-600 mt-2">Registro de todas las acciones realizadas en el sistema</p>
+                    </div>
+                </div>
 
                 <!-- Filtros -->
-                <div class="mb-4 bg-white p-4 rounded-lg shadow">
+                <div class="mb-4 bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-indigo-100">
                     <form @submit.prevent="applyFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
@@ -68,14 +73,14 @@
                         <div class="flex items-end space-x-2">
                             <button
                                 type="submit"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                             >
                                 Filtrar
                             </button>
                             <button
                                 type="button"
                                 @click="clearFilters"
-                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                                class="px-5 py-2.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-700 transition-colors"
                             >
                                 Limpiar
                             </button>
@@ -84,7 +89,7 @@
                 </div>
 
                 <!-- Tabla de Bitácora -->
-                <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+                <div class="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl border border-indigo-100 overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>

@@ -8,20 +8,96 @@ use App\Models\Pago;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
 use App\Models\Servicio;
+use App\Models\Usuario;
+use App\Models\MetodoPago;
+use App\Http\Controllers\MenuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PedidoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para ver pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para ver pedidos');
         }
 
-        return response()->json(Pedido::with(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio'])->get());
+        $query = Pedido::with(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']);
+
+        // Si es cliente, solo ver sus pedidos
+        if (Auth::user()->rol->nombre === 'CLIENTE') {
+            $query->where('usuario_id', Auth::id());
+        }
+
+        // Filtros
+        if ($request->has('estado')) {
+            $query->where('estado', $request->estado === 'completado');
+        }
+
+        if ($request->has('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+
+        if ($request->has('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'fecha');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($query->get());
+        }
+
+        // Si es petición web, retornar Inertia con paginación
+        $pedidos = $query->paginate($request->get('per_page', 15));
+
+        // Obtener menú y visitas para web
+        $menuController = new MenuController();
+        $menuItems = $menuController->getMenuForUser($request->user());
+        $pageVisits = \App\Models\PageVisit::obtenerContador($request->path());
+
+        return Inertia::render('Pedidos/Index', [
+            'pedidos' => $pedidos,
+            'menuItems' => $menuItems,
+            'pageVisits' => $pageVisits,
+            'filters' => $request->only(['estado', 'fecha_desde', 'fecha_hasta', 'sort_by', 'sort_dir']),
+        ]);
+    }
+
+    public function create()
+    {
+        // Solo para web
+        if (request()->wantsJson() || request()->is('api/*')) {
+            return response()->json(['message' => 'Use POST /api/pedidos/storeContado o storeCredito para crear'], 405);
+        }
+
+        if (!Auth::user()->tienePermiso('pedidos.crear')) {
+            abort(403, 'No tiene permiso para crear pedidos');
+        }
+
+        $productos = Producto::where('stock', '>', 0)->get();
+        $servicios = Servicio::where('activo', true)->get();
+        $clientes = Usuario::whereHas('rol', function($q) {
+            $q->where('nombre', 'CLIENTE');
+        })->where('estado', true)->get();
+        $metodosPago = MetodoPago::all();
+
+        return Inertia::render('Pedidos/Create', [
+            'productos' => $productos,
+            'servicios' => $servicios,
+            'clientes' => $clientes,
+            'metodosPago' => $metodosPago,
+        ]);
     }
 
     public function store(Request $request)
@@ -56,7 +132,10 @@ class PedidoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para crear pedidos');
         }
 
         $request->validate([
@@ -168,10 +247,20 @@ class PedidoController extends Controller
                     'fecha' => now(),
                 ]);
 
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                // Si es petición API, retornar JSON
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                }
+
+                // Si es petición web, redirigir
+                return redirect()->route('pedidos.show', $pedido->id)
+                    ->with('success', 'Venta al contado creada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al procesar venta al contado: ' . $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Error al procesar venta al contado: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Error al procesar venta al contado: ' . $e->getMessage()]);
         }
     }
 
@@ -180,7 +269,10 @@ class PedidoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para crear pedidos');
         }
 
         $request->validate([
@@ -283,26 +375,42 @@ class PedidoController extends Controller
                     'fecha' => now(),
                 ]);
 
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                // Si es petición API, retornar JSON
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                }
+
+                // Si es petición web, redirigir
+                return redirect()->route('pedidos.show', $pedido->id)
+                    ->with('success', 'Venta a crédito creada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al procesar venta a crédito: ' . $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Error al procesar venta a crédito: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Error al procesar venta a crédito: ' . $e->getMessage()]);
         }
     }
 
-    public function confirmarCredito(Pedido $pedido)
+    public function confirmarCredito(Request $request, Pedido $pedido)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.aprobar')) {
-            return response()->json(['message' => 'No tiene permiso para confirmar pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para confirmar pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para confirmar pedidos');
         }
 
         if ($pedido->estado) {
-            return response()->json(['error' => 'El pedido ya está confirmado'], 400);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'El pedido ya está confirmado'], 400);
+            }
+            return back()->withErrors(['error' => 'El pedido ya está confirmado']);
         }
 
         try {
-            return DB::transaction(function () use ($pedido) {
+            return DB::transaction(function () use ($request, $pedido) {
                 // Actualizar stock y crear movimientos de inventario
                 foreach ($pedido->detalles as $detalle) {
                     if ($detalle->producto_id) {
@@ -349,10 +457,20 @@ class PedidoController extends Controller
                     'fecha' => now(),
                 ]);
 
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']));
+                // Si es petición API, retornar JSON
+                if ($request->wantsJson() || $request->is('api/*')) {
+                    return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']));
+                }
+
+                // Si es petición web, redirigir
+                return redirect()->route('pedidos.show', $pedido->id)
+                    ->with('success', 'Pedido a crédito confirmado exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al confirmar pedido: ' . $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Error al confirmar pedido: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Error al confirmar pedido: ' . $e->getMessage()]);
         }
     }
 
@@ -464,19 +582,32 @@ class PedidoController extends Controller
         }
     }
 
-    public function show(Pedido $pedido)
+    public function show(Request $request, Pedido $pedido)
     {
-        return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']));
+        $pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($pedido);
+        }
+
+        // Si es petición web, retornar Inertia
+        return Inertia::render('Pedidos/Show', [
+            'pedido' => $pedido,
+        ]);
     }
 
     public function update(Request $request, Pedido $pedido)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para editar pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para editar pedidos');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'fecha' => 'nullable|date',
             'descripcion' => 'nullable|string',
             'importe_total' => 'nullable|numeric|min:0',
@@ -487,7 +618,7 @@ class PedidoController extends Controller
         ]);
 
         $datos_anteriores = $pedido->toArray();
-        $pedido->update($request->all());
+        $pedido->update($validated);
 
         // Registrar en bitácora
         \App\Models\Bitacora::create([
@@ -501,18 +632,31 @@ class PedidoController extends Controller
             'fecha' => now(),
         ]);
 
-        return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']));
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']));
+        }
+
+        // Si es petición web, redirigir
+        return redirect()->route('pedidos.index')
+            ->with('success', 'Pedido actualizado exitosamente');
     }
 
-    public function destroy(Pedido $pedido)
+    public function destroy(Request $request, Pedido $pedido)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar pedidos'], 403);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No tiene permiso para eliminar pedidos'], 403);
+            }
+            abort(403, 'No tiene permiso para eliminar pedidos');
         }
 
         if ($pedido->estado) {
-            return response()->json(['error' => 'No se puede eliminar un pedido confirmado'], 400);
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'No se puede eliminar un pedido confirmado'], 400);
+            }
+            return back()->withErrors(['error' => 'No se puede eliminar un pedido confirmado']);
         }
 
         // Registrar en bitácora antes de eliminar
@@ -527,6 +671,14 @@ class PedidoController extends Controller
         ]);
 
         $pedido->delete();
-        return response()->json(null, 204);
+
+        // Si es petición API, retornar JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(null, 204);
+        }
+
+        // Si es petición web, redirigir
+        return redirect()->route('pedidos.index')
+            ->with('success', 'Pedido eliminado exitosamente');
     }
 }
