@@ -8,8 +8,8 @@
                         <p v-if="materialData?.nombre" class="text-gray-600 text-sm">
                             {{ materialData.nombre }}
                         </p>
-                        <p v-else class="text-red-600 text-sm">
-                            ⚠️ No se pudo cargar la información del material
+                        <p v-else class="text-yellow-600 text-sm">
+                            ⚠️ Cargando información del material...
                         </p>
                     </div>
 
@@ -155,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useForm, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Input from '@/Components/Form/Input.vue';
@@ -189,26 +189,35 @@ const page = usePage();
 
 // Verificar que material existe
 const materialData = computed(() => {
-    return props.material || {};
+    const material = props.material;
+    console.log('Material recibido en props:', material);
+    console.log('Tipo de material:', typeof material);
+    console.log('Es objeto?:', material && typeof material === 'object');
+    console.log('Tiene id?:', material?.id);
+    console.log('Tiene nombre?:', material?.nombre);
+    console.log('Keys del material:', material ? Object.keys(material) : 'no material');
+    return material || {};
 });
 
+// Inicializar formulario con valores por defecto
 const form = useForm({
-    nombre: materialData.value?.nombre || '',
-    descripcion: materialData.value?.descripcion || '',
-    categoria_id: materialData.value?.categoria_id || '',
-    sector_id: materialData.value?.sector_id || '',
-    stock_actual: materialData.value?.stock_actual || 0,
-    stock_minimo: materialData.value?.stock_minimo || 0,
-    punto_reorden: materialData.value?.punto_reorden || 0,
-    precio: materialData.value?.precio || 0,
-    unidad_medida: materialData.value?.unidad_medida || '',
+    nombre: '',
+    descripcion: '',
+    categoria_id: '',
+    sector_id: '',
+    stock_actual: 0,
+    stock_minimo: 0,
+    punto_reorden: 0,
+    precio: 0,
+    unidad_medida: '',
     imagen: null,
-    activo: materialData.value?.activo ?? true,
+    activo: true,
     _method: 'PATCH',
 });
 
-// Actualizar form cuando material cambie
+// Actualizar form cuando material esté disponible
 onMounted(() => {
+    console.log('Componente montado, material:', materialData.value);
     if (materialData.value && Object.keys(materialData.value).length > 0) {
         form.nombre = materialData.value.nombre || '';
         form.descripcion = materialData.value.descripcion || '';
@@ -219,9 +228,58 @@ onMounted(() => {
         form.punto_reorden = materialData.value.punto_reorden || 0;
         form.precio = materialData.value.precio || 0;
         form.unidad_medida = materialData.value.unidad_medida || '';
-        form.activo = materialData.value.activo ?? true;
+        // Manejar activo correctamente
+        const activoValue = materialData.value.activo;
+        if (typeof activoValue === 'boolean') {
+            form.activo = activoValue;
+        } else if (activoValue === 'true' || activoValue === '1' || activoValue === 1) {
+            form.activo = true;
+        } else if (activoValue === 'false' || activoValue === '0' || activoValue === 0) {
+            form.activo = false;
+        } else {
+            form.activo = activoValue ?? true;
+        }
+        console.log('Formulario inicializado con:', {
+            nombre: form.nombre,
+            categoria_id: form.categoria_id,
+            sector_id: form.sector_id,
+        });
+    } else {
+        console.warn('Material no disponible al montar el componente');
     }
 });
+
+// Watch para actualizar cuando cambien los props
+watch(() => props.material, (newMaterial) => {
+    if (newMaterial && Object.keys(newMaterial).length > 0) {
+        console.log('Material actualizado, sincronizando formulario:', newMaterial);
+        form.nombre = newMaterial.nombre || '';
+        form.descripcion = newMaterial.descripcion || '';
+        form.categoria_id = newMaterial.categoria_id || '';
+        form.sector_id = newMaterial.sector_id || '';
+        form.stock_actual = newMaterial.stock_actual || 0;
+        form.stock_minimo = newMaterial.stock_minimo || 0;
+        form.punto_reorden = newMaterial.punto_reorden || 0;
+        form.precio = newMaterial.precio || 0;
+        form.unidad_medida = newMaterial.unidad_medida || '';
+        // Manejar activo correctamente
+        const activoValue = newMaterial.activo;
+        if (typeof activoValue === 'boolean') {
+            form.activo = activoValue;
+        } else if (activoValue === 'true' || activoValue === '1' || activoValue === 1) {
+            form.activo = true;
+        } else if (activoValue === 'false' || activoValue === '0' || activoValue === 0) {
+            form.activo = false;
+        } else {
+            form.activo = activoValue ?? true;
+        }
+        console.log('Activo sincronizado en watch:', {
+            original: activoValue,
+            final: form.activo,
+            type: typeof activoValue,
+        });
+    }
+}, { immediate: true, deep: true });
 
 const imagePreview = ref(null);
 
@@ -274,15 +332,15 @@ const submit = () => {
 
     const formData = {
         nombre: form.nombre,
-        descripcion: form.descripcion,
+        descripcion: form.descripcion || null,
         categoria_id: parseInt(form.categoria_id),
         sector_id: parseInt(form.sector_id),
         stock_actual: parseInt(form.stock_actual) || 0,
         stock_minimo: parseInt(form.stock_minimo) || 0,
         punto_reorden: parseInt(form.punto_reorden) || 0,
         precio: parseFloat(form.precio) || 0,
-        unidad_medida: form.unidad_medida,
-        activo: form.activo,
+        unidad_medida: form.unidad_medida || null,
+        activo: form.activo === true || form.activo === 'true' || form.activo === 1 || form.activo === '1',
         _method: 'PATCH',
     };
     

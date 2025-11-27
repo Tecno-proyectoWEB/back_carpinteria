@@ -4,11 +4,11 @@
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-gray-900">{{ material.nombre }}</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ material?.nombre || 'Cargando...' }}</h2>
                         <div class="flex space-x-2">
                             <button
-                                v-if="canEdit"
-                                @click="() => router.visit(getRoute('materiales.edit', material?.id) || `/materiales/${material?.id}/edit`)"
+                                v-if="canEdit && material?.id"
+                                @click="editMaterial"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                             >
                                 Editar
@@ -27,9 +27,9 @@
                             <!-- Imagen -->
                             <div>
                                 <img
-                                    v-if="material.imagen"
+                                    v-if="material?.imagen"
                                     :src="`/storage/${material.imagen}`"
-                                    :alt="material.nombre"
+                                    :alt="material?.nombre || 'Material'"
                                     class="w-full h-64 object-cover rounded-lg"
                                 />
                                 <div v-else class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -38,7 +38,7 @@
                             </div>
 
                             <!-- Información -->
-                            <div class="space-y-4">
+                            <div class="space-y-4" v-if="material">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500">Descripción</label>
                                     <p class="mt-1 text-gray-900">{{ material.descripcion || 'Sin descripción' }}</p>
@@ -63,10 +63,10 @@
                                         <label class="text-sm font-medium text-gray-500">Stock Actual</label>
                                         <p
                                             class="mt-1 text-lg font-semibold"
-                                            :class="material.stock_actual <= material.stock_minimo ? 'text-red-600' : 'text-gray-900'"
+                                            :class="(material.stock_actual || 0) <= (material.stock_minimo || 0) ? 'text-red-600' : 'text-gray-900'"
                                         >
-                                            {{ material.stock_actual }} {{ material.unidad_medida || '' }}
-                                            <span v-if="material.stock_actual <= material.stock_minimo" class="text-xs">⚠️</span>
+                                            {{ material.stock_actual || 0 }} {{ material.unidad_medida || '' }}
+                                            <span v-if="(material.stock_actual || 0) <= (material.stock_minimo || 0)" class="text-xs">⚠️</span>
                                         </p>
                                     </div>
 
@@ -102,6 +102,9 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                            <div v-else class="space-y-4">
+                                <p class="text-red-600">⚠️ No se pudo cargar la información del material</p>
                             </div>
                         </div>
                     </div>
@@ -150,6 +153,20 @@ const canEdit = computed(() => {
         return false;
     }
 });
+
+const editMaterial = () => {
+    if (!props.material?.id) {
+        console.error('Material inválido para editar:', props.material);
+        return;
+    }
+    try {
+        const routeUrl = getRoute('materiales.edit', props.material.id);
+        router.visit(routeUrl);
+    } catch (e) {
+        console.error('Error al editar material:', e);
+        router.visit(`/materiales/${props.material.id}/edit`);
+    }
+};
 
 const goBack = () => {
     try {

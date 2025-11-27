@@ -157,14 +157,54 @@ class MaterialController extends BaseController
             ->with('success', 'Material creado exitosamente');
     }
 
-    public function show(Request $request, Material $material)
+    public function show(Request $request, $id)
     {
-        $material->load(['sector', 'categoria']);
+        // Buscar el material manualmente
+        $material = Material::with(['sector', 'categoria'])->findOrFail($id);
 
         // Si es petición API, retornar JSON
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json($material);
         }
+
+        // Preparar datos del material para Inertia (igual que en edit)
+        $activoValue = $material->activo;
+        if (is_string($activoValue)) {
+            $activoValue = in_array(strtolower($activoValue), ['true', '1', 't', 'yes']);
+        } elseif (is_int($activoValue)) {
+            $activoValue = (bool)$activoValue;
+        }
+        
+        $materialData = [
+            'id' => $material->id,
+            'nombre' => $material->nombre,
+            'descripcion' => $material->descripcion,
+            'categoria_id' => $material->categoria_id,
+            'sector_id' => $material->sector_id,
+            'stock_actual' => $material->stock_actual,
+            'stock_minimo' => $material->stock_minimo,
+            'punto_reorden' => $material->punto_reorden,
+            'precio' => $material->precio,
+            'unidad_medida' => $material->unidad_medida,
+            'imagen' => $material->imagen,
+            'activo' => (bool)$activoValue, // Forzar a boolean explícito
+            'categoria' => $material->categoria ? [
+                'id' => $material->categoria->id,
+                'nombre' => $material->categoria->nombre,
+            ] : null,
+            'sector' => $material->sector ? [
+                'id' => $material->sector->id,
+                'nombre' => $material->sector->nombre,
+            ] : null,
+        ];
+
+        \Log::debug('MaterialController::show() - Material cargado', [
+            'material_id' => $id,
+            'material_nombre' => $material->nombre,
+            'activo' => $materialData['activo'],
+            'has_categoria' => $material->relationLoaded('categoria'),
+            'has_sector' => $material->relationLoaded('sector'),
+        ]);
 
         // Compartir usuario autenticado
         $this->shareAuthUser($request);
@@ -176,22 +216,36 @@ class MaterialController extends BaseController
 
         // Si es petición web, retornar Inertia
         return Inertia::render('Materiales/Show', [
-            'material' => $material,
+            'material' => $materialData, // Pasar el array preparado
             'menuItems' => $menuItems,
             'pageVisits' => $pageVisits,
         ]);
     }
 
-    public function edit(Material $material)
+    public function edit(Request $request, $id)
     {
         // Solo para web
-        if (request()->wantsJson() || request()->is('api/*')) {
+        if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json(['message' => 'Use PUT /api/materiales/{id} para actualizar'], 405);
         }
 
         if (!Auth::user()->tienePermiso('materiales.editar')) {
             abort(403, 'No tiene permiso para editar materiales');
         }
+
+        // Buscar el material manualmente
+        $material = Material::with(['sector', 'categoria'])->findOrFail($id);
+        
+        // Log para debug
+        \Log::debug('MaterialController::edit() - Material cargado', [
+            'request_id' => $id,
+            'material_id' => $material->id,
+            'material_nombre' => $material->nombre,
+            'categoria_id' => $material->categoria_id,
+            'sector_id' => $material->sector_id,
+            'has_categoria' => $material->relationLoaded('categoria'),
+            'has_sector' => $material->relationLoaded('sector'),
+        ]);
 
         $categorias = Categoria::where('activo', true)->get();
         $sectores = Sector::where('activo', true)->get();
@@ -204,8 +258,36 @@ class MaterialController extends BaseController
         $menuItems = $menuController->getMenuForUser(request()->user());
         $pageVisits = \App\Models\PageVisit::obtenerContador(request()->path());
 
+        // Preparar datos del material para Inertia
+        $materialData = [
+            'id' => $material->id,
+            'nombre' => $material->nombre,
+            'descripcion' => $material->descripcion,
+            'categoria_id' => $material->categoria_id,
+            'sector_id' => $material->sector_id,
+            'stock_actual' => $material->stock_actual,
+            'stock_minimo' => $material->stock_minimo,
+            'punto_reorden' => $material->punto_reorden,
+            'precio' => $material->precio,
+            'unidad_medida' => $material->unidad_medida,
+            'imagen' => $material->imagen,
+            'activo' => (bool)$material->activo, // Forzar a boolean explícito
+            'categoria' => $material->categoria ? [
+                'id' => $material->categoria->id,
+                'nombre' => $material->categoria->nombre,
+            ] : null,
+            'sector' => $material->sector ? [
+                'id' => $material->sector->id,
+                'nombre' => $material->sector->nombre,
+            ] : null,
+        ];
+        
+        \Log::debug('MaterialController::edit() - Datos preparados para Inertia', [
+            'material_data' => $materialData,
+        ]);
+
         return Inertia::render('Materiales/Edit', [
-            'material' => $material->load(['sector', 'categoria']),
+            'material' => $materialData,
             'categorias' => $categorias,
             'sectores' => $sectores,
             'menuItems' => $menuItems,
@@ -213,7 +295,7 @@ class MaterialController extends BaseController
         ]);
     }
 
-    public function update(Request $request, Material $material)
+    public function update(Request $request, $id)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('materiales.editar')) {
@@ -223,6 +305,9 @@ class MaterialController extends BaseController
             abort(403, 'No tiene permiso para editar materiales');
         }
 
+        // Buscar el material manualmente
+        $material = Material::findOrFail($id);
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -231,9 +316,36 @@ class MaterialController extends BaseController
             'punto_reorden' => 'nullable|integer|min:0',
             'precio' => 'nullable|numeric|min:0',
             'unidad_medida' => 'nullable|string|max:255',
-            'activo' => 'boolean',
+            'activo' => 'nullable|boolean',
             'sector_id' => 'required|exists:sector,id',
             'categoria_id' => 'required|exists:categoria,id',
+        ]);
+
+        // Manejar el campo activo explícitamente
+        if ($request->has('activo')) {
+            $activoInput = $request->activo;
+            // Convertir diferentes formatos a boolean
+            if (is_bool($activoInput)) {
+                $validated['activo'] = $activoInput;
+            } elseif (is_string($activoInput)) {
+                $validated['activo'] = in_array(strtolower($activoInput), ['true', '1', 't', 'yes', 'on']);
+            } elseif (is_int($activoInput) || is_float($activoInput)) {
+                $validated['activo'] = (bool)$activoInput;
+            } else {
+                $validated['activo'] = (bool)$activoInput;
+            }
+        } else {
+            // Si no viene el campo, mantener el valor actual
+            $validated['activo'] = (bool)$material->activo;
+        }
+
+        \Log::debug('MaterialController::update() - Datos validados', [
+            'material_id' => $id,
+            'validated' => $validated,
+            'activo_input' => $request->activo,
+            'activo_input_type' => gettype($request->activo),
+            'activo_value' => $validated['activo'],
+            'activo_type' => gettype($validated['activo']),
         ]);
 
         $datos_anteriores = $material->toArray();
