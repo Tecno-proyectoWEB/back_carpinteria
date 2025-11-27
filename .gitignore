@@ -1,4 +1,4 @@
-*.log
+
 .DS_Store
 .env
 .env.backup
@@ -17,7 +17,6 @@
 /public/hot
 /storage/*.key
 /storage/pail
-/storage/*.log
 /storage/debugbar
 /storage/debugbar/*
 /bootstrap/cache/*.php
