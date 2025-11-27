@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class MaterialController extends Controller
 {
@@ -12,17 +14,26 @@ class MaterialController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('materiales.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver materiales'], 403);
+            return back()->withErrors(['error' => 'No tiene permiso para ver materiales']);
         }
 
-        return response()->json(Material::with(['sector', 'categoria'])->get());
+        return Inertia::render('Materiales/Index', [
+            'materiales' => Material::with('categoria')->get(),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Materiales/Create', [
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function store(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('materiales.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear materiales'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para crear materiales']);
         }
 
         $request->validate([
@@ -34,36 +45,34 @@ class MaterialController extends Controller
             'precio' => 'nullable|numeric|min:0',
             'unidad_medida' => 'nullable|string|max:255',
             'activo' => 'boolean',
-            'sector_id' => 'required|exists:sector,id',
-            'categoria_id' => 'required|exists:categoria,id',
+            'categoria_id' => 'nullable|exists:categoria,id',
         ]);
 
         $material = Material::create($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Material creado',
-            'modulo' => 'Material',
-            'tabla_afectada' => 'material',
-            'registro_id' => $material->id,
-            'datos_nuevos' => $material->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($material->load(['sector', 'categoria']), 201);
+        return redirect()->route('materiales.index')->with('success', 'Material creado exitosamente');
     }
 
     public function show(Material $material)
     {
-        return response()->json($material->load(['sector', 'categoria']));
+        return Inertia::render('Materiales/Show', [
+            'material' => $material->load('categoria'),
+        ]);
+    }
+
+    public function edit(Material $material)
+    {
+        return Inertia::render('Materiales/Edit', [
+            'material' => $material->load('categoria'),
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function update(Request $request, Material $material)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('materiales.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar materiales'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para editar materiales']);
         }
 
         $request->validate([
@@ -75,47 +84,22 @@ class MaterialController extends Controller
             'precio' => 'nullable|numeric|min:0',
             'unidad_medida' => 'nullable|string|max:255',
             'activo' => 'boolean',
-            'sector_id' => 'sometimes|required|exists:sector,id',
-            'categoria_id' => 'sometimes|required|exists:categoria,id',
+            'categoria_id' => 'nullable|exists:categoria,id',
         ]);
 
-        $datos_anteriores = $material->toArray();
         $material->update($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Material actualizado',
-            'modulo' => 'Material',
-            'tabla_afectada' => 'material',
-            'registro_id' => $material->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $material->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($material->load(['sector', 'categoria']));
+        return redirect()->route('materiales.index')->with('success', 'Material actualizado exitosamente');
     }
 
     public function destroy(Material $material)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('materiales.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar materiales'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para eliminar materiales']);
         }
 
-        // Registrar en bitácora antes de eliminar
-        \App\Models\Bitacora::create([
-            'accion' => 'Material eliminado',
-            'modulo' => 'Material',
-            'tabla_afectada' => 'material',
-            'registro_id' => $material->id,
-            'datos_anteriores' => $material->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
         $material->delete();
-        return response()->json(null, 204);
+        return redirect()->route('materiales.index')->with('success', 'Material eliminado exitosamente');
     }
 }

@@ -15,7 +15,6 @@ class Categoria extends Model
         'nombre',
         'descripcion',
         'activo',
-        'subcategoria_id',
     ];
 
     protected $casts = [
@@ -23,11 +22,6 @@ class Categoria extends Model
     ];
 
     public $timestamps = false;
-
-    public function subcategoria()
-    {
-        return $this->belongsTo(Subcategoria::class, 'subcategoria_id');
-    }
 
     public function productos()
     {

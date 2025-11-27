@@ -20,7 +20,6 @@ class MovimientoInventario extends Model
         'material_id',
         'producto_id',
         'usuario_id',
-        'compra_id',
         'pedido_id',
     ];
 
@@ -44,11 +43,6 @@ class MovimientoInventario extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
-    }
-
-    public function compra()
-    {
-        return $this->belongsTo(Compra::class);
     }
 
     public function pedido()

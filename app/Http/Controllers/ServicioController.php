@@ -6,107 +6,99 @@ use App\Models\Servicio;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ServicioController extends Controller
 {
     public function index()
     {
-        return response()->json(Servicio::with('categoria')->where('activo', true)->get());
+        if (!Auth::user()->tienePermiso('servicios.ver')) {
+            return back()->withErrors(['message' => 'No tiene permiso para ver servicios']);
+        }
+
+        return Inertia::render('Servicios/Index', [
+            'servicios' => Servicio::with('categoria')->get(),
+        ]);
+    }
+
+    public function create()
+    {
+        if (!Auth::user()->tienePermiso('servicios.crear')) {
+            return back()->withErrors(['message' => 'No tiene permiso para crear servicios']);
+        }
+
+        return Inertia::render('Servicios/Create', [
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function store(Request $request)
     {
-        // Validar permisos
         if (!Auth::user()->tienePermiso('servicios.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear servicios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para crear servicios']);
         }
 
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio_base' => 'required|numeric|min:0',
-            'tiempo_estimado' => 'nullable|integer|min:0',
-            'categoria_id' => 'nullable|exists:categoria,id',
+            'tiempo_estimado' => 'nullable|integer|min:1',
             'activo' => 'boolean',
+            'categoria_id' => 'nullable|exists:categoria,id',
         ]);
 
-        $servicio = Servicio::create($request->all());
-
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Servicio creado',
-            'modulo' => 'Servicio',
-            'tabla_afectada' => 'servicio',
-            'registro_id' => $servicio->id,
-            'datos_nuevos' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
+        Servicio::create([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio_base' => $request->precio_base,
+            'tiempo_estimado' => $request->tiempo_estimado,
+            'activo' => $request->activo ?? true,
+            'categoria_id' => $request->categoria_id,
         ]);
 
-        return response()->json($servicio->load('categoria'), 201);
+        return redirect()->route('servicios.index')->with('success', 'Servicio creado correctamente');
     }
 
-    public function show(Servicio $servicio)
+    public function edit(Servicio $servicio)
     {
-        return response()->json($servicio->load('categoria'));
+        if (!Auth::user()->tienePermiso('servicios.editar')) {
+            return back()->withErrors(['message' => 'No tiene permiso para editar servicios']);
+        }
+
+        return Inertia::render('Servicios/Edit', [
+            'servicio' => $servicio->load('categoria'),
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function update(Request $request, Servicio $servicio)
     {
-        // Validar permisos
         if (!Auth::user()->tienePermiso('servicios.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar servicios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para editar servicios']);
         }
 
         $request->validate([
-            'nombre' => 'sometimes|required|string|max:255',
+            'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio_base' => 'sometimes|required|numeric|min:0',
-            'tiempo_estimado' => 'nullable|integer|min:0',
-            'categoria_id' => 'nullable|exists:categoria,id',
+            'precio_base' => 'required|numeric|min:0',
+            'tiempo_estimado' => 'nullable|integer|min:1',
             'activo' => 'boolean',
+            'categoria_id' => 'nullable|exists:categoria,id',
         ]);
 
-        $datos_anteriores = $servicio->toArray();
         $servicio->update($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Servicio actualizado',
-            'modulo' => 'Servicio',
-            'tabla_afectada' => 'servicio',
-            'registro_id' => $servicio->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($servicio->load('categoria'));
+        return redirect()->route('servicios.index')->with('success', 'Servicio actualizado correctamente');
     }
 
     public function destroy(Servicio $servicio)
     {
-        // Validar permisos
         if (!Auth::user()->tienePermiso('servicios.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar servicios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para eliminar servicios']);
         }
 
-        $datos_anteriores = $servicio->toArray();
-        $servicio->update(['activo' => false]);
+        $servicio->delete();
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Servicio desactivado',
-            'modulo' => 'Servicio',
-            'tabla_afectada' => 'servicio',
-            'registro_id' => $servicio->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $servicio->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json(['message' => 'Servicio desactivado'], 200);
+        return redirect()->route('servicios.index')->with('success', 'Servicio eliminado correctamente');
     }
 }

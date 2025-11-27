@@ -5,34 +5,56 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Categoria;
-use App\Models\Subcategoria;
 
 class CategoriaSeeder extends Seeder
 {
     public function run(): void
     {
-        $subcategoriaCocina = Subcategoria::where('nombre', 'Muebles de Cocina')->first();
-        $subcategoriaDormitorio = Subcategoria::where('nombre', 'Muebles de Dormitorio')->first();
-        $subcategoriaOficina = Subcategoria::where('nombre', 'Muebles de Oficina')->first();
-
         $categorias = [
             [
                 'nombre' => 'Alacenas',
                 'descripcion' => 'Alacenas y gabinetes de cocina',
                 'activo' => true,
-                'subcategoria_id' => $subcategoriaCocina?->id,
             ],
             [
                 'nombre' => 'Camas',
                 'descripcion' => 'Camas y bases de cama',
                 'activo' => true,
-                'subcategoria_id' => $subcategoriaDormitorio?->id,
             ],
             [
                 'nombre' => 'Escritorios',
                 'descripcion' => 'Escritorios y mesas de trabajo',
                 'activo' => true,
-                'subcategoria_id' => $subcategoriaOficina?->id,
+            ],
+            [
+                'nombre' => 'Muebles de Cocina',
+                'descripcion' => 'Muebles y accesorios para cocina',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Muebles de Dormitorio',
+                'descripcion' => 'Muebles para habitaciones',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Muebles de Oficina',
+                'descripcion' => 'Muebles para espacios de trabajo',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Maderas',
+                'descripcion' => 'Materiales de madera',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Herrajes',
+                'descripcion' => 'Herrajes y accesorios',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Barnices y Pinturas',
+                'descripcion' => 'Barnices, pinturas y acabados',
+                'activo' => true,
             ],
         ];
 

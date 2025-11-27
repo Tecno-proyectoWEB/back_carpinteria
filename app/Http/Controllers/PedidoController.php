@@ -8,55 +8,46 @@ use App\Models\Pago;
 use App\Models\MovimientoInventario;
 use App\Models\Producto;
 use App\Models\Servicio;
+use App\Models\Usuario;
+use App\Models\MetodoPago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class PedidoController extends Controller
 {
     public function index()
     {
-        // Validar permisos
-        if (!Auth::user()->tienePermiso('pedidos.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver pedidos'], 403);
-        }
+        return Inertia::render('Pedidos/Index', [
+            'pedidos' => Pedido::with(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio'])->orderBy('fecha', 'desc')->get(),
+        ]);
+    }
 
-        return response()->json(Pedido::with(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio'])->get());
+    public function create()
+    {
+        return Inertia::render('Pedidos/Create', [
+            'clientes' => Usuario::whereHas('rol', function($q) {
+                $q->where('nombre', 'CLIENTE');
+            })->get(),
+            'productos' => Producto::all(),
+            'servicios' => Servicio::where('activo', true)->get(),
+            'metodosPago' => MetodoPago::all(),
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'fecha' => 'nullable|date',
-            'descripcion' => 'nullable|string',
-            'importe_total' => 'nullable|numeric|min:0',
-            'importe_total_desc' => 'nullable|numeric|min:0',
-            'estado' => 'boolean',
-            'metodo_pago_id' => 'required|exists:metodo_pago,id',
-            'usuario_id' => 'required|exists:usuario,id',
-        ]);
-
-        $pedido = Pedido::create($request->all());
-        
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Pedido creado',
-            'modulo' => 'Pedido',
-            'tabla_afectada' => 'pedido',
-            'registro_id' => $pedido->id,
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-        
-        return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']), 201);
+        // Este método redirige a storeContado o storeCredito según el tipo
+        // Los formularios envían directamente a storeContado o storeCredito
+        return redirect()->route('pedidos.create');
     }
 
-    // Método para ventas al contado
     public function storeContado(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            return back()->withErrors(['error' => 'No tiene permiso para crear pedidos']);
         }
 
         $request->validate([
@@ -131,7 +122,6 @@ class PedidoController extends Controller
                             'observaciones' => "Pedido #{$pedido->id} - {$producto->nombre}",
                             'material_id' => null,
                             'producto_id' => $producto->id,
-                            'compra_id' => null,
                             'pedido_id' => $pedido->id,
                             'usuario_id' => Auth::id(),
                             'fecha' => now(),
@@ -158,29 +148,18 @@ class PedidoController extends Controller
                     'usuario_id' => Auth::id(),
                 ]);
 
-                // Registrar en bitácora
-                \App\Models\Bitacora::create([
-                    'accion' => 'Venta al contado creada',
-                    'modulo' => 'Pedido',
-                    'tabla_afectada' => 'pedido',
-                    'registro_id' => $pedido->id,
-                    'usuario_id' => Auth::id(),
-                    'fecha' => now(),
-                ]);
-
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                return redirect()->route('pedidos.index')->with('success', 'Venta al contado registrada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al procesar venta al contado: ' . $e->getMessage()], 500);
+            return back()->withErrors(['error' => 'Error al procesar venta al contado: ' . $e->getMessage()]);
         }
     }
 
-    // Método para ventas a crédito
     public function storeCredito(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            return back()->withErrors(['error' => 'No tiene permiso para crear pedidos']);
         }
 
         $request->validate([
@@ -255,7 +234,7 @@ class PedidoController extends Controller
 
                 for ($i = 1; $i <= $request->numero_cuotas; $i++) {
                     Pago::create([
-                        'monto' => $i === $request->numero_cuotas 
+                        'monto' => $i === $request->numero_cuotas
                             ? $importe_total_desc - ($monto_cuota * ($request->numero_cuotas - 1)) // Última cuota con ajuste
                             : $monto_cuota,
                         'fecha_pago' => null,
@@ -273,20 +252,10 @@ class PedidoController extends Controller
                     $fecha_cuota->modify('+1 month');
                 }
 
-                // Registrar en bitácora
-                \App\Models\Bitacora::create([
-                    'accion' => 'Venta a crédito creada',
-                    'modulo' => 'Pedido',
-                    'tabla_afectada' => 'pedido',
-                    'registro_id' => $pedido->id,
-                    'usuario_id' => Auth::id(),
-                    'fecha' => now(),
-                ]);
-
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']), 201);
+                return redirect()->route('pedidos.index')->with('success', 'Venta a crédito registrada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al procesar venta a crédito: ' . $e->getMessage()], 500);
+            return back()->withErrors(['error' => 'Error al procesar venta a crédito: ' . $e->getMessage()]);
         }
     }
 
@@ -294,20 +263,20 @@ class PedidoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.aprobar')) {
-            return response()->json(['message' => 'No tiene permiso para confirmar pedidos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para confirmar pedidos']);
         }
 
         if ($pedido->estado) {
-            return response()->json(['error' => 'El pedido ya está confirmado'], 400);
+            return back()->withErrors(['error' => 'El pedido ya está confirmado']);
         }
 
         try {
-            return DB::transaction(function () use ($pedido) {
+            DB::transaction(function () use ($pedido) {
                 // Actualizar stock y crear movimientos de inventario
                 foreach ($pedido->detalles as $detalle) {
                     if ($detalle->producto_id) {
                         $producto = Producto::findOrFail($detalle->producto_id);
-                        
+
                         // Verificar stock
                         if ($producto->stock < $detalle->cantidad) {
                             throw new \Exception("Stock insuficiente para producto {$producto->nombre}");
@@ -325,7 +294,6 @@ class PedidoController extends Controller
                             'observaciones' => "Pedido #{$pedido->id} - {$producto->nombre}",
                             'material_id' => null,
                             'producto_id' => $producto->id,
-                            'compra_id' => null,
                             'pedido_id' => $pedido->id,
                             'usuario_id' => Auth::id(),
                             'fecha' => now(),
@@ -338,21 +306,11 @@ class PedidoController extends Controller
 
                 $pedido->estado = true;
                 $pedido->save();
-
-                // Registrar en bitácora
-                \App\Models\Bitacora::create([
-                    'accion' => 'Pedido a crédito confirmado',
-                    'modulo' => 'Pedido',
-                    'tabla_afectada' => 'pedido',
-                    'registro_id' => $pedido->id,
-                    'usuario_id' => Auth::id(),
-                    'fecha' => now(),
-                ]);
-
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']));
             });
+
+            return redirect()->route('pedidos.show', $pedido->id)->with('success', 'Pedido a crédito confirmado exitosamente');
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al confirmar pedido: ' . $e->getMessage()], 500);
+            return back()->withErrors(['error' => 'Error al confirmar pedido: ' . $e->getMessage()]);
         }
     }
 
@@ -360,7 +318,7 @@ class PedidoController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear pedidos'], 403);
+            return back()->withErrors(['error' => 'No tiene permiso para crear pedidos']);
         }
 
         $request->validate([
@@ -434,7 +392,6 @@ class PedidoController extends Controller
                             'observaciones' => "Pedido #{$pedido->id} - {$producto->nombre}",
                             'material_id' => null,
                             'producto_id' => $producto->id,
-                            'compra_id' => null,
                             'pedido_id' => $pedido->id,
                             'usuario_id' => Auth::id(),
                             'fecha' => now(),
@@ -447,33 +404,25 @@ class PedidoController extends Controller
                 $pedido->importe_total_desc = $importe_total_desc;
                 $pedido->save();
 
-                // Registrar en bitácora
-                \App\Models\Bitacora::create([
-                    'accion' => 'Salida de producto (venta) creada',
-                    'modulo' => 'Pedido',
-                    'tabla_afectada' => 'pedido',
-                    'registro_id' => $pedido->id,
-                    'usuario_id' => Auth::id(),
-                    'fecha' => now(),
-                ]);
-
-                return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']), 201);
+                return redirect()->route('pedidos.show', $pedido->id)->with('success', 'Salida de producto registrada exitosamente');
             });
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al procesar salida de producto: ' . $e->getMessage()], 500);
+            return back()->withErrors(['error' => 'Error al procesar salida de producto: ' . $e->getMessage()]);
         }
     }
 
     public function show(Pedido $pedido)
     {
-        return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']));
+        return Inertia::render('Pedidos/Show', [
+            'pedido' => $pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio', 'pagos']),
+        ]);
     }
 
     public function update(Request $request, Pedido $pedido)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar pedidos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para editar pedidos']);
         }
 
         $request->validate([
@@ -489,44 +438,21 @@ class PedidoController extends Controller
         $datos_anteriores = $pedido->toArray();
         $pedido->update($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Pedido actualizado',
-            'modulo' => 'Pedido',
-            'tabla_afectada' => 'pedido',
-            'registro_id' => $pedido->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $pedido->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($pedido->load(['usuario', 'metodoPago', 'detalles.producto', 'detalles.servicio']));
+        return redirect()->route('pedidos.index')->with('success', 'Pedido actualizado exitosamente');
     }
 
     public function destroy(Pedido $pedido)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('pedidos.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar pedidos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para eliminar pedidos']);
         }
 
         if ($pedido->estado) {
-            return response()->json(['error' => 'No se puede eliminar un pedido confirmado'], 400);
+            return back()->withErrors(['error' => 'No se puede eliminar un pedido confirmado']);
         }
 
-        // Registrar en bitácora antes de eliminar
-        \App\Models\Bitacora::create([
-            'accion' => 'Pedido eliminado',
-            'modulo' => 'Pedido',
-            'tabla_afectada' => 'pedido',
-            'registro_id' => $pedido->id,
-            'datos_anteriores' => $pedido->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
         $pedido->delete();
-        return response()->json(null, 204);
+        return redirect()->route('pedidos.index')->with('success', 'Pedido eliminado exitosamente');
     }
 }

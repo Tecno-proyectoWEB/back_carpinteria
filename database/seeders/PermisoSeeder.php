@@ -19,51 +19,60 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'usuarios.crear'],
             ['nombre' => 'usuarios.editar'],
             ['nombre' => 'usuarios.eliminar'],
-            
+
             // Productos
             ['nombre' => 'productos.ver'],
             ['nombre' => 'productos.crear'],
             ['nombre' => 'productos.editar'],
             ['nombre' => 'productos.eliminar'],
-            
+
             // Servicios
             ['nombre' => 'servicios.ver'],
             ['nombre' => 'servicios.crear'],
             ['nombre' => 'servicios.editar'],
             ['nombre' => 'servicios.eliminar'],
-            
-            // Insumos/Materiales
+
+            // Materiales/Insumos
+            ['nombre' => 'materiales.ver'],
+            ['nombre' => 'materiales.crear'],
+            ['nombre' => 'materiales.editar'],
+            ['nombre' => 'materiales.eliminar'],
             ['nombre' => 'insumos.ver'],
             ['nombre' => 'insumos.crear'],
             ['nombre' => 'insumos.editar'],
             ['nombre' => 'insumos.eliminar'],
-            
+
             // Inventario
             ['nombre' => 'inventario.ver'],
             ['nombre' => 'inventario.ingreso'],
             ['nombre' => 'inventario.salida'],
-            
-            // Ventas
+
+            // Pedidos/Ventas
+            ['nombre' => 'pedidos.ver'],
+            ['nombre' => 'pedidos.crear'],
+            ['nombre' => 'pedidos.editar'],
+            ['nombre' => 'pedidos.eliminar'],
+            ['nombre' => 'pedidos.aprobar'],
             ['nombre' => 'ventas.ver'],
             ['nombre' => 'ventas.crear'],
             ['nombre' => 'ventas.editar'],
             ['nombre' => 'ventas.anular'],
-            
+
             // Pagos
             ['nombre' => 'pagos.ver'],
             ['nombre' => 'pagos.crear'],
             ['nombre' => 'pagos.registrar'],
-            
+
             // Compras
             ['nombre' => 'compras.ver'],
             ['nombre' => 'compras.crear'],
             ['nombre' => 'compras.editar'],
             ['nombre' => 'compras.eliminar'],
-            
+
             // Reportes
             ['nombre' => 'reportes.ver'],
             ['nombre' => 'reportes.exportar'],
-            
+
             // Configuración
             ['nombre' => 'configuracion.ver'],
             ['nombre' => 'configuracion.editar'],

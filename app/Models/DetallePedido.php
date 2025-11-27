@@ -46,9 +46,4 @@ class DetallePedido extends Model
     {
         return $this->belongsTo(Servicio::class);
     }
-
-    public function detalleDevolucion()
-    {
-        return $this->hasOne(DetalleDevolucion::class);
-    }
 }

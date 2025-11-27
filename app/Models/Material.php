@@ -23,7 +23,6 @@ class Material extends Model
         'activo',
         'imagen',
         'categoria_id',
-        'sector_id',
     ];
 
     protected $casts = [
@@ -39,16 +38,6 @@ class Material extends Model
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
-    }
-
-    public function sector()
-    {
-        return $this->belongsTo(Sector::class);
-    }
-
-    public function detallesCompra()
-    {
-        return $this->hasMany(DetallePedidoCompra::class, 'material_id');
     }
 
     public function movimientosInventario()

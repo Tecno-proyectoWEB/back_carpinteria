@@ -45,11 +45,6 @@ class Pedido extends Model
         return $this->hasMany(DetallePedido::class);
     }
 
-    public function devolucion()
-    {
-        return $this->hasOne(Devolucion::class);
-    }
-
     public function pagos()
     {
         return $this->hasMany(Pago::class);

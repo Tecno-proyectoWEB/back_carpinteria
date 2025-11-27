@@ -8,6 +8,7 @@ use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class MovimientoInventarioController extends Controller
 {
@@ -15,10 +16,10 @@ class MovimientoInventarioController extends Controller
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('inventario.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver inventario'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para ver inventario']);
         }
 
-        $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'compra', 'pedido']);
+        $query = MovimientoInventario::with(['material', 'producto', 'usuario', 'pedido']);
 
         if ($request->has('tipo')) {
             $query->where('tipo', $request->tipo);
@@ -40,18 +41,37 @@ class MovimientoInventarioController extends Controller
             $query->where('fecha', '<=', $request->fecha_hasta);
         }
 
-        return response()->json($query->orderBy('fecha', 'desc')->paginate(20));
+        $movimientos = $query->orderBy('fecha', 'desc')->paginate(20);
+
+        return Inertia::render('Inventarios/Index', [
+            'movimientos' => $movimientos,
+            'filters' => $request->only(['tipo', 'material_id', 'producto_id', 'fecha_desde', 'fecha_hasta']),
+            'materiales' => Material::where('activo', true)->get(['id', 'nombre']),
+            'productos' => Producto::all(['id', 'nombre']),
+        ]);
+    }
+
+    public function create()
+    {
+        if (!Auth::user()->tienePermiso('inventario.ingreso') && !Auth::user()->tienePermiso('inventario.salida')) {
+            return back()->withErrors(['message' => 'No tiene permiso para registrar movimientos']);
+        }
+
+        return Inertia::render('Inventarios/Create', [
+            'materiales' => Material::where('activo', true)->get(),
+            'productos' => Producto::all(),
+        ]);
     }
 
     public function store(Request $request)
     {
         // Validar permisos según tipo
         if ($request->tipo === 'INGRESO' && !Auth::user()->tienePermiso('inventario.ingreso')) {
-            return response()->json(['message' => 'No tiene permiso para registrar ingresos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para registrar ingresos']);
         }
 
         if ($request->tipo === 'SALIDA' && !Auth::user()->tienePermiso('inventario.salida')) {
-            return response()->json(['message' => 'No tiene permiso para registrar salidas'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para registrar salidas']);
         }
 
         $request->validate([
@@ -61,7 +81,6 @@ class MovimientoInventarioController extends Controller
             'observaciones' => 'nullable|string',
             'material_id' => 'required_without:producto_id|exists:material,id',
             'producto_id' => 'required_without:material_id|exists:producto,id',
-            'compra_id' => 'nullable|exists:compra,id',
             'pedido_id' => 'nullable|exists:pedido,id',
         ]);
 
@@ -74,7 +93,6 @@ class MovimientoInventarioController extends Controller
                 'observaciones' => $request->observaciones,
                 'material_id' => $request->material_id,
                 'producto_id' => $request->producto_id,
-                'compra_id' => $request->compra_id,
                 'pedido_id' => $request->pedido_id,
                 'usuario_id' => Auth::id(),
                 'fecha' => now(),
@@ -88,7 +106,7 @@ class MovimientoInventarioController extends Controller
                 } else {
                     if ($material->stock_actual < $request->cantidad) {
                         DB::rollBack();
-                        return response()->json(['error' => 'Stock insuficiente'], 400);
+                        return back()->withErrors(['error' => 'Stock insuficiente']);
                     }
                     $material->stock_actual -= $request->cantidad;
                 }
@@ -100,7 +118,7 @@ class MovimientoInventarioController extends Controller
                 } else {
                     if ($producto->stock < $request->cantidad) {
                         DB::rollBack();
-                        return response()->json(['error' => 'Stock insuficiente'], 400);
+                        return back()->withErrors(['error' => 'Stock insuficiente']);
                     }
                     $producto->stock -= $request->cantidad;
                 }
@@ -109,26 +127,17 @@ class MovimientoInventarioController extends Controller
 
             DB::commit();
 
-            // Registrar en bitácora
-            \App\Models\Bitacora::create([
-                'accion' => 'Movimiento de inventario creado',
-                'modulo' => 'Inventario',
-                'tabla_afectada' => 'movimiento_inventario',
-                'registro_id' => $movimiento->id,
-                'datos_nuevos' => $movimiento->toArray(),
-                'usuario_id' => Auth::id(),
-                'fecha' => now(),
-            ]);
-
-            return response()->json($movimiento->load(['material', 'producto', 'usuario']), 201);
+            return redirect()->route('inventarios.index')->with('success', 'Movimiento de inventario registrado correctamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
     public function show(MovimientoInventario $movimientoInventario)
     {
-        return response()->json($movimientoInventario->load(['material', 'producto', 'usuario', 'compra', 'pedido']));
+        return Inertia::render('Inventarios/Show', [
+            'movimiento' => $movimientoInventario->load(['material', 'producto', 'usuario', 'pedido']),
+        ]);
     }
 }

@@ -21,16 +21,16 @@ class DatabaseSeeder extends Seeder
             RolPermisoSeeder::class,
             MetodoPagoSeeder::class,
             UsuarioSeeder::class,
-            TipoAccionSeeder::class,
-            SubcategoriaSeeder::class,
+            // TipoAccionSeeder eliminado - modelo TipoAccion fue eliminado
+            // SubcategoriaSeeder eliminado - modelo Subcategoria fue eliminado
             CategoriaSeeder::class,
-            AlmacenSeeder::class,
-            SectorSeeder::class,
-            ProveedorSeeder::class,
+            // AlmacenSeeder eliminado - modelo Almacen fue eliminado
+            // SectorSeeder eliminado - modelo Sector fue eliminado
+            // ProveedorSeeder eliminado - modelo Proveedor fue eliminado (los proveedores están en Usuario)
             MaterialSeeder::class,
             ProductoSeeder::class,
             ServicioSeeder::class,
-            CompraSeeder::class,
+            // CompraSeeder eliminado - modelo Compra fue eliminado
             PedidoSeeder::class,
         ]);
     }

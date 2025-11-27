@@ -3,27 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class UsuarioController extends Controller
 {
     public function index()
     {
-        // Validar permisos
-        if (!Auth::user()->tienePermiso('usuarios.ver')) {
-            return response()->json(['message' => 'No tiene permiso para ver usuarios'], 403);
-        }
+        return Inertia::render('Usuarios/Index', [
+            'usuarios' => Usuario::with('rol')->get(),
+        ]);
+    }
 
-        return response()->json(Usuario::with('rol')->get());
+    public function create()
+    {
+        return Inertia::render('Usuarios/Create', [
+            'roles' => Rol::all(),
+        ]);
     }
 
     public function store(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('usuarios.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear usuarios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para crear usuarios']);
         }
 
         $request->validate([
@@ -49,30 +55,29 @@ class UsuarioController extends Controller
             'credenciales_no_expiradas' => $request->credenciales_no_expiradas ?? true,
         ]);
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Usuario creado',
-            'modulo' => 'Usuario',
-            'tabla_afectada' => 'usuario',
-            'registro_id' => $usuario->id,
-            'datos_nuevos' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($usuario->load('rol'), 201);
+        return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente');
     }
 
     public function show(Usuario $usuario)
     {
-        return response()->json($usuario->load('rol'));
+        return Inertia::render('Usuarios/Show', [
+            'usuario' => $usuario->load('rol'),
+        ]);
+    }
+
+    public function edit(Usuario $usuario)
+    {
+        return Inertia::render('Usuarios/Edit', [
+            'usuario' => $usuario->load('rol'),
+            'roles' => Rol::all(),
+        ]);
     }
 
     public function update(Request $request, Usuario $usuario)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('usuarios.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar usuarios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para editar usuarios']);
         }
 
         $request->validate([
@@ -93,48 +98,28 @@ class UsuarioController extends Controller
             $request->merge(['password' => Hash::make($request->password)]);
         }
 
-        $datos_anteriores = $usuario->toArray();
+        if ($request->has('password')) {
+            $request->merge(['password' => Hash::make($request->password)]);
+        }
+
         $usuario->update($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Usuario actualizado',
-            'modulo' => 'Usuario',
-            'tabla_afectada' => 'usuario',
-            'registro_id' => $usuario->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($usuario->load('rol'));
+        return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado exitosamente');
     }
 
     public function destroy(Usuario $usuario)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('usuarios.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar usuarios'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para eliminar usuarios']);
         }
 
         // No permitir auto-eliminación
         if ($usuario->id === Auth::id()) {
-            return response()->json(['error' => 'No puede eliminarse a sí mismo'], 400);
+            return back()->withErrors(['error' => 'No puede eliminarse a sí mismo']);
         }
 
-        // Registrar en bitácora antes de eliminar
-        \App\Models\Bitacora::create([
-            'accion' => 'Usuario eliminado',
-            'modulo' => 'Usuario',
-            'tabla_afectada' => 'usuario',
-            'registro_id' => $usuario->id,
-            'datos_anteriores' => $usuario->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
         $usuario->delete();
-        return response()->json(null, 204);
+        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente');
     }
 }

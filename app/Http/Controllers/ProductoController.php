@@ -6,19 +6,29 @@ use App\Models\Producto;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ProductoController extends Controller
 {
     public function index()
     {
-        return response()->json(Producto::with('categoria')->get());
+        return Inertia::render('Productos/Index', [
+            'productos' => Producto::with('categoria')->get(),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Productos/Create', [
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function store(Request $request)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('productos.crear')) {
-            return response()->json(['message' => 'No tiene permiso para crear productos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para crear productos']);
         }
 
         $request->validate([
@@ -31,30 +41,29 @@ class ProductoController extends Controller
 
         $producto = Producto::create($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Producto creado',
-            'modulo' => 'Producto',
-            'tabla_afectada' => 'producto',
-            'registro_id' => $producto->id,
-            'datos_nuevos' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($producto->load('categoria'), 201);
+        return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente');
     }
 
     public function show(Producto $producto)
     {
-        return response()->json($producto->load('categoria'));
+        return Inertia::render('Productos/Show', [
+            'producto' => $producto->load('categoria'),
+        ]);
+    }
+
+    public function edit(Producto $producto)
+    {
+        return Inertia::render('Productos/Edit', [
+            'producto' => $producto->load('categoria'),
+            'categorias' => Categoria::where('activo', true)->get(),
+        ]);
     }
 
     public function update(Request $request, Producto $producto)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('productos.editar')) {
-            return response()->json(['message' => 'No tiene permiso para editar productos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para editar productos']);
         }
 
         $request->validate([
@@ -68,40 +77,17 @@ class ProductoController extends Controller
         $datos_anteriores = $producto->toArray();
         $producto->update($request->all());
 
-        // Registrar en bitácora
-        \App\Models\Bitacora::create([
-            'accion' => 'Producto actualizado',
-            'modulo' => 'Producto',
-            'tabla_afectada' => 'producto',
-            'registro_id' => $producto->id,
-            'datos_anteriores' => $datos_anteriores,
-            'datos_nuevos' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
-        return response()->json($producto->load('categoria'));
+        return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente');
     }
 
     public function destroy(Producto $producto)
     {
         // Validar permisos
         if (!Auth::user()->tienePermiso('productos.eliminar')) {
-            return response()->json(['message' => 'No tiene permiso para eliminar productos'], 403);
+            return back()->withErrors(['message' => 'No tiene permiso para eliminar productos']);
         }
 
-        // Registrar en bitácora antes de eliminar
-        \App\Models\Bitacora::create([
-            'accion' => 'Producto eliminado',
-            'modulo' => 'Producto',
-            'tabla_afectada' => 'producto',
-            'registro_id' => $producto->id,
-            'datos_anteriores' => $producto->toArray(),
-            'usuario_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
         $producto->delete();
-        return response()->json(null, 204);
+        return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente');
     }
 }

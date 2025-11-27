@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Usuario;
 use App\Models\Rol;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
@@ -20,36 +21,33 @@ class AuthController extends Controller
         $usuario = Usuario::where('email', $request->email)->with('rol')->first();
 
         if (!$usuario || !Hash::check($request->password, $usuario->password)) {
-            return response()->json(['message' => 'Credenciales inválidas'], 401);
+            return back()->withErrors(['email' => 'Credenciales inválidas']);
         }
 
         // Validar todos los estados de seguridad según modelo de negocio
         if (!$usuario->estado) {
-            return response()->json(['message' => 'Usuario inactivo'], 403);
+            return back()->withErrors(['email' => 'Usuario inactivo']);
         }
 
         if (!$usuario->disponibilidad) {
-            return response()->json(['message' => 'Usuario no disponible'], 403);
+            return back()->withErrors(['email' => 'Usuario no disponible']);
         }
 
         if (!$usuario->cuenta_no_expirada) {
-            return response()->json(['message' => 'Cuenta expirada'], 403);
+            return back()->withErrors(['email' => 'Cuenta expirada']);
         }
 
         if (!$usuario->cuenta_no_bloqueada) {
-            return response()->json(['message' => 'Cuenta bloqueada'], 403);
+            return back()->withErrors(['email' => 'Cuenta bloqueada']);
         }
 
         if (!$usuario->credenciales_no_expiradas) {
-            return response()->json(['message' => 'Credenciales expiradas'], 403);
+            return back()->withErrors(['email' => 'Credenciales expiradas']);
         }
 
-        $token = $usuario->createToken('api')->plainTextToken;
+        Auth::login($usuario);
 
-        return response()->json([
-            'user' => $usuario,
-            'token' => $token,
-        ]);
+        return redirect()->route('dashboard');
     }
 
     public function register(Request $request)
@@ -87,8 +85,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Sesión cerrada exitosamente']);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
     }
 
     public function me(Request $request)

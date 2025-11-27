@@ -6,15 +6,14 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Material;
 use App\Models\Categoria;
-use App\Models\Sector;
 
 class MaterialSeeder extends Seeder
 {
     public function run(): void
     {
-        $categoriaAlacenas = Categoria::where('nombre', 'Alacenas')->first();
-        $sectorMaderas = Sector::where('nombre', 'Sector A - Maderas')->first();
-        $sectorHerrajes = Sector::where('nombre', 'Sector B - Herrajes')->first();
+        $categoriaMaderas = Categoria::where('nombre', 'Maderas')->first();
+        $categoriaHerrajes = Categoria::where('nombre', 'Herrajes')->first();
+        $categoriaBarnices = Categoria::where('nombre', 'Barnices y Pinturas')->first();
 
         $materiales = [
             [
@@ -28,8 +27,7 @@ class MaterialSeeder extends Seeder
                 'categoria_text' => 'Maderas',
                 'activo' => true,
                 'imagen' => null,
-                'categoria_id' => $categoriaAlacenas?->id,
-                'sector_id' => $sectorMaderas?->id,
+                'categoria_id' => $categoriaMaderas?->id,
             ],
             [
                 'nombre' => 'Bisagras de Cocina',
@@ -42,8 +40,7 @@ class MaterialSeeder extends Seeder
                 'categoria_text' => 'Herrajes',
                 'activo' => true,
                 'imagen' => null,
-                'categoria_id' => $categoriaAlacenas?->id,
-                'sector_id' => $sectorHerrajes?->id,
+                'categoria_id' => $categoriaHerrajes?->id,
             ],
             [
                 'nombre' => 'Barniz Poliuretánico',
@@ -56,8 +53,7 @@ class MaterialSeeder extends Seeder
                 'categoria_text' => 'Acabados',
                 'activo' => true,
                 'imagen' => null,
-                'categoria_id' => $categoriaAlacenas?->id,
-                'sector_id' => $sectorMaderas?->id,
+                'categoria_id' => $categoriaBarnices?->id,
             ],
         ];
 

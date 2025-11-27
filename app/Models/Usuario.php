@@ -57,11 +57,6 @@ class Usuario extends Authenticatable
         return $this->hasMany(Pedido::class);
     }
 
-    public function compras()
-    {
-        return $this->hasMany(Compra::class);
-    }
-
     public function movimientosInventario()
     {
         return $this->hasMany(MovimientoInventario::class);

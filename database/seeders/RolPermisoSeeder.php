@@ -27,21 +27,23 @@ class RolPermisoSeeder extends Seeder
             $propietario->permisos()->sync($todosPermisos->pluck('id'));
         }
 
-        // Carpintero: productos, servicios, insumos, inventario
+        // Carpintero: productos, servicios, materiales, inventario
         if ($carpintero) {
             $permisosCarpintero = Permiso::whereIn('nombre', [
                 'productos.ver', 'productos.crear', 'productos.editar',
                 'servicios.ver', 'servicios.crear', 'servicios.editar',
+                'materiales.ver', 'materiales.crear', 'materiales.editar',
                 'insumos.ver', 'insumos.crear', 'insumos.editar',
                 'inventario.ver', 'inventario.ingreso', 'inventario.salida',
             ])->pluck('id');
             $carpintero->permisos()->sync($permisosCarpintero);
         }
 
-        // Secretaria: usuarios, ventas, pagos, reportes
+        // Secretaria: usuarios, pedidos/ventas, pagos, reportes
         if ($secretaria) {
             $permisosSecretaria = Permiso::whereIn('nombre', [
                 'usuarios.ver', 'usuarios.crear', 'usuarios.editar',
+                'pedidos.ver', 'pedidos.crear', 'pedidos.editar', 'pedidos.aprobar',
                 'ventas.ver', 'ventas.crear', 'ventas.editar',
                 'pagos.ver', 'pagos.crear', 'pagos.registrar',
                 'reportes.ver', 'reportes.exportar',
@@ -54,6 +56,7 @@ class RolPermisoSeeder extends Seeder
             $permisosCliente = Permiso::whereIn('nombre', [
                 'productos.ver',
                 'servicios.ver',
+                'pedidos.crear',
                 'ventas.crear',
             ])->pluck('id');
             $cliente->permisos()->sync($permisosCliente);
@@ -63,6 +66,7 @@ class RolPermisoSeeder extends Seeder
         if ($proveedor) {
             $permisosProveedor = Permiso::whereIn('nombre', [
                 'compras.ver',
+                'materiales.ver',
                 'insumos.ver',
             ])->pluck('id');
             $proveedor->permisos()->sync($permisosProveedor);
