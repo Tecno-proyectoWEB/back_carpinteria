@@ -63,25 +63,23 @@ const submit = () => {
     form.post(route('login'), {
         preserveState: false,
         preserveScroll: false,
-        onSuccess: (page) => {
-            // Si la redirección no se hizo automáticamente, redirigir manualmente
-            console.log('Login exitoso, página recibida:', page)
-            // Si Inertia::location() no funcionó, hacer redirección manual
-            if (window.location.pathname === '/login') {
-                router.visit(route('dashboard'), {
-                    method: 'get',
-                    preserveState: false,
-                    preserveScroll: false
-                })
-            }
+        onSuccess: () => {
+            // Redirección completa del navegador inmediatamente
+            // Esto asegura que las cookies de sesión se envíen correctamente
+            window.location.href = route('dashboard')
         },
         onError: (errors) => {
             // Los errores se muestran automáticamente en el template
             console.error('Errores de login:', errors)
         },
         onFinish: () => {
-            // Este callback se ejecuta siempre al finalizar la petición
-            console.log('Petición de login finalizada')
+            // Fallback: si por alguna razón onSuccess no se ejecutó, redirigir aquí
+            // Solo si no hay errores y aún estamos en /login
+            setTimeout(() => {
+                if (window.location.pathname === '/login' && !form.hasErrors) {
+                    window.location.href = route('dashboard')
+                }
+            }, 200)
         }
     })
 }

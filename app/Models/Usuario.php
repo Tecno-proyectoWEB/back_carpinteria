@@ -111,17 +111,19 @@ class Usuario extends Authenticatable
         return $this->rol->permisos()->where('nombre', $permiso)->exists();
     }
 
+    /**
+     * Get the name of the unique identifier for the user.
+     */
     public function getAuthIdentifierName()
     {
-        return 'email';
+        return 'id'; // Debe ser 'id', no 'email'
     }
 
     /**
      * Get the value of the model's primary key for authentication.
-     * This ensures auth()->id() returns the numeric ID, not the email.
      */
     public function getAuthIdentifier()
     {
-        return $this->getKey();
+        return $this->getKey(); // Retorna el ID numérico
     }
 }

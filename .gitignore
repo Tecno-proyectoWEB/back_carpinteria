@@ -33,3 +33,5 @@ Thumbs.db
 if (-not (Select-String -Path .gitignore -Pattern '^\\.env$' -Quiet)) { Add-Content .gitignore "`n.env`n" }
 # revisar .gitignore
 Get-Content .gitignore
+
+nul

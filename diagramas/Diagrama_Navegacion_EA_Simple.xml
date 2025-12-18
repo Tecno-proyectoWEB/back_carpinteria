@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMI xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://schema.omg.org/spec/UML/2.1">
+  <XMI.header>
+    <XMI.documentation>
+      <XMI.exporter>Enterprise Architect</XMI.exporter>
+      <XMI.exporterVersion>1.0</XMI.exporterVersion>
+    </XMI.documentation>
+  </XMI.header>
+  <XMI.content>
+    <uml:Model xmi:id="model_SistemaCarpinteria" name="Sistema_Gestion_Carpinteria">
+      
+      <!-- Componentes (Páginas) -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_Login" name="Login">
+        <ownedComment xmi:type="uml:Comment" xmi:id="note_Login" body="Ruta: /login"/>
+      </packagedElement>
+      
+      <packagedElement xmi:type="uml:Component" xmi:id="component_Dashboard" name="Dashboard">
+        <ownedComment xmi:type="uml:Comment" xmi:id="note_Dashboard" body="Ruta: /dashboard"/>
+      </packagedElement>
+      
+      <!-- CU1: Usuarios y Roles -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_UsuariosIndex" name="Usuarios Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_UsuariosCreate" name="Usuarios Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_UsuariosEdit" name="Usuarios Edit"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_UsuariosShow" name="Usuarios Show"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_RolesIndex" name="Roles Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_RolesCreate" name="Roles Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_RolesEdit" name="Roles Edit"/>
+      
+      <!-- CU2: Productos -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ProductosIndex" name="Productos Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ProductosCreate" name="Productos Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ProductosEdit" name="Productos Edit"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ProductosShow" name="Productos Show"/>
+      
+      <!-- CU3: Servicios -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ServiciosIndex" name="Servicios Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ServiciosCreate" name="Servicios Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ServiciosEdit" name="Servicios Edit"/>
+      
+      <!-- CU4: Materiales -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_MaterialesIndex" name="Materiales Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_MaterialesCreate" name="Materiales Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_MaterialesEdit" name="Materiales Edit"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_MaterialesShow" name="Materiales Show"/>
+      
+      <!-- CU5: Inventarios -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_InventariosIndex" name="Inventarios Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_InventariosCreate" name="Inventarios Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_InventariosShow" name="Inventarios Show"/>
+      
+      <!-- CU6: Ventas -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_VentasIndex" name="Ventas Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_VentasCreate" name="Ventas Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_VentaContado" name="Venta Contado"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_VentaCredito" name="Venta Crédito"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_VentasShow" name="Ventas Show"/>
+      
+      <!-- CU7: Pagos -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_PagosIndex" name="Pagos Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_PagosCreate" name="Pagos Create"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_PagosEdit" name="Pagos Edit"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_PagosShow" name="Pagos Show"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_RegistrarPago" name="Registrar Pago"/>
+      
+      <!-- CU8: Reportes -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ReportesIndex" name="Reportes Index"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ReportesVentas" name="Reportes Ventas"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ReportesEstadisticas" name="Reportes Estadísticas"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ReportesInventario" name="Reportes Inventario"/>
+      
+      <!-- Funcionalidades Adicionales -->
+      <packagedElement xmi:type="uml:Component" xmi:id="component_Busqueda" name="Búsqueda Global"/>
+      <packagedElement xmi:type="uml:Component" xmi:id="component_ResultadosBusqueda" name="Resultados Búsqueda"/>
+      
+      <!-- Relaciones de Navegación Principal -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Login_Dashboard" client="component_Login" supplier="component_Dashboard">
+        <name>autenticado</name>
+      </packagedElement>
+      
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Usuarios" client="component_Dashboard" supplier="component_UsuariosIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Roles" client="component_Dashboard" supplier="component_RolesIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Productos" client="component_Dashboard" supplier="component_ProductosIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Servicios" client="component_Dashboard" supplier="component_ServiciosIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Materiales" client="component_Dashboard" supplier="component_MaterialesIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Inventarios" client="component_Dashboard" supplier="component_InventariosIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Ventas" client="component_Dashboard" supplier="component_VentasIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Pagos" client="component_Dashboard" supplier="component_PagosIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Reportes" client="component_Dashboard" supplier="component_ReportesIndex"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Dashboard_Busqueda" client="component_Dashboard" supplier="component_Busqueda"/>
+      
+      <!-- CU1: Navegación Usuarios -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosIndex_Create" client="component_UsuariosIndex" supplier="component_UsuariosCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosIndex_Edit" client="component_UsuariosIndex" supplier="component_UsuariosEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosIndex_Show" client="component_UsuariosIndex" supplier="component_UsuariosShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosCreate_Index" client="component_UsuariosCreate" supplier="component_UsuariosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosEdit_Index" client="component_UsuariosEdit" supplier="component_UsuariosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosShow_Index" client="component_UsuariosShow" supplier="component_UsuariosIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_UsuariosShow_Edit" client="component_UsuariosShow" supplier="component_UsuariosEdit">
+        <name>editar</name>
+      </packagedElement>
+      
+      <!-- CU1: Navegación Roles -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_RolesIndex_Create" client="component_RolesIndex" supplier="component_RolesCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_RolesIndex_Edit" client="component_RolesIndex" supplier="component_RolesEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_RolesCreate_Index" client="component_RolesCreate" supplier="component_RolesIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_RolesEdit_Index" client="component_RolesEdit" supplier="component_RolesIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      
+      <!-- CU2: Navegación Productos -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosIndex_Create" client="component_ProductosIndex" supplier="component_ProductosCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosIndex_Edit" client="component_ProductosIndex" supplier="component_ProductosEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosIndex_Show" client="component_ProductosIndex" supplier="component_ProductosShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosCreate_Index" client="component_ProductosCreate" supplier="component_ProductosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosEdit_Index" client="component_ProductosEdit" supplier="component_ProductosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosShow_Index" client="component_ProductosShow" supplier="component_ProductosIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ProductosShow_Edit" client="component_ProductosShow" supplier="component_ProductosEdit">
+        <name>editar</name>
+      </packagedElement>
+      
+      <!-- CU3: Navegación Servicios -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ServiciosIndex_Create" client="component_ServiciosIndex" supplier="component_ServiciosCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ServiciosIndex_Edit" client="component_ServiciosIndex" supplier="component_ServiciosEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ServiciosCreate_Index" client="component_ServiciosCreate" supplier="component_ServiciosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ServiciosEdit_Index" client="component_ServiciosEdit" supplier="component_ServiciosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      
+      <!-- CU4: Navegación Materiales -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesIndex_Create" client="component_MaterialesIndex" supplier="component_MaterialesCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesIndex_Edit" client="component_MaterialesIndex" supplier="component_MaterialesEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesIndex_Show" client="component_MaterialesIndex" supplier="component_MaterialesShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesCreate_Index" client="component_MaterialesCreate" supplier="component_MaterialesIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesEdit_Index" client="component_MaterialesEdit" supplier="component_MaterialesIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesShow_Index" client="component_MaterialesShow" supplier="component_MaterialesIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_MaterialesShow_Edit" client="component_MaterialesShow" supplier="component_MaterialesEdit">
+        <name>editar</name>
+      </packagedElement>
+      
+      <!-- CU5: Navegación Inventarios -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_InventariosIndex_Create" client="component_InventariosIndex" supplier="component_InventariosCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_InventariosIndex_Show" client="component_InventariosIndex" supplier="component_InventariosShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_InventariosCreate_Index" client="component_InventariosCreate" supplier="component_InventariosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_InventariosShow_Index" client="component_InventariosShow" supplier="component_InventariosIndex">
+        <name>volver</name>
+      </packagedElement>
+      
+      <!-- CU6: Navegación Ventas -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasIndex_Create" client="component_VentasIndex" supplier="component_VentasCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasIndex_Show" client="component_VentasIndex" supplier="component_VentasShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasCreate_Contado" client="component_VentasCreate" supplier="component_VentaContado">
+        <name>contado</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasCreate_Credito" client="component_VentasCreate" supplier="component_VentaCredito">
+        <name>crédito</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentaContado_Index" client="component_VentaContado" supplier="component_VentasIndex">
+        <name>completar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentaCredito_Index" client="component_VentaCredito" supplier="component_VentasIndex">
+        <name>completar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasShow_Index" client="component_VentasShow" supplier="component_VentasIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_VentasShow_PagosCreate" client="component_VentasShow" supplier="component_PagosCreate">
+        <name>crear pago</name>
+      </packagedElement>
+      
+      <!-- CU7: Navegación Pagos -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosIndex_Create" client="component_PagosIndex" supplier="component_PagosCreate">
+        <name>crear</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosIndex_Edit" client="component_PagosIndex" supplier="component_PagosEdit">
+        <name>editar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosIndex_Show" client="component_PagosIndex" supplier="component_PagosShow">
+        <name>ver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosCreate_Index" client="component_PagosCreate" supplier="component_PagosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosEdit_Index" client="component_PagosEdit" supplier="component_PagosIndex">
+        <name>guardar/cancelar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosShow_Index" client="component_PagosShow" supplier="component_PagosIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosShow_Registrar" client="component_PagosShow" supplier="component_RegistrarPago">
+        <name>registrar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_RegistrarPago_Show" client="component_RegistrarPago" supplier="component_PagosShow">
+        <name>completado</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_PagosShow_VentasShow" client="component_PagosShow" supplier="component_VentasShow">
+        <name>ver venta relacionada</name>
+      </packagedElement>
+      
+      <!-- CU8: Navegación Reportes -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesIndex_Ventas" client="component_ReportesIndex" supplier="component_ReportesVentas"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesIndex_Estadisticas" client="component_ReportesIndex" supplier="component_ReportesEstadisticas"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesIndex_Inventario" client="component_ReportesIndex" supplier="component_ReportesInventario"/>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesVentas_Index" client="component_ReportesVentas" supplier="component_ReportesIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesEstadisticas_Index" client="component_ReportesEstadisticas" supplier="component_ReportesIndex">
+        <name>volver</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ReportesInventario_Index" client="component_ReportesInventario" supplier="component_ReportesIndex">
+        <name>volver</name>
+      </packagedElement>
+      
+      <!-- Búsqueda -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_Busqueda_Resultados" client="component_Busqueda" supplier="component_ResultadosBusqueda">
+        <name>buscar</name>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Dependency" xmi:id="dep_ResultadosBusqueda_Busqueda" client="component_ResultadosBusqueda" supplier="component_Busqueda">
+        <name>nueva búsqueda</name>
+      </packagedElement>
+      
+    </uml:Model>
+  </XMI.content>
+</XMI>
+
+

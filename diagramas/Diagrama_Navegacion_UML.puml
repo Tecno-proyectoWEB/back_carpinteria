@@ -1,0 +1,234 @@
+@startuml Diagrama_Navegacion_Sistema_Carpinteria
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+title Diagrama de Navegación - Sistema de Gestión de Carpintería\n(UML 2.5)
+
+' Definir colores para módulos
+skinparam package {
+    BackgroundColor<<CU1>> #E3F2FD
+    BackgroundColor<<CU2>> #F3E5F5
+    BackgroundColor<<CU3>> #E8F5E9
+    BackgroundColor<<CU4>> #FFF3E0
+    BackgroundColor<<CU5>> #FCE4EC
+    BackgroundColor<<CU6>> #E0F2F1
+    BackgroundColor<<CU7>> #FFF9C4
+    BackgroundColor<<CU8>> #F1F8E9
+}
+
+' ============================================
+' PUNTO DE ENTRADA - AUTENTICACIÓN
+' ============================================
+package "Autenticación" {
+    component [Login] <<page>> as LoginPage
+    note right of LoginPage
+        Ruta: /login
+        Método: GET/POST
+    end note
+}
+
+' ============================================
+' HUB CENTRAL - DASHBOARD
+' ============================================
+package "Dashboard" {
+    component [Dashboard] <<page>> as DashboardPage
+    note right of DashboardPage
+        Ruta: /dashboard
+        Hub central de navegación
+    end note
+}
+
+' ============================================
+' CU1: GESTIÓN DE USUARIOS Y ROLES
+' ============================================
+package "CU1: Usuarios y Roles" <<CU1>> {
+    component [Usuarios\nIndex] <<page>> as UsuariosIndex
+    component [Usuarios\nCreate] <<page>> as UsuariosCreate
+    component [Usuarios\nEdit] <<page>> as UsuariosEdit
+    component [Usuarios\nShow] <<page>> as UsuariosShow
+    
+    component [Roles\nIndex] <<page>> as RolesIndex
+    component [Roles\nCreate] <<page>> as RolesCreate
+    component [Roles\nEdit] <<page>> as RolesEdit
+}
+
+' ============================================
+' CU2: GESTIÓN DE PRODUCTOS
+' ============================================
+package "CU2: Productos" <<CU2>> {
+    component [Productos\nIndex] <<page>> as ProductosIndex
+    component [Productos\nCreate] <<page>> as ProductosCreate
+    component [Productos\nEdit] <<page>> as ProductosEdit
+    component [Productos\nShow] <<page>> as ProductosShow
+}
+
+' ============================================
+' CU3: GESTIÓN DE SERVICIOS
+' ============================================
+package "CU3: Servicios" <<CU3>> {
+    component [Servicios\nIndex] <<page>> as ServiciosIndex
+    component [Servicios\nCreate] <<page>> as ServiciosCreate
+    component [Servicios\nEdit] <<page>> as ServiciosEdit
+}
+
+' ============================================
+' CU4: GESTIÓN DE MATERIALES
+' ============================================
+package "CU4: Materiales" <<CU4>> {
+    component [Materiales\nIndex] <<page>> as MaterialesIndex
+    component [Materiales\nCreate] <<page>> as MaterialesCreate
+    component [Materiales\nEdit] <<page>> as MaterialesEdit
+    component [Materiales\nShow] <<page>> as MaterialesShow
+}
+
+' ============================================
+' CU5: GESTIÓN DE INVENTARIOS
+' ============================================
+package "CU5: Inventarios" <<CU5>> {
+    component [Inventarios\nIndex] <<page>> as InventariosIndex
+    component [Inventarios\nCreate] <<page>> as InventariosCreate
+    component [Inventarios\nShow] <<page>> as InventariosShow
+}
+
+' ============================================
+' CU6: GESTIÓN DE VENTAS
+' ============================================
+package "CU6: Ventas" <<CU6>> {
+    component [Ventas\nIndex] <<page>> as VentasIndex
+    component [Ventas\nCreate] <<page>> as VentasCreate
+    component [Venta\nContado] <<page>> as VentaContado
+    component [Venta\nCrédito] <<page>> as VentaCredito
+    component [Ventas\nShow] <<page>> as VentasShow
+}
+
+' ============================================
+' CU7: GESTIÓN DE PAGOS
+' ============================================
+package "CU7: Pagos" <<CU7>> {
+    component [Pagos\nIndex] <<page>> as PagosIndex
+    component [Pagos\nCreate] <<page>> as PagosCreate
+    component [Pagos\nEdit] <<page>> as PagosEdit
+    component [Pagos\nShow] <<page>> as PagosShow
+    component [Registrar\nPago] <<page>> as RegistrarPago
+}
+
+' ============================================
+' CU8: REPORTES Y ESTADÍSTICAS
+' ============================================
+package "CU8: Reportes" <<CU8>> {
+    component [Reportes\nIndex] <<page>> as ReportesIndex
+    component [Reportes\nVentas] <<page>> as ReportesVentas
+    component [Reportes\nEstadísticas] <<page>> as ReportesEstadisticas
+    component [Reportes\nInventario] <<page>> as ReportesInventario
+}
+
+' ============================================
+' FUNCIONALIDADES ADICIONALES
+' ============================================
+package "Funcionalidades Adicionales" {
+    component [Búsqueda\nGlobal] <<page>> as BusquedaPage
+    component [Resultados\nBúsqueda] <<page>> as ResultadosBusqueda
+}
+
+' ============================================
+' FLUJOS DE NAVEGACIÓN PRINCIPALES
+' ============================================
+
+' Autenticación
+LoginPage --> DashboardPage : [autenticado]
+
+' Dashboard a Módulos
+DashboardPage --> UsuariosIndex
+DashboardPage --> RolesIndex
+DashboardPage --> ProductosIndex
+DashboardPage --> ServiciosIndex
+DashboardPage --> MaterialesIndex
+DashboardPage --> InventariosIndex
+DashboardPage --> VentasIndex
+DashboardPage --> PagosIndex
+DashboardPage --> ReportesIndex
+DashboardPage --> BusquedaPage
+
+' CU1: Navegación Usuarios
+UsuariosIndex --> UsuariosCreate : [crear]
+UsuariosIndex --> UsuariosEdit : [editar]
+UsuariosIndex --> UsuariosShow : [ver]
+UsuariosCreate --> UsuariosIndex : [guardar/cancelar]
+UsuariosEdit --> UsuariosIndex : [guardar/cancelar]
+UsuariosShow --> UsuariosIndex : [volver]
+UsuariosShow --> UsuariosEdit : [editar]
+
+' CU1: Navegación Roles
+RolesIndex --> RolesCreate : [crear]
+RolesIndex --> RolesEdit : [editar]
+RolesCreate --> RolesIndex : [guardar/cancelar]
+RolesEdit --> RolesIndex : [guardar/cancelar]
+
+' CU2: Navegación Productos
+ProductosIndex --> ProductosCreate : [crear]
+ProductosIndex --> ProductosEdit : [editar]
+ProductosIndex --> ProductosShow : [ver]
+ProductosCreate --> ProductosIndex : [guardar/cancelar]
+ProductosEdit --> ProductosIndex : [guardar/cancelar]
+ProductosShow --> ProductosIndex : [volver]
+ProductosShow --> ProductosEdit : [editar]
+
+' CU3: Navegación Servicios
+ServiciosIndex --> ServiciosCreate : [crear]
+ServiciosIndex --> ServiciosEdit : [editar]
+ServiciosCreate --> ServiciosIndex : [guardar/cancelar]
+ServiciosEdit --> ServiciosIndex : [guardar/cancelar]
+
+' CU4: Navegación Materiales
+MaterialesIndex --> MaterialesCreate : [crear]
+MaterialesIndex --> MaterialesEdit : [editar]
+MaterialesIndex --> MaterialesShow : [ver]
+MaterialesCreate --> MaterialesIndex : [guardar/cancelar]
+MaterialesEdit --> MaterialesIndex : [guardar/cancelar]
+MaterialesShow --> MaterialesIndex : [volver]
+MaterialesShow --> MaterialesEdit : [editar]
+
+' CU5: Navegación Inventarios
+InventariosIndex --> InventariosCreate : [crear]
+InventariosIndex --> InventariosShow : [ver]
+InventariosCreate --> InventariosIndex : [guardar/cancelar]
+InventariosShow --> InventariosIndex : [volver]
+
+' CU6: Navegación Ventas
+VentasIndex --> VentasCreate : [crear]
+VentasIndex --> VentasShow : [ver]
+VentasCreate --> VentaContado : [contado]
+VentasCreate --> VentaCredito : [crédito]
+VentaContado --> VentasIndex : [completar]
+VentaCredito --> VentasIndex : [completar]
+VentasShow --> VentasIndex : [volver]
+VentasShow --> PagosCreate : [crear pago]
+
+' CU7: Navegación Pagos
+PagosIndex --> PagosCreate : [crear]
+PagosIndex --> PagosEdit : [editar]
+PagosIndex --> PagosShow : [ver]
+PagosCreate --> PagosIndex : [guardar/cancelar]
+PagosEdit --> PagosIndex : [guardar/cancelar]
+PagosShow --> PagosIndex : [volver]
+PagosShow --> RegistrarPago : [registrar]
+RegistrarPago --> PagosShow : [completado]
+
+' CU8: Navegación Reportes
+ReportesIndex --> ReportesVentas
+ReportesIndex --> ReportesEstadisticas
+ReportesIndex --> ReportesInventario
+ReportesVentas --> ReportesIndex : [volver]
+ReportesEstadisticas --> ReportesIndex : [volver]
+ReportesInventario --> ReportesIndex : [volver]
+
+' Búsqueda
+BusquedaPage --> ResultadosBusqueda : [buscar]
+ResultadosBusqueda --> BusquedaPage : [nueva búsqueda]
+
+' Relaciones cruzadas importantes
+VentasShow ..> PagosIndex : [ver pagos relacionados]
+PagosShow ..> VentasShow : [ver venta relacionada]
+
+@enduml
+

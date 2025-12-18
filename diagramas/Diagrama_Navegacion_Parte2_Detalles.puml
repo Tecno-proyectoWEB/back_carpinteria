@@ -1,0 +1,165 @@
+@startuml Diagrama_Navegacion_Parte2_Detalles
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+title Diagrama de Navegación - Parte 2: Detalles de Navegación CRUD\nSistema de Gestión de Carpintería
+
+' ============================================
+' CU1: USUARIOS Y ROLES
+' ============================================
+
+component [Usuarios\nIndex] as UsuariosIndex
+component [Usuarios\nCreate] as UsuariosCreate
+component [Usuarios\nEdit] as UsuariosEdit
+component [Usuarios\nShow] as UsuariosShow
+
+component [Roles\nIndex] as RolesIndex
+component [Roles\nCreate] as RolesCreate
+component [Roles\nEdit] as RolesEdit
+
+UsuariosIndex --> UsuariosCreate : [crear]
+UsuariosIndex --> UsuariosEdit : [editar]
+UsuariosIndex --> UsuariosShow : [ver]
+UsuariosCreate --> UsuariosIndex : [guardar/cancelar]
+UsuariosEdit --> UsuariosIndex : [guardar/cancelar]
+UsuariosShow --> UsuariosIndex : [volver]
+UsuariosShow --> UsuariosEdit : [editar]
+
+RolesIndex --> RolesCreate : [crear]
+RolesIndex --> RolesEdit : [editar]
+RolesCreate --> RolesIndex : [guardar/cancelar]
+RolesEdit --> RolesIndex : [guardar/cancelar]
+
+' ============================================
+' CU2: PRODUCTOS
+' ============================================
+
+component [Productos\nIndex] as ProductosIndex
+component [Productos\nCreate] as ProductosCreate
+component [Productos\nEdit] as ProductosEdit
+component [Productos\nShow] as ProductosShow
+
+ProductosIndex --> ProductosCreate : [crear]
+ProductosIndex --> ProductosEdit : [editar]
+ProductosIndex --> ProductosShow : [ver]
+ProductosCreate --> ProductosIndex : [guardar/cancelar]
+ProductosEdit --> ProductosIndex : [guardar/cancelar]
+ProductosShow --> ProductosIndex : [volver]
+ProductosShow --> ProductosEdit : [editar]
+
+' ============================================
+' CU3: SERVICIOS
+' ============================================
+
+component [Servicios\nIndex] as ServiciosIndex
+component [Servicios\nCreate] as ServiciosCreate
+component [Servicios\nEdit] as ServiciosEdit
+
+ServiciosIndex --> ServiciosCreate : [crear]
+ServiciosIndex --> ServiciosEdit : [editar]
+ServiciosCreate --> ServiciosIndex : [guardar/cancelar]
+ServiciosEdit --> ServiciosIndex : [guardar/cancelar]
+
+' ============================================
+' CU4: MATERIALES
+' ============================================
+
+component [Materiales\nIndex] as MaterialesIndex
+component [Materiales\nCreate] as MaterialesCreate
+component [Materiales\nEdit] as MaterialesEdit
+component [Materiales\nShow] as MaterialesShow
+
+MaterialesIndex --> MaterialesCreate : [crear]
+MaterialesIndex --> MaterialesEdit : [editar]
+MaterialesIndex --> MaterialesShow : [ver]
+MaterialesCreate --> MaterialesIndex : [guardar/cancelar]
+MaterialesEdit --> MaterialesIndex : [guardar/cancelar]
+MaterialesShow --> MaterialesIndex : [volver]
+MaterialesShow --> MaterialesEdit : [editar]
+
+' ============================================
+' CU5: INVENTARIOS
+' ============================================
+
+component [Inventarios\nIndex] as InventariosIndex
+component [Inventarios\nCreate] as InventariosCreate
+component [Inventarios\nShow] as InventariosShow
+
+InventariosIndex --> InventariosCreate : [crear]
+InventariosIndex --> InventariosShow : [ver]
+InventariosCreate --> InventariosIndex : [guardar/cancelar]
+InventariosShow --> InventariosIndex : [volver]
+
+' ============================================
+' CU6: VENTAS
+' ============================================
+
+component [Ventas\nIndex] as VentasIndex
+component [Ventas\nCreate] as VentasCreate
+component [Venta\nContado] as VentaContado
+component [Venta\nCrédito] as VentaCredito
+component [Ventas\nShow] as VentasShow
+
+VentasIndex --> VentasCreate : [crear]
+VentasIndex --> VentasShow : [ver]
+VentasCreate --> VentaContado : [contado]
+VentasCreate --> VentaCredito : [crédito]
+VentaContado --> VentasIndex : [completar]
+VentaCredito --> VentasIndex : [completar]
+VentasShow --> VentasIndex : [volver]
+
+' ============================================
+' CU7: PAGOS
+' ============================================
+
+component [Pagos\nIndex] as PagosIndex
+component [Pagos\nCreate] as PagosCreate
+component [Pagos\nEdit] as PagosEdit
+component [Pagos\nShow] as PagosShow
+component [Registrar\nPago] as RegistrarPago
+
+PagosIndex --> PagosCreate : [crear]
+PagosIndex --> PagosEdit : [editar]
+PagosIndex --> PagosShow : [ver]
+PagosCreate --> PagosIndex : [guardar/cancelar]
+PagosEdit --> PagosIndex : [guardar/cancelar]
+PagosShow --> PagosIndex : [volver]
+PagosShow --> RegistrarPago : [registrar]
+RegistrarPago --> PagosShow : [completado]
+
+' ============================================
+' CU8: REPORTES
+' ============================================
+
+component [Reportes\nIndex] as ReportesIndex
+component [Reportes\nVentas] as ReportesVentas
+component [Reportes\nEstadísticas] as ReportesEstadisticas
+component [Reportes\nInventario] as ReportesInventario
+
+ReportesIndex --> ReportesVentas
+ReportesIndex --> ReportesEstadisticas
+ReportesIndex --> ReportesInventario
+ReportesVentas --> ReportesIndex : [volver]
+ReportesEstadisticas --> ReportesIndex : [volver]
+ReportesInventario --> ReportesIndex : [volver]
+
+' ============================================
+' RELACIONES CRUZADAS
+' ============================================
+
+VentasShow ..> PagosCreate : [crear pago]
+PagosShow ..> VentasShow : [ver venta relacionada]
+
+' ============================================
+' BÚSQUEDA
+' ============================================
+
+component [Búsqueda\nGlobal] as BusquedaPage
+component [Resultados\nBúsqueda] as ResultadosBusqueda
+
+BusquedaPage --> ResultadosBusqueda : [buscar]
+ResultadosBusqueda --> BusquedaPage : [nueva búsqueda]
+
+@enduml
+
+

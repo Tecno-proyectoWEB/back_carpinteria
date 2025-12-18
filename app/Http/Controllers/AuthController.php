@@ -14,6 +14,12 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
+        Log::info('🟢 POST /login recibido', [
+            'email' => $request->email,
+            'has_password' => !empty($request->password),
+            'is_inertia' => $request->header('X-Inertia'),
+        ]);
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -56,15 +62,21 @@ class AuthController extends Controller
         // Autenticar al usuario (sin remember_token ya que la tabla no lo tiene)
         Auth::login($usuario, false);
         
-        // Regenerar ID de sesión para seguridad
-        $request->session()->regenerate();
-
-        Log::info('Login exitoso', [
+        // FORZAR guardado de sesión
+        $request->session()->put('user_id', $usuario->id);
+        $request->session()->save();
+        
+        Log::info('Login exitoso - DEBUG COMPLETO', [
             'user_id' => $usuario->id,
             'email' => $usuario->email,
-            'rol' => $usuario->rol ? $usuario->rol->nombre : null,
-            'is_authenticated' => Auth::check(),
-            'session_id' => $request->session()->getId()
+            'Auth::check()' => Auth::check(),
+            'Auth::id()' => Auth::id(),
+            'Auth::user()' => Auth::user() ? Auth::user()->email : null,
+            'session_id' => $request->session()->getId(),
+            'session_all' => $request->session()->all(),
+            'guard' => config('auth.defaults.guard'),
+            'provider' => config('auth.guards.web.provider'),
+            'model' => config('auth.providers.users.model')
         ]);
 
         // Obtener la URL de destino
@@ -77,12 +89,11 @@ class AuthController extends Controller
             'user_id' => Auth::id()
         ]);
 
-        // Para peticiones de Inertia, usar Inertia::location() que fuerza una redirección HTTP completa
-        // Esto hace que el navegador haga una petición GET completa en lugar de una petición AJAX
+        // Para peticiones de Inertia, usar redirect() normal
+        // El frontend hará window.location inmediatamente en onSuccess para asegurar cookies
         if ($request->header('X-Inertia')) {
-            // Inertia::location() devuelve una respuesta 409 con header X-Inertia-Location
-            // que Inertia.js interpreta como una redirección completa del navegador
-            return Inertia::location($intendedUrl);
+            // Usar redirect() que incluye las cookies de sesión
+            return redirect($intendedUrl);
         }
 
         // Para peticiones normales (no Inertia), redirección estándar

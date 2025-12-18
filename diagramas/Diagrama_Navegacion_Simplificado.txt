@@ -1,0 +1,150 @@
+================================================================================
+DIAGRAMA DE NAVEGACIÓN - SISTEMA DE GESTIÓN DE CARPINTERÍA
+Estándar: UML 2.5
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           PUNTO DE ENTRADA                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    [Login] (/login)
+         │
+         │ [autenticado]
+         ▼
+    ┌─────────────────┐
+    │   DASHBOARD     │ (/dashboard) - Hub Central
+    └─────────────────┘
+         │
+         ├─────────────────────────────────────────────────────────────┐
+         │                                                             │
+         ▼                                                             ▼
+    ┌─────────────┐                                              ┌─────────────┐
+    │  MÓDULOS    │                                              │ BÚSQUEDA    │
+    │  PRINCIPALES│                                              │  GLOBAL     │
+    └─────────────┘                                              └─────────────┘
+
+================================================================================
+CU1: GESTIÓN DE USUARIOS Y ROLES
+================================================================================
+
+    Usuarios Index (/usuarios)
+         │
+         ├──[crear]──→ Usuarios Create
+         ├──[editar]──→ Usuarios Edit
+         └──[ver]──→ Usuarios Show
+              │
+              └──[editar]──→ Usuarios Edit
+
+    Roles Index (/roles)
+         │
+         ├──[crear]──→ Roles Create
+         └──[editar]──→ Roles Edit
+
+================================================================================
+CU2: GESTIÓN DE PRODUCTOS
+================================================================================
+
+    Productos Index (/productos)
+         │
+         ├──[crear]──→ Productos Create
+         ├──[editar]──→ Productos Edit
+         └──[ver]──→ Productos Show
+              │
+              └──[editar]──→ Productos Edit
+
+================================================================================
+CU3: GESTIÓN DE SERVICIOS
+================================================================================
+
+    Servicios Index (/servicios)
+         │
+         ├──[crear]──→ Servicios Create
+         └──[editar]──→ Servicios Edit
+
+================================================================================
+CU4: GESTIÓN DE MATERIALES
+================================================================================
+
+    Materiales Index (/materiales)
+         │
+         ├──[crear]──→ Materiales Create
+         ├──[editar]──→ Materiales Edit
+         └──[ver]──→ Materiales Show
+              │
+              └──[editar]──→ Materiales Edit
+
+================================================================================
+CU5: GESTIÓN DE INVENTARIOS
+================================================================================
+
+    Inventarios Index (/inventarios)
+         │
+         ├──[crear]──→ Inventarios Create
+         └──[ver]──→ Inventarios Show
+
+================================================================================
+CU6: GESTIÓN DE VENTAS
+================================================================================
+
+    Ventas Index (/ventas)
+         │
+         ├──[crear]──→ Ventas Create
+         │                │
+         │                ├──[contado]──→ Venta Contado
+         │                └──[crédito]──→ Venta Crédito
+         │
+         └──[ver]──→ Ventas Show
+              │
+              └──[crear pago]──→ Pagos Create
+
+================================================================================
+CU7: GESTIÓN DE PAGOS
+================================================================================
+
+    Pagos Index (/pagos)
+         │
+         ├──[crear]──→ Pagos Create
+         ├──[editar]──→ Pagos Edit
+         └──[ver]──→ Pagos Show
+              │
+              ├──[registrar]──→ Registrar Pago
+              └──[ver venta]──→ Ventas Show (relación cruzada)
+
+================================================================================
+CU8: REPORTES Y ESTADÍSTICAS
+================================================================================
+
+    Reportes Index (/reportes)
+         │
+         ├──→ Reportes Ventas (/reportes/ventas)
+         ├──→ Reportes Estadísticas (/reportes/estadisticas)
+         └──→ Reportes Inventario (/reportes/inventario)
+
+================================================================================
+FUNCIONALIDADES ADICIONALES
+================================================================================
+
+    Búsqueda Global (/buscar)
+         │
+         └──[buscar]──→ Resultados Búsqueda
+
+================================================================================
+LEGENDA
+================================================================================
+
+    →     : Navegación directa
+    [texto]: Acción que dispara la navegación
+    ()    : Ruta URL
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+1. Todas las rutas requieren autenticación excepto /login
+2. El Dashboard es el punto central de navegación
+3. Cada módulo tiene operaciones CRUD estándar
+4. Las ventas y pagos tienen relación cruzada
+5. La búsqueda global está disponible desde el Dashboard
+
+================================================================================
+

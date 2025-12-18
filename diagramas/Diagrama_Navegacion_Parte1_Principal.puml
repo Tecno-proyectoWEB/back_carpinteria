@@ -1,0 +1,61 @@
+@startuml Diagrama_Navegacion_Parte1_Principal
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+title Diagrama de Navegación - Parte 1: Estructura Principal\nSistema de Gestión de Carpintería
+
+' ============================================
+' PUNTO DE ENTRADA Y HUB CENTRAL
+' ============================================
+
+component [Login] as LoginPage
+note right of LoginPage
+  Ruta: /login
+end note
+
+component [Dashboard] as DashboardPage
+note right of DashboardPage
+  Ruta: /dashboard
+  Hub central de navegación
+end note
+
+' ============================================
+' MÓDULOS PRINCIPALES (Páginas Index)
+' ============================================
+
+component [Usuarios\nIndex] as UsuariosIndex
+component [Roles\nIndex] as RolesIndex
+component [Productos\nIndex] as ProductosIndex
+component [Servicios\nIndex] as ServiciosIndex
+component [Materiales\nIndex] as MaterialesIndex
+component [Inventarios\nIndex] as InventariosIndex
+component [Ventas\nIndex] as VentasIndex
+component [Pagos\nIndex] as PagosIndex
+component [Reportes\nIndex] as ReportesIndex
+component [Búsqueda\nGlobal] as BusquedaPage
+
+' ============================================
+' NAVEGACIÓN PRINCIPAL
+' ============================================
+
+LoginPage --> DashboardPage : [autenticado]
+
+DashboardPage --> UsuariosIndex
+DashboardPage --> RolesIndex
+DashboardPage --> ProductosIndex
+DashboardPage --> ServiciosIndex
+DashboardPage --> MaterialesIndex
+DashboardPage --> InventariosIndex
+DashboardPage --> VentasIndex
+DashboardPage --> PagosIndex
+DashboardPage --> ReportesIndex
+DashboardPage --> BusquedaPage
+
+note bottom of DashboardPage
+  Desde el Dashboard se puede acceder
+  a todos los módulos principales del sistema
+end note
+
+@enduml
+
+

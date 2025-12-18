@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ContarVisitas::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+        
+        // Registrar alias de middleware para Laravel 11
+        $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
+            'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

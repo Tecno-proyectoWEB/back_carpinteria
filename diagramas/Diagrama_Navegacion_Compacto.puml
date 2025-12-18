@@ -1,0 +1,173 @@
+@startuml Diagrama_Navegacion_Sistema_Carpinteria_Compacto
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam maxMessageSize 60
+skinparam wrapWidth 200
+title Diagrama de Navegación - Sistema de Gestión de Carpintería\n(Versión Compacta para Word)
+
+' ============================================
+' COMPONENTES PRINCIPALES
+' ============================================
+
+component [Login] as LoginPage
+component [Dashboard] as DashboardPage
+
+' CU1: Usuarios y Roles
+component [Usuarios\nIndex] as UsuariosIndex
+component [Usuarios\nCreate] as UsuariosCreate
+component [Usuarios\nEdit] as UsuariosEdit
+component [Usuarios\nShow] as UsuariosShow
+component [Roles\nIndex] as RolesIndex
+component [Roles\nCreate] as RolesCreate
+component [Roles\nEdit] as RolesEdit
+
+' CU2: Productos
+component [Productos\nIndex] as ProductosIndex
+component [Productos\nCreate] as ProductosCreate
+component [Productos\nEdit] as ProductosEdit
+component [Productos\nShow] as ProductosShow
+
+' CU3: Servicios
+component [Servicios\nIndex] as ServiciosIndex
+component [Servicios\nCreate] as ServiciosCreate
+component [Servicios\nEdit] as ServiciosEdit
+
+' CU4: Materiales
+component [Materiales\nIndex] as MaterialesIndex
+component [Materiales\nCreate] as MaterialesCreate
+component [Materiales\nEdit] as MaterialesEdit
+component [Materiales\nShow] as MaterialesShow
+
+' CU5: Inventarios
+component [Inventarios\nIndex] as InventariosIndex
+component [Inventarios\nCreate] as InventariosCreate
+component [Inventarios\nShow] as InventariosShow
+
+' CU6: Ventas
+component [Ventas\nIndex] as VentasIndex
+component [Ventas\nCreate] as VentasCreate
+component [Venta\nContado] as VentaContado
+component [Venta\nCrédito] as VentaCredito
+component [Ventas\nShow] as VentasShow
+
+' CU7: Pagos
+component [Pagos\nIndex] as PagosIndex
+component [Pagos\nCreate] as PagosCreate
+component [Pagos\nEdit] as PagosEdit
+component [Pagos\nShow] as PagosShow
+component [Registrar\nPago] as RegistrarPago
+
+' CU8: Reportes
+component [Reportes\nIndex] as ReportesIndex
+component [Reportes\nVentas] as ReportesVentas
+component [Reportes\nEstadísticas] as ReportesEstadisticas
+component [Reportes\nInventario] as ReportesInventario
+
+' Funcionalidades
+component [Búsqueda] as BusquedaPage
+component [Resultados] as ResultadosBusqueda
+
+' ============================================
+' NAVEGACIÓN PRINCIPAL (Vertical)
+' ============================================
+
+LoginPage --> DashboardPage : autenticado
+
+' Dashboard central con conexiones agrupadas
+DashboardPage --> UsuariosIndex
+DashboardPage --> RolesIndex
+DashboardPage --> ProductosIndex
+DashboardPage --> ServiciosIndex
+DashboardPage --> MaterialesIndex
+DashboardPage --> InventariosIndex
+DashboardPage --> VentasIndex
+DashboardPage --> PagosIndex
+DashboardPage --> ReportesIndex
+DashboardPage --> BusquedaPage
+
+' ============================================
+' NAVEGACIÓN CRUD (Agrupada por módulo)
+' ============================================
+
+' CU1: Usuarios
+UsuariosIndex --> UsuariosCreate : crear
+UsuariosIndex --> UsuariosEdit : editar
+UsuariosIndex --> UsuariosShow : ver
+UsuariosCreate --> UsuariosIndex : guardar
+UsuariosEdit --> UsuariosIndex : guardar
+UsuariosShow --> UsuariosIndex : volver
+UsuariosShow --> UsuariosEdit : editar
+
+' CU1: Roles
+RolesIndex --> RolesCreate : crear
+RolesIndex --> RolesEdit : editar
+RolesCreate --> RolesIndex : guardar
+RolesEdit --> RolesIndex : guardar
+
+' CU2: Productos
+ProductosIndex --> ProductosCreate : crear
+ProductosIndex --> ProductosEdit : editar
+ProductosIndex --> ProductosShow : ver
+ProductosCreate --> ProductosIndex : guardar
+ProductosEdit --> ProductosIndex : guardar
+ProductosShow --> ProductosIndex : volver
+ProductosShow --> ProductosEdit : editar
+
+' CU3: Servicios
+ServiciosIndex --> ServiciosCreate : crear
+ServiciosIndex --> ServiciosEdit : editar
+ServiciosCreate --> ServiciosIndex : guardar
+ServiciosEdit --> ServiciosIndex : guardar
+
+' CU4: Materiales
+MaterialesIndex --> MaterialesCreate : crear
+MaterialesIndex --> MaterialesEdit : editar
+MaterialesIndex --> MaterialesShow : ver
+MaterialesCreate --> MaterialesIndex : guardar
+MaterialesEdit --> MaterialesIndex : guardar
+MaterialesShow --> MaterialesIndex : volver
+MaterialesShow --> MaterialesEdit : editar
+
+' CU5: Inventarios
+InventariosIndex --> InventariosCreate : crear
+InventariosIndex --> InventariosShow : ver
+InventariosCreate --> InventariosIndex : guardar
+InventariosShow --> InventariosIndex : volver
+
+' CU6: Ventas
+VentasIndex --> VentasCreate : crear
+VentasIndex --> VentasShow : ver
+VentasCreate --> VentaContado : contado
+VentasCreate --> VentaCredito : crédito
+VentaContado --> VentasIndex : completar
+VentaCredito --> VentasIndex : completar
+VentasShow --> VentasIndex : volver
+VentasShow --> PagosCreate : crear pago
+
+' CU7: Pagos
+PagosIndex --> PagosCreate : crear
+PagosIndex --> PagosEdit : editar
+PagosIndex --> PagosShow : ver
+PagosCreate --> PagosIndex : guardar
+PagosEdit --> PagosIndex : guardar
+PagosShow --> PagosIndex : volver
+PagosShow --> RegistrarPago : registrar
+RegistrarPago --> PagosShow : completado
+PagosShow ..> VentasShow : ver venta
+
+' CU8: Reportes
+ReportesIndex --> ReportesVentas
+ReportesIndex --> ReportesEstadisticas
+ReportesIndex --> ReportesInventario
+ReportesVentas --> ReportesIndex : volver
+ReportesEstadisticas --> ReportesIndex : volver
+ReportesInventario --> ReportesIndex : volver
+
+' Búsqueda
+BusquedaPage --> ResultadosBusqueda : buscar
+ResultadosBusqueda --> BusquedaPage : nueva búsqueda
+
+@enduml
+
+
