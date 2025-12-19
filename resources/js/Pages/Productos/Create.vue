@@ -1,80 +1,123 @@
 <template>
-    <Layout :auth="auth">
-        <div class="max-w-2xl">
-            <h1 class="text-3xl font-bold text-gray-900 mb-6">Nuevo Producto</h1>
-
-            <form @submit.prevent="submit" class="bg-white rounded-lg shadow p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                        <input v-model="form.nombre" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                        <div v-if="errors.nombre" class="text-red-600 text-sm mt-1">{{ errors.nombre }}</div>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                            Crear Nuevo Producto
+                        </h2>
+                        <p class="text-gray-600 text-sm">Complete el formulario para agregar un nuevo producto al cat├ílogo</p>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Descripción</label>
-                        <textarea v-model="form.descripcion" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                    </div>
+                    <form @submit.prevent="submit">
+                        <Input
+                            v-model="form.nombre"
+                            label="Nombre"
+                            required
+                            :error="form.errors.nombre"
+                        />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Categoría</label>
-                        <select v-model="form.categoria_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                            <option value="">Seleccione una categoría</option>
-                            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                                {{ categoria.nombre }}
-                            </option>
-                        </select>
-                        <div v-if="errors.categoria_id" class="text-red-600 text-sm mt-1">{{ errors.categoria_id }}</div>
-                    </div>
+                        <Textarea
+                            v-model="form.descripcion"
+                            label="Descripci├│n"
+                            :error="form.errors.descripcion"
+                            :rows="4"
+                        />
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Stock</label>
-                            <input v-model.number="form.stock" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                            <div v-if="errors.stock" class="text-red-600 text-sm mt-1">{{ errors.stock }}</div>
+                        <Select
+                            v-model="form.categoria_id"
+                            label="Categor├¡a"
+                            :options="categorias"
+                            option-value="id"
+                            option-label="nombre"
+                            required
+                            :error="form.errors.categoria_id"
+                        />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model.number="form.stock"
+                                label="Stock"
+                                type="number"
+                                required
+                                :error="form.errors.stock"
+                            />
+
+                            <Input
+                                v-model.number="form.stock_minimo"
+                                label="Stock M├¡nimo"
+                                type="number"
+                                :error="form.errors.stock_minimo"
+                            />
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
-                            <input v-model.number="form.stock_minimo" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+                        <Input
+                            v-model.number="form.precio_unitario"
+                            label="Precio Unitario"
+                            type="number"
+                            step="0.01"
+                            required
+                            :error="form.errors.precio_unitario"
+                        />
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Imagen
+                            </label>
+                            <input
+                                type="file"
+                                @change="handleImageChange"
+                                accept="image/*"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            />
+                            <p v-if="form.errors.imagen" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.imagen }}
+                            </p>
+                            <div v-if="imagePreview" class="mt-2">
+                                <img :src="imagePreview" alt="Preview" class="h-32 w-32 object-cover rounded" />
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Precio Unitario</label>
-                        <input v-model.number="form.precio_unitario" type="number" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                        <div v-if="errors.precio_unitario" class="text-red-600 text-sm mt-1">{{ errors.precio_unitario }}</div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Tiempo de Fabricación</label>
-                        <input v-model="form.tiempo" type="text" placeholder="Ej: 5 días" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
-                    </div>
+                        <div class="flex justify-end space-x-4 mt-6">
+                            <button
+                                type="button"
+                                @click="cancelCreate"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 font-medium"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                                <span v-if="form.processing">Guardando...</span>
+                                <span v-else>Guardar Producto</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mt-6 flex space-x-4">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Guardar
-                    </button>
-                    <Link :href="route('productos.index')" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                        Cancelar
-                    </Link>
-                </div>
-            </form>
+            </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { ref } from 'vue';
+import { useForm, router } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import Input from '@/Components/Form/Input.vue';
+import Textarea from '@/Components/Form/Textarea.vue';
+import Select from '@/Components/Form/Select.vue';
 
-const props = defineProps({
-    auth: Object,
-    categorias: Array,
-    errors: Object,
-})
+defineProps({
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+categorias: Array,
+    menuItems: Array,
+    pageVisits: Number,
+});
 
 const form = useForm({
     nombre: '',
@@ -83,11 +126,76 @@ const form = useForm({
     stock: 0,
     stock_minimo: 0,
     precio_unitario: 0,
-    tiempo: '',
-})
+    imagen: null,
+});
+
+const imagePreview = ref(null);
+
+const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.imagen = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
 
 const submit = () => {
-    form.post(route('productos.store'))
-}
+    // Validar campos requeridos
+    if (!form.nombre || !form.categoria_id || form.stock === null || form.precio_unitario === null) {
+        alert('Por favor, complete todos los campos requeridos');
+        return;
+    }
+
+    // Preparar datos
+    const formData = {
+        nombre: form.nombre,
+        descripcion: form.descripcion || null,
+        categoria_id: parseInt(form.categoria_id),
+        stock: parseInt(form.stock) || 0,
+        stock_minimo: parseInt(form.stock_minimo) || 0,
+        precio_unitario: parseFloat(form.precio_unitario) || 0,
+    };
+
+    if (form.imagen) {
+        formData.imagen = form.imagen;
+    }
+
+    console.log('Enviando datos de creaci├│n:', {
+        ...formData,
+        imagen: formData.imagen ? '(archivo)' : '(no enviado)',
+    });
+
+    form.post('/productos', {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+            console.log('Producto creado exitosamente', page);
+            router.visit('/productos');
+        },
+        onError: (errors) => {
+            console.error('Errores al crear producto:', errors);
+            if (errors.nombre) {
+                alert('Error: ' + errors.nombre);
+            } else if (errors.categoria_id) {
+                alert('Error: ' + errors.categoria_id);
+            } else if (errors.precio_unitario) {
+                alert('Error: ' + errors.precio_unitario);
+            } else {
+                alert('Error al crear producto. Por favor, verifique los datos e intente nuevamente.');
+            }
+        },
+        onFinish: () => {
+            console.log('Request finished');
+        },
+    });
+};
+
+const cancelCreate = () => {
+    router.visit('/productos');
+};
 </script>
 

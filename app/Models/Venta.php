@@ -40,6 +40,12 @@ class Venta extends Model
         return $this->belongsTo(MetodoPago::class, 'metodo_pago_id');
     }
 
+    // Alias para compatibilidad con snake_case
+    public function metodo_pago()
+    {
+        return $this->metodoPago();
+    }
+
     public function detalles()
     {
         return $this->hasMany(DetalleVenta::class);

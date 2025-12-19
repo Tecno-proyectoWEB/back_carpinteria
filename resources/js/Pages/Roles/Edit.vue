@@ -1,111 +1,138 @@
 <template>
-    <Layout :auth="auth">
-        <div v-if="rol && rol.id">
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Editar Rol</h1>
-            </div>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-indigo-100">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Editar Permisos del Rol: {{ rol.nombre }}</h2>
+                        <p class="text-gray-600 mt-1">Seleccione los permisos que desea asignar a este rol</p>
+                    </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <form @submit.prevent="submit">
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nombre del Rol *</label>
-                            <input v-model="form.nombre" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <div v-if="errors.nombre" class="mt-1 text-sm text-red-600">{{ errors.nombre }}</div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">Permisos</label>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4">
-                                <label v-for="permiso in permisos" :key="permiso.id" class="flex items-center">
+                    <form @submit.prevent="submit">
+                        <!-- Agrupar permisos por m├│dulo -->
+                        <div class="space-y-6">
+                            <div
+                                v-for="(permisosGrupo, modulo) in permisosAgrupados"
+                                :key="modulo"
+                                class="border rounded-lg p-4"
+                            >
+                                <h3 class="text-lg font-semibold mb-3 flex items-center">
                                     <input
                                         type="checkbox"
-                                        :value="permiso.id"
-                                        v-model="form.permisos"
-                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">{{ permiso.nombre }}</span>
-                                </label>
+                                        :checked="todosSeleccionados(modulo)"
+                                        :indeterminate="algunosSeleccionados(modulo)"
+                                        @change="toggleModulo(modulo, $event.target.checked)"
+                                        class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    {{ modulo }}
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 ml-6">
+                                    <label
+                                        v-for="permiso in permisosGrupo"
+                                        :key="permiso.id"
+                                        class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            :value="permiso.id"
+                                            v-model="form.permisos"
+                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span class="text-sm text-gray-700">{{ permiso.nombre }}</span>
+                                    </label>
+                                </div>
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">Seleccione los permisos que tendrá este rol</p>
                         </div>
-                    </div>
 
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <Link :href="route('roles.index')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            Cancelar
-                        </Link>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Actualizar
-                        </button>
-                    </div>
-                </form>
+                        <!-- Resumen -->
+                        <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
+                            <p class="text-sm text-indigo-800">
+                                <strong>Permisos seleccionados:</strong> <span class="font-bold text-indigo-600">{{ form.permisos.length }}</span> de {{ permisos.length }}
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end space-x-4 mt-6">
+                            <Link
+                                :href="route('roles.index')"
+                                class="px-5 py-2.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-700 transition-colors"
+                            >
+                                Cancelar
+                            </Link>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                            >
+                                <span v-if="form.processing">Guardando...</span>
+                                <span v-else>Guardar Permisos</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-        <div v-else class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p class="text-red-800">Error: No se encontraron los datos del rol. Por favor, vuelva a la lista de roles.</p>
-            <Link :href="route('roles.index')" class="mt-2 inline-block text-blue-600 hover:text-blue-900">
-                Volver a Roles
-            </Link>
-        </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3'
-import { computed, watchEffect } from 'vue'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { ref, computed } from 'vue';
+import { useForm, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
 
 const props = defineProps({
-    auth: Object,
-    rol: Object,
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+rol: Object,
     permisos: Array,
-    errors: Object,
-})
+    menuItems: Array,
+    pageVisits: Number,
+});
 
-// Corrección 5.6: Computed property para permisos seleccionados
-const permisosSeleccionados = computed(() => {
-    if (!props.rol || !props.rol.permisos) {
-        return []
-    }
-    
-    // Asegurarse de que permisos es un array
-    const permisosArray = Array.isArray(props.rol.permisos) 
-        ? props.rol.permisos 
-        : []
-    
-    // Extraer los IDs
-    return permisosArray.map(p => {
-        // Manejar tanto objetos como IDs directos
-        return typeof p === 'object' ? p.id : p
-    }).filter(id => id !== null && id !== undefined)
-})
-
-// Inicializar el formulario con los datos del rol disponibles
 const form = useForm({
-    nombre: props.rol?.nombre || '',
-    permisos: permisosSeleccionados.value,
-})
+    permisos: props.rol.permisos?.map(p => p.id) || [],
+});
 
-// Corrección 5.6: Actualizar el formulario cuando los props cambien
-watchEffect(() => {
-    if (props.rol) {
-        form.nombre = props.rol.nombre || ''
-        form.permisos = permisosSeleccionados.value
+// Agrupar permisos por m├│dulo (asumiendo formato: modulo.accion)
+const permisosAgrupados = computed(() => {
+    const grupos = {};
+    props.permisos.forEach(permiso => {
+        const partes = permiso.nombre.split('.');
+        const modulo = partes[0] || 'Otros';
+        if (!grupos[modulo]) {
+            grupos[modulo] = [];
+        }
+        grupos[modulo].push(permiso);
+    });
+    return grupos;
+});
+
+const todosSeleccionados = (modulo) => {
+    const permisosModulo = permisosAgrupados.value[modulo];
+    return permisosModulo.every(p => form.permisos.includes(p.id));
+};
+
+const algunosSeleccionados = (modulo) => {
+    const permisosModulo = permisosAgrupados.value[modulo];
+    const seleccionados = permisosModulo.filter(p => form.permisos.includes(p.id));
+    return seleccionados.length > 0 && seleccionados.length < permisosModulo.length;
+};
+
+const toggleModulo = (modulo, checked) => {
+    const permisosModulo = permisosAgrupados.value[modulo];
+    if (checked) {
+        permisosModulo.forEach(p => {
+            if (!form.permisos.includes(p.id)) {
+                form.permisos.push(p.id);
+            }
+        });
+    } else {
+        form.permisos = form.permisos.filter(id => !permisosModulo.some(p => p.id === id));
     }
-})
+};
 
 const submit = () => {
-    // Corrección 5.7: Validar que el rol tenga ID
-    if (!props.rol || !props.rol.id) {
-        console.error('Error: No se puede actualizar el rol porque no se encontró el ID', props.rol)
-        alert('Error: No se puede actualizar el rol porque no se encontraron los datos')
-        return
-    }
-    
-    // Usar el ID directamente o como objeto según lo que espere la ruta
-    const rolId = props.rol.id
-    form.put(route('roles.update', rolId))
-}
+    form.put(route('roles.update', props.rol.id));
+};
 </script>
+
 

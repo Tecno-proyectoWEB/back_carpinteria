@@ -1,125 +1,243 @@
 <template>
-    <Layout :auth="auth">
-        <div>
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Editar Usuario</h1>
-            </div>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                            Editar Usuario
+                        </h2>
+                        <p class="text-gray-600 text-sm">
+                            {{ usuario?.nombre || '' }} {{ usuario?.apellido || '' }} - {{ usuario?.email || '' }}
+                        </p>
+                    </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <form @submit.prevent="submit">
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre *</label>
-                                <input v-model="form.nombre" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.nombre" class="mt-1 text-sm text-red-600">{{ errors.nombre }}</div>
-                            </div>
+                    <form @submit.prevent="submit">
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model="form.nombre"
+                                label="Nombre"
+                                required
+                                :error="form.errors.nombre"
+                            />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Apellido *</label>
-                                <input v-model="form.apellido" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.apellido" class="mt-1 text-sm text-red-600">{{ errors.apellido }}</div>
-                            </div>
+                            <Input
+                                v-model="form.apellido"
+                                label="Apellido"
+                                required
+                                :error="form.errors.apellido"
+                            />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Email *</label>
-                                <input v-model="form.email" type="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</div>
-                            </div>
+                        <Input
+                            v-model="form.email"
+                            label="Email"
+                            type="email"
+                            required
+                            :error="form.errors.email"
+                        />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                                <input v-model="form.telefono" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
+                        <Input
+                            v-model="form.telefono"
+                            label="Tel├®fono"
+                            type="tel"
+                            :error="form.errors.telefono"
+                        />
+
+                        <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <p class="text-sm text-yellow-800">
+                                <strong>Nota:</strong> Deje los campos de contrase├▒a vac├¡os si no desea cambiarla.
+                            </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Nueva Contraseña</label>
-                                <input v-model="form.password" type="password" minlength="8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <p class="mt-1 text-xs text-gray-500">Dejar en blanco para mantener la contraseña actual</p>
-                                <div v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</div>
-                            </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model="form.password"
+                                label="Nueva Contrase├▒a (opcional)"
+                                type="password"
+                                :error="form.errors.password"
+                            />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Rol *</label>
-                                <select v-model="form.rol_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">Seleccione un rol</option>
-                                    <option v-for="rol in roles" :key="rol.id" :value="rol.id">{{ rol.nombre }}</option>
-                                </select>
-                                <div v-if="errors.rol_id" class="mt-1 text-sm text-red-600">{{ errors.rol_id }}</div>
-                            </div>
+                            <Input
+                                v-model="form.password_confirmation"
+                                label="Confirmar Nueva Contrase├▒a"
+                                type="password"
+                                :error="form.errors.password_confirmation"
+                            />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
+                        <Select
+                            v-model="form.rol_id"
+                            label="Rol"
+                            :options="roles"
+                            option-value="id"
+                            option-label="nombre"
+                            required
+                            :error="form.errors.rol_id"
+                        />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="mb-4">
                                 <label class="flex items-center">
-                                    <input v-model="form.estado" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">Activo</span>
+                                    <input
+                                        v-model="form.estado"
+                                        type="checkbox"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span class="ml-2 text-sm text-gray-700">Usuario activo</span>
                                 </label>
                             </div>
 
-                            <div>
+                            <div class="mb-4">
                                 <label class="flex items-center">
-                                    <input v-model="form.disponibilidad" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <input
+                                        v-model="form.disponibilidad"
+                                        type="checkbox"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
                                     <span class="ml-2 text-sm text-gray-700">Disponible</span>
                                 </label>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <Link :href="route('usuarios.index')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            Cancelar
-                        </Link>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Actualizar
-                        </button>
-                    </div>
-                </form>
+                        <div class="flex justify-end space-x-4 mt-6">
+                            <button
+                                type="button"
+                                @click="cancelEdit"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 font-medium"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                                <span v-if="form.processing">Actualizando...</span>
+                                <span v-else>Actualizar Usuario</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { useForm, router } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import Input from '@/Components/Form/Input.vue';
+import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    auth: Object,
-    usuario: Object,
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+usuario: Object,
     roles: Array,
-    errors: Object,
-})
+    menuItems: Array,
+    pageVisits: Number,
+});
 
 const form = useForm({
-    nombre: props.usuario.nombre,
-    apellido: props.usuario.apellido,
-    email: props.usuario.email,
-    telefono: props.usuario.telefono || '',
+    nombre: props.usuario?.nombre || '',
+    apellido: props.usuario?.apellido || '',
+    email: props.usuario?.email || '',
+    telefono: props.usuario?.telefono || '',
     password: '',
-    rol_id: props.usuario.rol_id,
-    estado: props.usuario.estado,
-    disponibilidad: props.usuario.disponibilidad,
-    cuenta_no_expirada: props.usuario.cuenta_no_expirada,
-    cuenta_no_bloqueada: props.usuario.cuenta_no_bloqueada,
-    credenciales_no_expiradas: props.usuario.credenciales_no_expiradas,
-})
+    password_confirmation: '',
+    rol_id: props.usuario?.rol_id || '',
+    estado: props.usuario?.estado ?? true,
+    disponibilidad: props.usuario?.disponibilidad ?? true,
+    _method: 'PATCH',
+});
+
+// Funci├│n route segura
+const getRoute = (name, params = null) => {
+    try {
+        if (typeof window !== 'undefined' && window.route) {
+            return params !== null ? window.route(name, params) : window.route(name);
+        }
+        if (typeof globalThis !== 'undefined' && globalThis.route) {
+            return params !== null ? globalThis.route(name, params) : globalThis.route(name);
+        }
+        if (typeof route !== 'undefined') {
+            return params !== null ? route(name, params) : route(name);
+        }
+        // Fallback
+        const baseUrl = window.location.origin;
+        if (name === 'usuarios.index') return `${baseUrl}/usuarios`;
+        if (name === 'usuarios.update' && params) return `${baseUrl}/usuarios/${params}`;
+        return '#';
+    } catch (e) {
+        console.warn('Error getting route:', e, name, params);
+        const baseUrl = window.location.origin;
+        if (name === 'usuarios.update' && params) return `${baseUrl}/usuarios/${params}`;
+        return '#';
+    }
+};
 
 const submit = () => {
-    // Si no hay password, no enviarlo
-    if (!form.password) {
-        form.transform((data) => {
-            const { password, ...rest } = data
-            return rest
-        }).put(route('usuarios.update', props.usuario.id))
-    } else {
-        form.put(route('usuarios.update', props.usuario.id))
+    // Validar que la contrase├▒a coincida si se proporciona
+    if (form.password && form.password !== form.password_confirmation) {
+        alert('Las contrase├▒as no coinciden');
+        return;
     }
-}
+
+    // Preparar los datos del formulario
+    const formData = {
+        nombre: form.nombre,
+        apellido: form.apellido,
+        email: form.email,
+        telefono: form.telefono || null,
+        rol_id: form.rol_id ? parseInt(form.rol_id) : form.rol_id,
+        estado: form.estado ?? true,
+        disponibilidad: form.disponibilidad ?? true,
+        _method: 'PATCH',
+    };
+
+    // Solo agregar password si se proporciona
+    if (form.password && form.password.length > 0) {
+        formData.password = form.password;
+        formData.password_confirmation = form.password_confirmation;
+    }
+
+    console.log('Enviando datos de actualizaci├│n:', {
+        ...formData,
+        password: formData.password ? '***' : '(no enviado)',
+        password_confirmation: formData.password_confirmation ? '***' : '(no enviado)',
+    });
+
+    const routeUrl = `/usuarios/${props.usuario?.id}`;
+    
+    form.post(routeUrl, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            console.log('Usuario actualizado exitosamente', page);
+            router.visit('/usuarios');
+        },
+        onError: (errors) => {
+            console.error('Errores al actualizar usuario:', errors);
+            // Mostrar errores espec├¡ficos
+            if (errors.email) {
+                alert('Error: ' + errors.email);
+            } else if (errors.password) {
+                alert('Error: ' + errors.password);
+            } else if (errors.rol_id) {
+                alert('Error: ' + errors.rol_id);
+            } else {
+                alert('Error al actualizar usuario. Por favor, verifique los datos e intente nuevamente.');
+            }
+        },
+        onFinish: () => {
+            console.log('Request finished');
+        },
+    });
+};
+
+const cancelEdit = () => {
+    router.visit(getRoute('usuarios.index'));
+};
 </script>
+
 

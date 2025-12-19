@@ -23,6 +23,7 @@ class Material extends Model
         'activo',
         'imagen',
         'categoria_id',
+        'sector_id',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class Material extends Model
         'stock_minimo' => 'integer',
         'punto_reorden' => 'integer',
         'activo' => 'boolean',
+        'sector_id' => 'integer',
     ];
 
     public $timestamps = false;
@@ -38,6 +40,11 @@ class Material extends Model
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
+    }
+
+    public function sector()
+    {
+        return $this->belongsTo(Sector::class);
     }
 
     public function movimientosInventario()

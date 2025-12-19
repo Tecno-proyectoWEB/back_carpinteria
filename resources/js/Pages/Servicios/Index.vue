@@ -1,71 +1,184 @@
 <template>
-    <Layout :auth="auth">
-        <div>
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Servicios</h1>
-                <Link :href="route('servicios.create')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Nuevo Servicio
-                </Link>
-            </div>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900">Servicios</h2>
+                    <Link
+                        v-if="canCreate"
+                        :href="route('servicios.create')"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        + Nuevo Servicio
+                    </Link>
+                </div>
 
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Base</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiempo Estimado</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="servicio in servicios" :key="servicio.id">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ servicio.nombre }}</div>
-                                <div class="text-sm text-gray-500">{{ servicio.descripcion }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ servicio.categoria?.nombre || 'Sin categoría' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ${{ servicio.precio_base?.toFixed(2) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ servicio.tiempo_estimado ? `${servicio.tiempo_estimado} min` : 'N/A' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="servicio.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 text-xs font-semibold rounded-full">
-                                    {{ servicio.activo ? 'Activo' : 'Inactivo' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <Link :href="route('servicios.edit', servicio.id)" class="text-blue-600 hover:text-blue-900">Editar</Link>
-                                <button @click="eliminar(servicio.id)" class="text-red-600 hover:text-red-900">Eliminar</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Filtros -->
+                <div class="mb-4 bg-white p-4 rounded-lg shadow">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                            <input
+                                v-model="filters.search"
+                                type="text"
+                                placeholder="Nombre o descripci├│n..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                @input="applyFilters"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Categor├¡a</label>
+                            <select
+                                v-model="filters.categoria_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                @change="applyFilters"
+                            >
+                                <option value="">Todas</option>
+                                <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+                                    {{ cat.nombre }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button
+                                @click="clearFilters"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla -->
+                <DataTable
+                    :data="serviciosData"
+                    :columns="columns"
+                    :loading="false"
+                    :show-search="false"
+                    :paginated="false"
+                >
+                    <template #cell-categoria="{ value }">
+                        <Badge variant="info">{{ value?.nombre || 'Sin categor├¡a' }}</Badge>
+                    </template>
+                    <template #cell-precio_base="{ value }">
+                        ${{ parseFloat(value).toFixed(2) }}
+                    </template>
+                    <template #cell-tiempo_estimado="{ value }">
+                        {{ value ? `${value} horas` : 'N/A' }}
+                    </template>
+                    <template #actions="{ row }">
+                        <template v-if="row && row.id">
+                            <Link
+                                :href="route('servicios.show', row.id)"
+                                class="text-blue-600 hover:text-blue-900 mr-3"
+                            >
+                                Ver
+                            </Link>
+                            <Link
+                                v-if="canEdit"
+                                :href="route('servicios.edit', row.id)"
+                                class="text-indigo-600 hover:text-indigo-900 mr-3"
+                            >
+                                Editar
+                            </Link>
+                            <button
+                                v-if="canDelete"
+                                @click="deleteServicio(row)"
+                                class="text-red-600 hover:text-red-900"
+                            >
+                                Desactivar
+                            </button>
+                        </template>
+                    </template>
+                </DataTable>
+
+                <!-- Paginaci├│n -->
+                <div v-if="serviciosLinks" class="mt-4">
+                    <div class="flex justify-center">
+                        <div v-for="link in serviciosLinks" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                v-html="link.label"
+                                :class="[
+                                    'px-3 py-2 border rounded-md mx-1',
+                                    link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                ]"
+                            ></Link>
+                            <span
+                                v-else
+                                v-html="link.label"
+                                class="px-3 py-2 border rounded-md mx-1 bg-gray-100 text-gray-400"
+                            ></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { Link, router } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { ref, computed } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import DataTable from '@/Components/Table/DataTable.vue';
+import Badge from '@/Components/UI/Badge.vue';
 
-defineProps({
-    auth: Object,
-    servicios: Array,
-})
+const props = defineProps({
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+servicios: Object,
+    categorias: Array,
+    menuItems: Array,
+    pageVisits: Number,
+    filters: Object,
+});
 
-const eliminar = (id) => {
-    if (confirm('¿Está seguro de eliminar este servicio?')) {
-        router.delete(route('servicios.destroy', id))
+const columns = [
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'nombre', label: 'Nombre', sortable: true },
+    { key: 'categoria', label: 'Categor├¡a', sortable: false },
+    { key: 'precio_base', label: 'Precio Base', sortable: true },
+    { key: 'tiempo_estimado', label: 'Tiempo Estimado', sortable: true },
+];
+
+const filters = ref({
+    search: props.filters?.search || '',
+    categoria_id: props.filters?.categoria_id || '',
+});
+
+// Soporta tanto lista simple como paginada
+const serviciosData = computed(() => Array.isArray(props.servicios) ? props.servicios : (props.servicios?.data || []));
+const serviciosLinks = computed(() => props.servicios?.links || null);
+
+const canCreate = computed(() => {
+    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
+    return ['PROPIETARIO', 'CARPINTERO'].includes(rol);
+});
+
+const canEdit = computed(() => canCreate.value);
+const canDelete = computed(() => canCreate.value);
+
+const applyFilters = () => {
+    router.get(route('servicios.index'), filters.value, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
+const clearFilters = () => {
+    filters.value = { search: '', categoria_id: '' };
+    applyFilters();
+};
+
+const deleteServicio = (servicio) => {
+    if (confirm(`┬┐Est├í seguro de desactivar el servicio "${servicio.nombre}"?`)) {
+        router.delete(route('servicios.destroy', servicio.id), {
+            preserveScroll: true,
+        });
     }
-}
+};
 </script>
 

@@ -14,6 +14,12 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BusquedaController;
+use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\AlmacenController;
+use App\Http\Controllers\CompraController;
+use App\Http\Controllers\ReporteCompraController;
+use App\Http\Controllers\SectorController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -46,17 +52,34 @@ Route::middleware('auth')->group(function () {
     // CU7: Gestión de Pagos
     Route::resource('pagos', PagoController::class);
     Route::post('/pagos/{pago}/registrar', [PagoController::class, 'registrarPago'])->name('pagos.registrar');
+    Route::post('/pagos/plan', [PagoController::class, 'crearPlanPagos'])->name('pagos.plan');
 
     // CU8: Reportes y Estadísticas
     Route::prefix('reportes')->name('reportes.')->group(function () {
         Route::get('/', [ReporteController::class, 'index'])->name('index');
         Route::get('/ventas', [ReporteController::class, 'ventas'])->name('ventas');
+        Route::get('/compras', [ReporteCompraController::class, 'index'])->name('compras');
         Route::get('/estadisticas', [ReporteController::class, 'estadisticas'])->name('estadisticas');
         Route::get('/inventario', [ReporteController::class, 'inventario'])->name('inventario');
     });
 
     // Búsqueda
     Route::get('/buscar', [BusquedaController::class, 'index'])->name('buscar');
+
+    // Bitácora (Auditoría)
+    Route::resource('bitacora', BitacoraController::class)->only(['index', 'show']);
+
+    // Proveedores
+    Route::resource('proveedores', ProveedorController::class);
+
+    // Almacenes
+    Route::resource('almacenes', AlmacenController::class);
+
+    // Sectores
+    Route::resource('sectores', SectorController::class);
+
+    // Compras
+    Route::resource('compras', CompraController::class);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

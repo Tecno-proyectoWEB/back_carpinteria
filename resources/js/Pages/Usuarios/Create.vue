@@ -1,98 +1,130 @@
 <template>
-    <Layout :auth="auth">
-        <div>
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Nuevo Usuario</h1>
-            </div>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-indigo-100">
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-6">Crear Nuevo Usuario</h2>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <form @submit.prevent="submit">
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre *</label>
-                                <input v-model="form.nombre" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.nombre" class="mt-1 text-sm text-red-600">{{ errors.nombre }}</div>
-                            </div>
+                    <form @submit.prevent="submit">
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model="form.nombre"
+                                label="Nombre"
+                                required
+                                :error="form.errors.nombre"
+                            />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Apellido *</label>
-                                <input v-model="form.apellido" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.apellido" class="mt-1 text-sm text-red-600">{{ errors.apellido }}</div>
-                            </div>
+                            <Input
+                                v-model="form.apellido"
+                                label="Apellido"
+                                required
+                                :error="form.errors.apellido"
+                            />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Email *</label>
-                                <input v-model="form.email" type="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</div>
-                            </div>
+                        <Input
+                            v-model="form.email"
+                            label="Email"
+                            type="email"
+                            required
+                            :error="form.errors.email"
+                        />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                                <input v-model="form.telefono" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
+                        <Input
+                            v-model="form.telefono"
+                            label="Tel├®fono"
+                            type="tel"
+                            :error="form.errors.telefono"
+                        />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model="form.password"
+                                label="Contrase├▒a"
+                                type="password"
+                                required
+                                :error="form.errors.password"
+                            />
+
+                            <Input
+                                v-model="form.password_confirmation"
+                                label="Confirmar Contrase├▒a"
+                                type="password"
+                                required
+                                :error="form.errors.password_confirmation"
+                            />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Contraseña *</label>
-                                <input v-model="form.password" type="password" required minlength="8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <div v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</div>
-                            </div>
+                        <Select
+                            v-model="form.rol_id"
+                            label="Rol"
+                            :options="roles"
+                            option-value="id"
+                            option-label="nombre"
+                            required
+                            :error="form.errors.rol_id"
+                        />
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Rol *</label>
-                                <select v-model="form.rol_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">Seleccione un rol</option>
-                                    <option v-for="rol in roles" :key="rol.id" :value="rol.id">{{ rol.nombre }}</option>
-                                </select>
-                                <div v-if="errors.rol_id" class="mt-1 text-sm text-red-600">{{ errors.rol_id }}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="mb-4">
                                 <label class="flex items-center">
-                                    <input v-model="form.estado" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">Activo</span>
+                                    <input
+                                        v-model="form.estado"
+                                        type="checkbox"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span class="ml-2 text-sm text-gray-700">Usuario activo</span>
                                 </label>
                             </div>
 
-                            <div>
+                            <div class="mb-4">
                                 <label class="flex items-center">
-                                    <input v-model="form.disponibilidad" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <input
+                                        v-model="form.disponibilidad"
+                                        type="checkbox"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
                                     <span class="ml-2 text-sm text-gray-700">Disponible</span>
                                 </label>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <Link :href="route('usuarios.index')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            Cancelar
-                        </Link>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Guardar
-                        </button>
-                    </div>
-                </form>
+                        <div class="flex justify-end space-x-4 mt-6">
+                            <Link
+                                :href="route('usuarios.index')"
+                                class="px-5 py-2.5 border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-700 transition-colors"
+                            >
+                                Cancelar
+                            </Link>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                            >
+                                <span v-if="form.processing">Guardando...</span>
+                                <span v-else>Guardar Usuario</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { useForm, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import Input from '@/Components/Form/Input.vue';
+import Select from '@/Components/Form/Select.vue';
 
 const props = defineProps({
-    auth: Object,
-    roles: Array,
-    errors: Object,
-})
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+roles: Array,
+    menuItems: Array,
+    pageVisits: Number,
+});
 
 const form = useForm({
     nombre: '',
@@ -100,16 +132,15 @@ const form = useForm({
     email: '',
     telefono: '',
     password: '',
-    rol_id: null,
+    password_confirmation: '',
+    rol_id: '',
     estado: true,
     disponibilidad: true,
-    cuenta_no_expirada: true,
-    cuenta_no_bloqueada: true,
-    credenciales_no_expiradas: true,
-})
+});
 
 const submit = () => {
-    form.post(route('usuarios.store'))
-}
+    form.post(route('usuarios.store'));
+};
 </script>
+
 

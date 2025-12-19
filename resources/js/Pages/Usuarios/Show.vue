@@ -1,72 +1,170 @@
 <template>
-    <Layout :auth="auth">
-        <div>
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Detalle de Usuario</h1>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ usuario.nombre }} {{ usuario.apellido }}</p>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
+                    <!-- Header -->
+                    <div class="px-6 py-5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold">
+                                {{ usuario?.nombre || '' }} {{ usuario?.apellido || '' }}
+                            </h2>
+                            <p class="text-sm text-indigo-100 mt-1">{{ usuario?.email || '' }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <Link
+                                v-if="canEdit"
+                                :href="getRoute('usuarios.edit', usuario?.id)"
+                                class="px-4 py-2 bg-white text-indigo-600 rounded-md hover:bg-indigo-50 font-medium transition-colors"
+                            >
+                                Editar
+                            </Link>
+                            <Link
+                                :href="getRoute('usuarios.index')"
+                                class="px-4 py-2 bg-indigo-700 text-white rounded-md hover:bg-indigo-800 font-medium transition-colors"
+                            >
+                                Volver
+                            </Link>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ usuario.email }}</p>
-                    </div>
+                    <div class="px-6 py-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Informaci├│n Personal -->
+                            <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Informaci├│n Personal
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Nombre Completo</label>
+                                        <p class="text-gray-900 font-medium">{{ usuario?.nombre || '' }} {{ usuario?.apellido || '' }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Email</label>
+                                        <p class="text-gray-900">{{ usuario?.email || 'No especificado' }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Tel├®fono</label>
+                                        <p class="text-gray-900">{{ usuario?.telefono || 'No especificado' }}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ usuario.telefono || 'N/A' }}</p>
-                    </div>
+                            <!-- Informaci├│n del Rol -->
+                            <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    Rol y Permisos
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Rol</label>
+                                        <p class="mt-1">
+                                            <Badge variant="info" class="text-sm px-3 py-1">{{ usuario?.rol?.nombre || 'Sin rol' }}</Badge>
+                                        </p>
+                                    </div>
+                                    <div v-if="usuario?.rol?.permisos && usuario.rol.permisos.length > 0">
+                                        <label class="text-sm font-medium text-gray-500 block mb-2">Permisos ({{ usuario.rol.permisos.length }})</label>
+                                        <div class="mt-2 flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                                            <Badge
+                                                v-for="permiso in usuario.rol.permisos"
+                                                :key="permiso.id"
+                                                variant="success"
+                                                class="text-xs px-2 py-1"
+                                            >
+                                                {{ permiso.nombre }}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Permisos</label>
+                                        <p class="text-gray-400 text-sm">No hay permisos asignados</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Rol</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ usuario.rol?.nombre || 'N/A' }}</p>
+                            <!-- Estado de la Cuenta -->
+                            <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Estado de la Cuenta
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Estado</label>
+                                        <p class="mt-1">
+                                            <Badge :variant="usuario?.estado ? 'success' : 'error'" class="text-sm px-3 py-1">
+                                                {{ usuario?.estado ? 'Activo' : 'Inactivo' }}
+                                            </Badge>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 block mb-1">Disponibilidad</label>
+                                        <p class="mt-1">
+                                            <Badge :variant="usuario?.disponibilidad ? 'success' : 'warning'" class="text-sm px-3 py-1">
+                                                {{ usuario?.disponibilidad ? 'Disponible' : 'No disponible' }}
+                                            </Badge>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Estado</label>
-                        <p class="mt-1">
-                            <span :class="usuario.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 rounded-full text-xs font-medium">
-                                {{ usuario.estado ? 'Activo' : 'Inactivo' }}
-                            </span>
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Disponibilidad</label>
-                        <p class="mt-1">
-                            <span :class="usuario.disponibilidad ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 rounded-full text-xs font-medium">
-                                {{ usuario.disponibilidad ? 'Disponible' : 'No Disponible' }}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <Link :href="route('usuarios.index')" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                        Volver
-                    </Link>
-                    <Link :href="route('usuarios.edit', usuario.id)" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Editar
-                    </Link>
                 </div>
             </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import Badge from '@/Components/UI/Badge.vue';
 
-defineProps({
-    auth: Object,
-    usuario: Object,
-})
+const props = defineProps({
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+usuario: Object,
+    menuItems: Array,
+    pageVisits: Number,
+});
+
+const page = usePage();
+
+const canEdit = computed(() => {
+    try {
+        const rol = page.props.auth?.user?.rol?.nombre;
+        return ['PROPIETARIO', 'ADMINISTRADOR'].includes(rol);
+    } catch (e) {
+        return false;
+    }
+});
+
+// Funci├│n route segura
+const getRoute = (name, params = null) => {
+    try {
+        if (typeof window !== 'undefined' && window.route) {
+            return params !== null ? window.route(name, params) : window.route(name);
+        }
+        // Fallback
+        const baseUrl = window.location.origin;
+        if (name === 'usuarios.index') return `${baseUrl}/usuarios`;
+        if (name === 'usuarios.edit' && params) return `${baseUrl}/usuarios/${params}/edit`;
+        return '#';
+    } catch (e) {
+        console.warn('Error getting route:', e, name, params);
+        return '#';
+    }
+};
 </script>
+
 

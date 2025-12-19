@@ -59,6 +59,19 @@ class ServicioController extends Controller
         return redirect()->route('servicios.index')->with('success', 'Servicio creado correctamente');
     }
 
+    public function show(Servicio $servicio)
+    {
+        if (!Auth::user()->tienePermiso('servicios.ver')) {
+            return back()->withErrors(['message' => 'No tiene permiso para ver servicios']);
+        }
+
+        $servicio->load('categoria');
+
+        return Inertia::render('Servicios/Show', [
+            'servicio' => $servicio,
+        ]);
+    }
+
     public function edit(Servicio $servicio)
     {
         if (!Auth::user()->tienePermiso('servicios.editar')) {

@@ -7,12 +7,14 @@ use App\Models\Venta;
 use App\Models\Producto;
 use App\Models\MovimientoInventario;
 use App\Models\MetodoPago;
+use App\Models\Bitacora;
 use App\Services\PaymentGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class PagoController extends Controller
 {
@@ -194,10 +196,24 @@ class PagoController extends Controller
 
         DB::beginTransaction();
         try {
+            $datosAnteriores = $pago->toArray();
+
             $pago->update([
                 'estado' => 'PAGADO',
                 'fecha_pago' => now(),
                 'usuario_id' => Auth::id(),
+            ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'tipo_accion_id' => 2, // ACTUALIZAR
+                'tabla_afectada' => 'pago',
+                'registro_id' => $pago->id,
+                'usuario_id' => Auth::id(),
+                'datos_anteriores' => $datosAnteriores,
+                'datos_nuevos' => $pago->toArray(),
+                'descripcion' => "Pago #{$pago->id} registrado como PAGADO - Venta #{$pago->venta_id}",
+                'ip' => request()->ip(),
             ]);
 
             // Verificar si todas las cuotas están pagadas para confirmar la venta
@@ -243,6 +259,101 @@ class PagoController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Crea un plan de pagos en cuotas para una venta
+     * @param Request $request Debe contener: venta_id, numero_cuotas (2-12), fecha_primera_cuota
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function crearPlanPagos(Request $request)
+    {
+        // Validar permisos
+        if (!Auth::user()->tienePermiso('pagos.registrar')) {
+            return back()->withErrors(['message' => 'No tiene permiso para crear planes de pago']);
+        }
+
+        $request->validate([
+            'venta_id' => 'required|exists:venta,id',
+            'numero_cuotas' => 'required|integer|min:2|max:12',
+            'fecha_primera_cuota' => 'required|date|after_or_equal:today',
+            'metodo_pago_id' => 'nullable|exists:metodo_pago,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $venta = Venta::findOrFail($request->venta_id);
+
+            // Verificar que la venta no tenga pagos existentes
+            if ($venta->pagos()->count() > 0) {
+                return back()->withErrors(['error' => 'La venta ya tiene pagos registrados']);
+            }
+
+            $numeroCuotas = $request->numero_cuotas;
+            $montoTotal = $venta->total;
+            $montoPorCuota = floor(($montoTotal / $numeroCuotas) * 100) / 100; // Redondear hacia abajo
+            $montoUltimaCuota = $montoTotal - ($montoPorCuota * ($numeroCuotas - 1)); // Ajustar última cuota
+
+            $fechaPrimeraCuota = Carbon::parse($request->fecha_primera_cuota);
+
+            // Determinar método de pago (por defecto EFECTIVO)
+            $metodoPagoId = $request->metodo_pago_id;
+            if (!$metodoPagoId) {
+                $metodoPago = MetodoPago::where('nombre', 'EFECTIVO')->where('activo', true)->first();
+                $metodoPagoId = $metodoPago ? $metodoPago->id : null;
+            }
+
+            $pagosCreados = [];
+
+            for ($i = 1; $i <= $numeroCuotas; $i++) {
+                $fechaVencimiento = $fechaPrimeraCuota->copy()->addMonths($i - 1);
+                $monto = ($i === $numeroCuotas) ? $montoUltimaCuota : $montoPorCuota;
+
+                $pago = Pago::create([
+                    'monto' => $monto,
+                    'fecha_pago' => null,
+                    'fecha_vencimiento' => $fechaVencimiento,
+                    'estado' => 'PENDIENTE',
+                    'tipo' => 'CUOTA',
+                    'numero_cuota' => $i,
+                    'observaciones' => "Cuota {$i} de {$numeroCuotas} - Plan de pagos",
+                    'venta_id' => $venta->id,
+                    'metodo_pago_id' => $metodoPagoId,
+                    'usuario_id' => Auth::id(),
+                ]);
+
+                $pagosCreados[] = $pago;
+            }
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'tipo_accion_id' => 1, // CREAR
+                'tabla_afectada' => 'pago',
+                'registro_id' => $venta->id,
+                'usuario_id' => Auth::id(),
+                'datos_anteriores' => null,
+                'datos_nuevos' => [
+                    'venta_id' => $venta->id,
+                    'numero_cuotas' => $numeroCuotas,
+                    'monto_total' => $montoTotal,
+                    'monto_por_cuota' => $montoPorCuota,
+                    'pagos_creados' => count($pagosCreados),
+                    'fecha_primera_cuota' => $fechaPrimeraCuota->toDateString(),
+                ],
+                'descripcion' => "Plan de pagos creado: {$numeroCuotas} cuotas para venta #{$venta->id}",
+                'ip' => $request->ip(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('pagos.index', ['venta_id' => $venta->id])
+                ->with('success', "Plan de pagos creado: {$numeroCuotas} cuotas");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear plan de pagos: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al crear el plan de pagos: ' . $e->getMessage()]);
         }
     }
 }

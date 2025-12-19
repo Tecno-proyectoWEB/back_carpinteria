@@ -11,10 +11,34 @@ use Inertia\Inertia;
 
 class UsuarioController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Usuario::with('rol');
+
+        // Búsqueda
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'ILIKE', "%{$search}%")
+                  ->orWhere('apellido', 'ILIKE', "%{$search}%")
+                  ->orWhere('email', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        // Filtro por rol
+        if ($request->has('rol_id') && $request->rol_id) {
+            $query->where('rol_id', $request->rol_id);
+        }
+
+        // Filtro por estado
+        if ($request->has('estado') && $request->estado !== '') {
+            $query->where('estado', $request->estado === 'activo');
+        }
+
         return Inertia::render('Usuarios/Index', [
-            'usuarios' => Usuario::with('rol')->get(),
+            'usuarios' => $query->paginate(15)->withQueryString(),
+            'roles' => Rol::all(),
+            'filters' => $request->only(['search', 'rol_id', 'estado']),
         ]);
     }
 

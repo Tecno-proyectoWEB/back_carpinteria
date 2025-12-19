@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pago;
+use App\Models\Bitacora;
 use App\Services\PaymentGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -65,6 +66,7 @@ class PaymentController extends Controller
                 $paymentGatewayService = app(PaymentGatewayService::class);
 
                 $pago = Pago::where('nro_pago', $ventaID)->first();
+                $datosAnteriores = $pago ? $pago->toArray() : null;
 
                 if ($pago) {
                     if ($fecha && $hora) {
@@ -88,6 +90,20 @@ class PaymentController extends Controller
 
                 // Confirmar el pago
                 $paymentGatewayService->confirmPayment($ventaID);
+
+                // Registrar en bitácora
+                if ($pago) {
+                    Bitacora::create([
+                        'tipo_accion_id' => 2, // ACTUALIZAR
+                        'tabla_afectada' => 'pago',
+                        'registro_id' => $pago->id,
+                        'usuario_id' => $pago->usuario_id,
+                        'datos_anteriores' => $datosAnteriores,
+                        'datos_nuevos' => $pago->fresh()->toArray(),
+                        'descripcion' => "Pago confirmado vía callback PagoFácil - VentaID: {$ventaID}",
+                        'ip' => $request->ip(),
+                    ]);
+                }
 
                 Log::info('Pago confirmado desde callback', [
                     'VentaID' => $ventaID,

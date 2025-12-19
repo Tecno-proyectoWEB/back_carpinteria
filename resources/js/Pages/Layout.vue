@@ -337,6 +337,9 @@ const props = defineProps({
     },
 })
 
+// Destructure props for easier template access
+const { auth, visitasPagina } = props
+
 const page = usePage()
 const { theme, fontSize, contrast, darkMode, setTheme, setFontSize, setContrast, setDarkMode } = useTheme()
 

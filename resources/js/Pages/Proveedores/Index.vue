@@ -1,0 +1,174 @@
+<template>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900">Proveedores</h2>
+                    <Link
+                        v-if="canCreate"
+                        :href="route('proveedores.create')"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        + Nuevo Proveedor
+                    </Link>
+                </div>
+
+                <!-- Filtros -->
+                <div class="mb-4 bg-white p-4 rounded-lg shadow">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                            <input
+                                v-model="filters.search"
+                                type="text"
+                                placeholder="Nombre, RUC, email, tel├®fono..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                @input="applyFilters"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select
+                                v-model="filters.activo"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                @change="applyFilters"
+                            >
+                                <option value="">Todos</option>
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button
+                                @click="clearFilters"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla -->
+                <DataTable
+                    :data="proveedores.data"
+                    :columns="columns"
+                    :loading="false"
+                    :show-search="false"
+                    :paginated="false"
+                >
+                    <template #cell-activo="{ row }">
+                        <Badge :variant="row.activo ? 'success' : 'error'">
+                            {{ row.activo ? 'Activo' : 'Inactivo' }}
+                        </Badge>
+                    </template>
+                    <template #actions="{ row }">
+                        <Link
+                            :href="route('proveedores.show', row.id)"
+                            class="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                            Ver
+                        </Link>
+                        <Link
+                            v-if="canEdit"
+                            :href="route('proveedores.edit', row.id)"
+                            class="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                            Editar
+                        </Link>
+                        <button
+                            v-if="canDelete"
+                            @click="deleteProveedor(row)"
+                            class="text-red-600 hover:text-red-900"
+                        >
+                            Eliminar
+                        </button>
+                    </template>
+                </DataTable>
+
+                <!-- Paginaci├│n -->
+                <div v-if="proveedores.links" class="mt-4">
+                    <div class="flex justify-center">
+                        <div v-for="link in proveedores.links" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                v-html="link.label"
+                                :class="[
+                                    'px-3 py-2 border rounded-md mx-1',
+                                    link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                ]"
+                            ></Link>
+                            <span
+                                v-else
+                                v-html="link.label"
+                                class="px-3 py-2 border rounded-md mx-1 bg-gray-100 text-gray-400"
+                            ></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import DataTable from '@/Components/Table/DataTable.vue';
+import Badge from '@/Components/UI/Badge.vue';
+
+const props = defineProps({
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+proveedores: Object,
+    menuItems: Array,
+    pageVisits: Number,
+    filters: Object,
+});
+
+const columns = [
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'nombre', label: 'Nombre', sortable: true },
+    { key: 'ruc', label: 'RUC', sortable: true },
+    { key: 'telefono', label: 'Tel├®fono', sortable: false },
+    { key: 'email', label: 'Email', sortable: false },
+    { key: 'persona_contacto', label: 'Contacto', sortable: false },
+    { key: 'activo', label: 'Estado', sortable: true },
+];
+
+const filters = ref({
+    search: props.filters?.search || '',
+    activo: props.filters?.activo || '',
+});
+
+const canCreate = computed(() => {
+    const rol = window.$page?.props?.auth?.user?.rol?.nombre;
+    return ['PROPIETARIO', 'SECRETARIA'].includes(rol);
+});
+
+const canEdit = computed(() => canCreate.value);
+const canDelete = computed(() => canCreate.value);
+
+const applyFilters = () => {
+    router.get(route('proveedores.index'), filters.value, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
+const clearFilters = () => {
+    filters.value = { search: '', activo: '' };
+    applyFilters();
+};
+
+const deleteProveedor = (proveedor) => {
+    if (confirm(`┬┐Est├í seguro de eliminar al proveedor "${proveedor.nombre}"?`)) {
+        router.delete(route('proveedores.destroy', proveedor.id), {
+            preserveScroll: true,
+        });
+    }
+};
+</script>
+

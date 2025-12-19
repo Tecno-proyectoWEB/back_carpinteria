@@ -1,62 +1,106 @@
 <template>
-    <Layout :auth="auth">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500">Total Productos</h3>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalProductos || 0 }}</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500">Total Materiales</h3>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.totalMateriales || 0 }}</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500">Ventas Pendientes</h3>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.ventasPendientes || 0 }}</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-sm font-medium text-gray-500">Pagos Pendientes</h3>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.pagosPendientes || 0 }}</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Productos con Stock Bajo</h2>
-                    <div class="space-y-2">
-                        <div v-for="producto in productosStockBajo" :key="producto.id" class="flex justify-between items-center p-3 bg-red-50 rounded">
-                            <span class="font-medium">{{ producto.nombre }}</span>
-                            <span class="text-red-600 font-bold">Stock: {{ producto.stock }}</span>
-                        </div>
-                        <p v-if="productosStockBajo.length === 0" class="text-gray-500">No hay productos con stock bajo</p>
+                <!-- Resumen de estad├¡sticas -->
+                <div v-if="estadisticas.resumen" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Productos</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ estadisticas.resumen.total_productos }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Servicios</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ estadisticas.resumen.total_servicios }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Usuarios</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ estadisticas.resumen.total_usuarios }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Ventas del Mes</h3>
+                        <p class="text-2xl font-bold text-green-600">${{ (estadisticas.resumen.ventas_mes || 0).toFixed(2) }}</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Materiales con Stock Bajo</h2>
-                    <div class="space-y-2">
-                        <div v-for="material in materialesStockBajo" :key="material.id" class="flex justify-between items-center p-3 bg-red-50 rounded">
-                            <span class="font-medium">{{ material.nombre }}</span>
-                            <span class="text-red-600 font-bold">Stock: {{ material.stock_actual }}</span>
+                <!-- Ventas recientes -->
+                <div v-if="estadisticas.ventas_recientes?.length > 0" class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold mb-4">Ventas Recientes</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">M├®todo Pago</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr v-for="venta in estadisticas.ventas_recientes" :key="venta.id">
+                                        <td class="px-4 py-3 text-sm">{{ venta.id }}</td>
+                                        <td class="px-4 py-3 text-sm">{{ new Date(venta.fecha).toLocaleDateString() }}</td>
+                                        <td class="px-4 py-3 text-sm">{{ venta.cliente }}</td>
+                                        <td class="px-4 py-3 text-sm font-semibold">${{ (venta.total || 0).toFixed(2) }}</td>
+                                        <td class="px-4 py-3 text-sm">{{ venta.metodo_pago }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <p v-if="materialesStockBajo.length === 0" class="text-gray-500">No hay materiales con stock bajo</p>
+                    </div>
+                </div>
+
+                <!-- Alertas de stock -->
+                <div v-if="estadisticas.alertas_stock?.total > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-yellow-800 mb-2">ÔÜá´©Å Alertas de Stock Bajo</h3>
+                    <p class="text-yellow-700">Hay {{ estadisticas.alertas_stock.total }} items con stock bajo</p>
+                </div>
+
+                <!-- Productos m├ís vendidos -->
+                <div v-if="estadisticas.productos_mas_vendidos?.length > 0" class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold mb-4">Productos M├ís Vendidos</h3>
+                        <ul class="space-y-2">
+                            <li v-for="producto in estadisticas.productos_mas_vendidos" :key="producto.id" 
+                                class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">{{ producto.nombre }}</span>
+                                <span class="text-blue-600 font-semibold">{{ producto.total_vendido }} unidades</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import Layout from './Layout.vue'
+import AppLayout from '@/Pages/Layout.vue';
 
 defineProps({
-    auth: Object,
-    stats: Object,
-    productosStockBajo: Array,
-    materialesStockBajo: Array,
-})
+    auth: {
+        type: Object,
+        required: true,
+    },
+    visitasPagina: {
+        type: Number,
+        default: 0,
+    },
+    menuItems: {
+        type: Array,
+        default: () => [],
+    },
+    pageVisits: {
+        type: Number,
+        default: null,
+    },
+    estadisticas: {
+        type: Object,
+        default: () => ({}),
+    },
+});
 </script>
 

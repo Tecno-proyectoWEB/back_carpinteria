@@ -1,93 +1,188 @@
 <template>
-    <Layout :auth="auth">
-        <div class="max-w-2xl">
-            <h1 class="text-3xl font-bold text-gray-900 mb-6">Nuevo Material</h1>
+    <AppLayout :auth="auth" :menu-items="menuItems" :page-visits="pageVisits" :visitas-pagina="visitasPagina">
+        <div class="py-12">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white shadow-sm rounded-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Crear Nuevo Material</h2>
 
-            <form @submit.prevent="submit" class="bg-white rounded-lg shadow p-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                        <input v-model="form.nombre" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                        <div v-if="errors.nombre" class="text-red-600 text-sm mt-1">{{ errors.nombre }}</div>
-                    </div>
+                    <form @submit.prevent="submit">
+                        <Input
+                            v-model="form.nombre"
+                            label="Nombre"
+                            required
+                            :error="form.errors.nombre"
+                        />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Descripción</label>
-                        <textarea v-model="form.descripcion" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                    </div>
+                        <Textarea
+                            v-model="form.descripcion"
+                            label="Descripci├│n"
+                            :error="form.errors.descripcion"
+                            :rows="4"
+                        />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Categoría</label>
-                        <select v-model="form.categoria_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="">Seleccione una categoría (opcional)</option>
-                            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                                {{ categoria.nombre }}
-                            </option>
-                        </select>
-                        <div v-if="errors.categoria_id" class="text-red-600 text-sm mt-1">{{ errors.categoria_id }}</div>
-                    </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <Select
+                                v-model="form.categoria_id"
+                                label="Categor├¡a"
+                                :options="categorias"
+                                option-value="id"
+                                option-label="nombre"
+                                required
+                                :error="form.errors.categoria_id"
+                            />
 
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Stock Actual</label>
-                            <input v-model.number="form.stock_actual" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+                            <Select
+                                v-model="form.sector_id"
+                                label="Sector/Almac├®n"
+                                :options="sectores"
+                                option-value="id"
+                                option-label="nombre"
+                                required
+                                :error="form.errors.sector_id"
+                            />
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
-                            <input v-model.number="form.stock_minimo" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+                        <div class="grid grid-cols-3 gap-4">
+                            <Input
+                                v-model.number="form.stock_actual"
+                                label="Stock Actual"
+                                type="number"
+                                required
+                                :error="form.errors.stock_actual"
+                            />
+
+                            <Input
+                                v-model.number="form.stock_minimo"
+                                label="Stock M├¡nimo"
+                                type="number"
+                                :error="form.errors.stock_minimo"
+                            />
+
+                            <Input
+                                v-model.number="form.punto_reorden"
+                                label="Punto de Reorden"
+                                type="number"
+                                :error="form.errors.punto_reorden"
+                            />
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Unidad de Medida</label>
-                            <input v-model="form.unidad_medida" type="text" placeholder="Ej: m², unidad, litro" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                        </div>
-                    </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <Input
+                                v-model.number="form.precio"
+                                label="Precio"
+                                type="number"
+                                step="0.01"
+                                :error="form.errors.precio"
+                            />
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Precio</label>
-                        <input v-model.number="form.precio" type="number" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-                        <div v-if="errors.precio" class="text-red-600 text-sm mt-1">{{ errors.precio }}</div>
-                    </div>
+                            <Input
+                                v-model="form.unidad_medida"
+                                label="Unidad de Medida"
+                                placeholder="Ej: kg, m┬▓, unidades"
+                                :error="form.errors.unidad_medida"
+                            />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Imagen
+                            </label>
+                            <input
+                                type="file"
+                                @change="handleImageChange"
+                                accept="image/*"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            />
+                            <p v-if="form.errors.imagen" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.imagen }}
+                            </p>
+                            <div v-if="imagePreview" class="mt-2">
+                                <img :src="imagePreview" alt="Preview" class="h-32 w-32 object-cover rounded" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="flex items-center">
+                                <input
+                                    v-model="form.activo"
+                                    type="checkbox"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span class="ml-2 text-sm text-gray-700">Material activo</span>
+                            </label>
+                        </div>
+
+                        <div class="flex justify-end space-x-4 mt-6">
+                            <Link
+                                :href="route('materiales.index')"
+                                class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </Link>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                <span v-if="form.processing">Guardando...</span>
+                                <span v-else>Guardar Material</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mt-6 flex space-x-4">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Guardar
-                    </button>
-                    <Link :href="route('materiales.index')" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                        Cancelar
-                    </Link>
-                </div>
-            </form>
+            </div>
         </div>
-    </Layout>
+    </AppLayout>
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3'
-import { route } from '../../ziggy.js'
-import Layout from '../Layout.vue'
+import { ref } from 'vue';
+import { useForm, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Pages/Layout.vue';
+import Input from '@/Components/Form/Input.vue';
+import Textarea from '@/Components/Form/Textarea.vue';
+import Select from '@/Components/Form/Select.vue';
 
-const props = defineProps({
-    auth: Object,
-    categorias: Array,
-    errors: Object,
-})
+defineProps({
+        auth: { type: Object, required: true },
+    visitasPagina: { type: Number, default: 0 },
+categorias: Array,
+    sectores: Array,
+    menuItems: Array,
+    pageVisits: Number,
+});
 
 const form = useForm({
     nombre: '',
     descripcion: '',
-    categoria_id: null,
+    categoria_id: '',
+    sector_id: '',
     stock_actual: 0,
     stock_minimo: 0,
+    punto_reorden: 0,
     precio: 0,
     unidad_medida: '',
+    imagen: null,
     activo: true,
-})
+});
+
+const imagePreview = ref(null);
+
+const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.imagen = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
 
 const submit = () => {
-    form.post(route('materiales.store'))
-}
+    form.post(route('materiales.store'), {
+        forceFormData: true,
+    });
+};
 </script>
-
